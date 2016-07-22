@@ -1,7 +1,7 @@
 - Feature Name: Catchy, descriptive name
 - Start Date: Today’s date
 - RFC PR: Leave this empty, filled on proposal accept
-- Haskell Issue: Leave this empty, filled on proposal accept
+- Haskell Report Issue: Leave this empty, filled on proposal accept
 
 
 
