@@ -64,7 +64,7 @@ Bad:
 Proposal process
 ----------------
 
-1. For this repo at https://github.com/haskell/rfcs
+1. Fork this repo at https://github.com/haskell/rfcs
 2. Copy ``0000-template.rst`` to ``texts/0000-GOOD-NAME.rst``; do not assign a
    number yet
 3. Fill in the template with your suggestion. Make sure the proposal is as
