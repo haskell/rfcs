@@ -21,8 +21,8 @@ Motivation
 The only effect of the change would be to make more Haskell programs compile, with no negative consequences I can think
 of. Furthermore, the ``-XRelaxedPolyRec`` extension has been thoroughly tested: it is implicitly activated by the widely
 used ``-XScopedTypeVariables`` extension. If the present proposal is accepted, the feature pragma can be dropped from
-the list of encouraged extensions in `section 12.3 of the language
-report<https://www.haskell.org/onlinereport/haskell2010/haskellch12.html#x19-19100012.3>`_.
+the list of encouraged extensions in `section 12.3 of the language report
+<https://www.haskell.org/onlinereport/haskell2010/haskellch12.html#x19-19100012.3>`_.
 
 
 ###############
@@ -51,9 +51,9 @@ proposal is solely about the last problem, and the fix is to simply remove the l
      If the programmer supplies explicit type signatures for more than one variable in a declaration group, the contexts
      of these signatures must be identical up to renaming of the type variables.
 
-As it happens, one language extension from the list of Haskell 2010 `encouraged language
-extensions<https://www.haskell.org/onlinereport/haskell2010/haskellch12.html#x19-19100012.3>`_, namely
-`-XRelaxedPolyRec<https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#generalised-typing-of-mutually-recursive-bindings>`_
+As it happens, one language extension from the list of Haskell 2010 `encouraged language extensions
+<https://www.haskell.org/onlinereport/haskell2010/haskellch12.html#x19-19100012.3>`_, namely `-XRelaxedPolyRec
+<https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#generalised-typing-of-mutually-recursive-bindings>`_
 in GHC has two effects on the language semantics which exactly correspond to issues #2 and #3 referenced above. If this
 proposal is accepted, therefore, the ``-XRelaxedPolyRec`` behaviour would become the default and the extension could
 then be removed from the list.
