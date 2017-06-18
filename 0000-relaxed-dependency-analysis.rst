@@ -29,11 +29,12 @@ the list of encouraged extensions in `section 12.3 of the language report
 Detailed design
 ###############
 
-Section 4.5.2 of Haskell 98 report describes the algorithm for type checking and inference of let bindings. In a
-sentence, every syntactic group of ``let`` bindings is broken up in a list of subgroups of mutually recursive bindings
-by dependency order, then the types of each subgroup are inferred in order.
+Section 4.5.2 of the Haskell 98 report describes the algorithm for type checking and inference of let bindings. In a
+sentence: every syntactic group of ``let`` bindings is broken up in a list of subgroups of mutually recursive bindings
+by dependency order, then the types of each subgroup are inferred in order, then some restrictions are imposed.
 
-Section *11.6.3 Combined Binding Groups* of [MarkJones1999] explains the problems with this section of Haskell report:
+Section *11.6.3 Combined Binding Groups* of [MarkJones1999] identified several problems with this section of the Haskell
+98 report:
 
 1. the algorithm description is vague and gave rise to inconsistent implementations,
 2. no distinction is made for bindings with explicit type signature, and
@@ -54,9 +55,9 @@ proposal is solely about the last problem, and the fix is to simply remove the l
 As it happens, one language extension from the list of Haskell 2010 `encouraged language extensions
 <https://www.haskell.org/onlinereport/haskell2010/haskellch12.html#x19-19100012.3>`_, namely `-XRelaxedPolyRec
 <https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#generalised-typing-of-mutually-recursive-bindings>`_
-in GHC has two effects on the language semantics which exactly correspond to issues #2 and #3 referenced above. If this
-proposal is accepted, therefore, the ``-XRelaxedPolyRec`` behaviour would become the default and the extension could
-then be removed from the list.
+in GHC has two effects on the language semantics which exactly correspond to issues #2 and #3 above. If this proposal is
+accepted, therefore, the ``-XRelaxedPolyRec`` behaviour would become the default and the extension could then be removed
+from the list.
 
 #########
 Drawbacks
