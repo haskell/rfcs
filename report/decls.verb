@@ -1,0 +1,2214 @@
+%
+% $Header: /home/cvs/root/haskell-report/report/decls.verb,v 1.19 2003/01/13 13:08:55 simonpj Exp $
+%
+%**<title>The Haskell 98 Report: Declarations</title>
+%*section 4
+%**~header
+\section{Declarations and Bindings}
+\index{declaration}
+\index{binding}
+\label{declarations}
+
+In this chapter, we describe the syntax and informal semantics of \Haskell{}
+{\em declarations}.
+% including their translations into
+% the \Haskell{} kernel where appropriate.
+% (see Appendix~\ref{formal-semantics} for a complete formal semantics).
+
+@@@
+module -> @module@ modid [exports] @where@ body 
+       |  body
+body   -> @{@ impdecls @;@ topdecls @}@
+	| @{@ impdecls  @}@
+	| @{@ topdecls  @}@
+
+topdecls -> topdecl_1 @;@ ... @;@ topdecl_n 	& (n>=1)
+topdecl	-> @type@ simpletype @=@ type
+	|  @data@ [context @=>@] simpletype \hprime{[}@=@ constrs\hprime{]} [deriving]
+        |  @newtype@ [context @=>@] simpletype @=@ newconstr [deriving]
+	|  @class@ [scontext @=>@] tycls tyvar [@where@ cdecls]
+	|  @instance@ [scontext @=>@] qtycls inst [@where@ idecls]
+	|  @default@ @(@type_1 @,@ ... @,@ type_n@)@ & \qquad (n>=0)
+        |  @foreign@ fdecl
+	|  decl
+
+decls	-> @{@ decl_1 @;@ ... @;@ decl_n @}@		& (n>=0)
+decl	-> gendecl
+	|  (funlhs | \hprime{pat}) rhs
+
+cdecls	-> @{@ cdecl_1 @;@ ... @;@ cdecl_n @}@		& (n>=0)
+cdecl	-> gendecl
+	|  (funlhs | var) rhs
+
+idecls	-> @{@ idecl_1 @;@ ... @;@ idecl_n @}@		& (n>=0)
+idecl	-> (funlhs | var) rhs
+	|						& (\tr{empty})
+
+gendecl	-> vars @::@ [context @=>@] type	& (\tr{type signature})
+	|  fixity [integer] ops			& (\tr{fixity declaration})
+	|					& (\tr{empty declaration})
+
+ops	-> op_1 @,@ ... @,@ op_n		& (n>=1)
+vars	-> var_1 @,@ ... @,@ var_n		& (n>=1)
+fixity	-> @infixl@ | @infixr@ | @infix@
+@@@
+\indexsyn{vars}%
+\indexsyn{fixity}%
+\indexsyn{ops}%
+\indexsyn{topdecls}%
+\indexsyn{topdecl}%
+\indexsyn{gendecl}%
+\indexsyn{decls}%
+\indexsyn{decl}%
+\indexsyn{cdecls}%
+\indexsyn{cdecl}%
+\indexsyn{idecls}%
+\indexsyn{idecl}%
+\indexsyn{fdecl}%
+
+The declarations in the syntactic category "topdecls" are only allowed
+at the top level of a \Haskell{} module (see
+Chapter~\ref{modules}), whereas "decls" may be used either at the top level or
+in nested scopes (i.e.~those within a @let@ or @where@ construct).
+
+For exposition, we divide the declarations into
+three groups: user-defined datatypes, consisting of @type@, @newtype@,
+and @data@ 
+declarations (Section~\ref{user-defined-datatypes}); type classes and
+overloading, consisting of @class@, @instance@, and @default@
+declarations (Section~\ref{overloading}); and nested declarations,
+consisting of value bindings, type signatures, and fixity declarations
+(Section~\ref{nested}).
+
+%The @module@ declaration, along with @import@ and
+%infix declarations, is described in Section~\ref{modules}.
+
+\Haskell{} has several primitive datatypes that are ``hard-wired''
+(such as integers and floating-point numbers), but most ``built-in''
+datatypes are defined with normal \Haskell{} code, using normal @type@
+and @data@ declarations. % (see Section~\ref{user-defined-datatypes}).
+These ``built-in'' datatypes are described in detail in
+Section~\ref{basic-types}.
+
+\subsection{Overview of Types and Classes}
+\label{types-overview}
+
+\Haskell{} uses a traditional
+Hindley-Milner\index{Hindley-Milner type system}
+polymorphic type system to provide a static type semantics
+\cite{damas-milner82,hindley69}, but the type system has been extended with
+{\em type classes} (or just {\em
+classes}\index{class}) that provide 
+a structured way to introduce {\em overloaded} functions.\index{type
+class} \index{constructor class} \index{overloaded functions}
+
+A @class@ declaration (Section~\ref{class-decls}) introduces a new
+{\em type class} and the overloaded operations that must be
+supported by any type that is an instance of that class.  An
+@instance@ declaration (Section~\ref{instance-decls}) declares that a
+type is an {\em instance} of a class and includes
+the definitions of the overloaded operations---called {\em
+class methods}---instantiated on the named type.
+\index{class method}
+
+For example, suppose we wish to overload the operations @(+)@ and
+@negate@ on types @Int@ and @Float@.  We introduce a new
+type class called @Num@:\nopagebreak[4]
+\par
+{\small
+\bprog
+@
+  class Num a  where          -- simplified class declaration for Num
+    (+)    :: a -> a -> a     -- (Num is defined in the Prelude)
+    negate :: a -> a
+@
+\eprog
+}
+This declaration may be read ``a type @a@ is an instance of the class
+@Num@ if there are class methods @(+)@ and @negate@, of the
+given types, defined on it.''
+
+We may then declare @Int@ and @Float@ to be instances of this class:
+\bprog
+@
+  instance Num Int  where     -- simplified instance of Num Int
+    x + y       =  addInt x y
+    negate x    =  negateInt x
+  
+  instance Num Float  where   -- simplified instance of Num Float
+    x + y       =  addFloat x y
+    negate x    =  negateFloat x
+@
+\eprog
+where @addInt@, @negateInt@, @addFloat@, and @negateFloat@ are assumed
+in this case to be primitive functions, but in general could be any
+user-defined function.  The first declaration above may be read
+``@Int@ is an instance of the class @Num@ as witnessed by these
+definitions (i.e.~class methods)\index{class method} for @(+)@ and @negate@.''
+
+More examples of type classes can be found in
+the papers by Jones \cite{jones:cclasses} or Wadler and Blott
+\cite{wadler:classes}. 
+The term `type class' was used to describe the original \Haskell{} 1.0
+type system; `constructor class' was used to describe an extension to
+the original type classes.  There is no longer any reason to use two
+different terms: in this report, `type class' includes both the
+original \Haskell{} type classes and the constructor classes
+introduced by Jones.
+
+\subsubsection{Kinds}
+
+To ensure that they are valid, type expressions are classified
+into different {\em kinds}, \index{kind} which take one of two possible
+forms:\nopagebreak[4]
+\begin{itemize}
+
+\item The symbol $\ast$ represents the kind of all nullary type
+constructors.
+
+\item If $\kappa_1$ and $\kappa_2$ are kinds, then $\kappa_1\rightarrow\kappa_2$
+is the kind of types that take a type of kind $\kappa_1$ and return
+a type of kind $\kappa_2$.
+\end{itemize}
+Kind inference checks the validity of type expressions 
+in a similar way that type inference checks the validity of value expressions.  
+However, unlike types, kinds are entirely
+implicit and are not a visible part of the language.  Kind inference is discussed
+in Section~\ref{kindinference}.
+
+\subsubsection{Syntax of Types}
+\label{type-syntax}
+\index{type}
+\label{types}
+
+@@@
+type      -> btype [@->@ type]                    & (\tr{function type})
+
+btype    ->  [btype] atype                        & (\tr{type application})
+
+atype    ->  gtycon
+          |  tyvar
+          |  @(@ type_1 @,@ ... @,@ type_k @)@ & (\tr{tuple type}, k>=2)
+          |  @[@ type @]@                      & (\tr{list type})
+          |  @(@ type @)@                      & (\tr{parenthesised constructor})
+
+gtycon    -> qtycon
+          |  @()@                              & (\tr{unit type})
+          |  @[]@                              & (\tr{list constructor})
+          |  @(->)@                            & (\tr{function constructor})
+          |  @(,@\{@,@\}@)@                    & (\tr{tupling constructors})
+@@@
+\indexsyn{type}%
+\indexsyn{atype}%
+\indexsyn{btype}%
+\indexsyn{gtycon}%
+
+\noindent
+The syntax for \Haskell{} type expressions
+\index{type expression}
+\index{constructor expression}
+is given above.  Just as data values are built using data
+constructors, type values are built from "type constructors".  As with
+data constructors, the names of type constructors start with uppercase
+letters.
+Unlike data constructors, infix type constructors are not allowed (other than @(->)@).
+
+The main forms of type expression are as follows:\nopagebreak[4]
+\begin{enumerate}
+
+\item Type variables, written as identifiers beginning with
+      a lowercase letter.  The kind of a variable is determined implicitly
+      by the context in which it appears.
+
+\item Type constructors.  Most type constructors are written as an identifier
+      beginning with an uppercase letter.  For example:\nopagebreak[4]
+      \begin{itemize}
+      \item @Char@, @Int@, @Integer@, @Float@, @Double@ and @Bool@ are
+            type constants with kind $\ast$.
+      \item @Maybe@ and @IO@ are unary type
+            constructors, and treated as types with
+            kind $\ast\rightarrow\ast$.
+      \item The declarations @data T ...@ or @newtype T ...@ add the type
+            constructor @T@ to
+            the type vocabulary.  The kind of @T@ is determined by
+            kind inference.
+      \end{itemize}
+      Special syntax is provided for certain built-in type constructors:\nopagebreak[4]
+      \begin{itemize}
+      \item The {\em trivial type}\index{trivial type} is written as @()@ and
+            has kind $\ast$.
+            It denotes the ``nullary tuple'' type, and has exactly one value,
+            also written @()@ (see Sections~\ref{unit-expression}
+            and~\ref{basic-trivial}).
+      \item The {\em function type} is written as @(->)@ and has\index{function type}
+            kind $\ast\rightarrow\ast\rightarrow\ast$.
+      \item The {\em list type}  is written as @[]@ and has kind
+            $\ast\rightarrow\ast$.\index{list}
+      \item The {\em tuple types} are written as @(,)@,\index{tuple}
+            @(,,)@, and so on.  Their kinds are
+            $\ast\rightarrow\ast\rightarrow\ast$,
+            $\ast\rightarrow\ast\rightarrow\ast\rightarrow\ast$,  and
+            so on.
+      \end{itemize}
+      Use of the @(->)@ and @[]@ constants is described in more detail below.
+
+\item Type application.  If $t_1$ is a type of kind
+      $\kappa_1\rightarrow\kappa_2$ and $t_2$ is a type of kind $\kappa_1$,
+      then $t_1~t_2$ is a type expression of kind $\kappa_2$.
+
+\item A {\em parenthesized type}, having form "@(@t@)@", is identical
+      to the type "t".
+
+\end{enumerate}
+For example, the type expression @IO a@ can be understood as the application
+of a constant, @IO@, to the variable @a@.  Since the @IO@ type
+constructor has kind 
+$\ast\rightarrow\ast$, it follows that both the variable @a@ and the whole
+expression, @IO a@, must have kind $\ast$.
+In general, a process of {\em kind inference}\index{kind}\index{kind inference}
+(see Section~\ref{kindinference})
+is needed to determine appropriate kinds for user-defined datatypes, type
+synonyms, and classes.
+
+Special syntax is provided to allow certain type expressions to be written
+in a more traditional style:\nopagebreak[4]
+\begin{enumerate}
+
+\item A {\em function type}\index{function type} has the form
+"t_1 @->@ t_2", which is equivalent to the type
+"@(->)@ t_1 t_2".  Function arrows associate to the right.
+For example, @Int -> Int -> Float@ means @Int -> (Int -> Float)@.
+
+\item A {\em tuple type}\index{tuple type} has the form 
+"@(@t_1@,@ ... @,@ t_k@)@" where "k>=2", which is equivalent to
+the type "@(,@$\ldots$@,)@ t_1 ... t_k" where there are
+$k-1$ commas between the parenthesis.  It denotes the
+type of "k"-tuples with the first component of type "t_1", the second
+component of type "t_2", and so on (see Sections~\ref{tuples}
+and \ref{basic-tuples}).
+
+\item A {\em list type}\index{list type} has the form "@[@t@]@",
+which is equivalent to the type "@[]@ t".
+It denotes the type of lists with elements of type "t" (see
+Sections~\ref{lists} and \ref{basic-lists}).
+
+\end{enumerate}
+These special syntactic forms always denote the built-in type constructors
+for functions, tuples, and lists, regardless of what is in scope.
+In a similar way, the prefix type constructors @(->)@, @[]@, @()@, @(,)@, 
+and so on, always denote the built-in type constructors; they 
+cannot be qualified, nor mentioned in import or export lists (Chapter~\ref{modules}).
+(Hence the special production, ``gtycon'', above.)
+
+Although the list and tuple types have special syntax, their semantics 
+is the same as the equivalent user-defined algebraic data types.
+
+Notice that expressions and types have a consistent syntax.
+If "t_i" is the type of
+expression or pattern "e_i", then the expressions "@(\@ e_1 @->@ e_2@)@",
+"@[@e_1@]@", and "@(@e_1,e_2@)@" have the types "@(@t_1 @->@ t_2@)@",
+"@[@t_1@]@", and "@(@t_1,t_2@)@", respectively.
+
+\index{quantification}
+With one exception (that of the distinguished type variable
+in a class declaration (Section~\ref{class-decls})), the
+type variables in a \Haskell{} type expression
+are all assumed to be universally quantified; there is no explicit
+syntax for universal quantification~\cite{damas-milner82}.
+% \cite{damas-milner82,reynolds90}.
+For example, the type expression
+@a -> a@ denotes the type "\forall a.~a \rightarrow a".
+For clarity, however, we often write quantification explicitly
+when discussing the types of \Haskell{} programs.  When we write an
+explicitly quantified type, the scope of the "\forall" extends as far
+to the right as possible; for example, "\forall a.~a \rightarrow a" means
+"\forall a.~(a \rightarrow a)".
+
+%Every type variable appearing in a signature
+%is universally quantified over that signature.  This last
+%constraint implies that signatures such as:
+%\bprog
+%@@
+%	\ x -> ([x] :: [a])
+%@@
+%\eprog
+%are not valid, because this declares @[x]@ to be of type 
+%"\forall a.@[@a@]@".  In contrast, this {\em is} a valid signature:
+%@(\ x -> [x]) :: a -> [a]@; it declares that @(\ x -> [x])@ has type
+%"\forall a.a @->@ @[@a@]@".
+
+\subsubsection{Syntax of Class Assertions and Contexts}
+\index{class assertion}
+\index{context}
+\label{classes&contexts}
+
+@@@
+context -> class
+        |  @(@ class_1 @,@ ... @,@ class_n @)@		& (n>=0)
+class	-> qtycls tyvar
+	|  qtycls @(@ tyvar atype_1 ...  atype_n @)@ & (n>=1)
+qtycls  -> [ modid @.@ ] tycls
+tycls	-> conid
+tyvar	-> varid
+@@@
+\indexsyn{context}%
+\indexsyn{class}%
+\indexsyn{simpleclass}%
+\indexsyn{tycls}%
+\indexsyn{tyvar}%
+
+A {\em class assertion} has form "qtycls tyvar", and
+indicates the membership of the type "tyvar" in the class
+"qtycls".  A class identifier begins with an uppercase
+letter.
+A {\em context} consists of zero or more class assertions,
+and has the general form
+\[
+"@(@ C_1 u_1, ..., C_n u_n @)@"
+\]
+where "C_1, ..., C_n" are class identifiers, and each of the "u_1, ..., u_n" is
+either a type variable, or the application of type variable to one or more types.
+The outer parentheses may be omitted when "n=1".  In
+general, we use "cx" to denote a context and we write "cx @=>@ t" to
+indicate the type "t" restricted by the context "cx".
+The context "cx" must only contain type variables referenced in "t".
+For convenience,
+we write "cx @=>@ t" even if the context "cx" is empty, although in this
+case the concrete syntax contains no @=>@.
+
+\subsubsection{Semantics of Types and Classes}
+\label{type-semantics}
+
+In this section, we provide informal details of the type system.
+% the formal semantics is described in Appendix~\ref{static-semantics}
+(Wadler and Blott \cite{wadler:classes} and Jones
+\cite{jones:cclasses} discuss type
+and constructor classes, respectively, in more detail.)
+
+%A type is a {\em monotype\/}\index{monotype} if it contains no type
+%variables, and is {\em monomorphic\/}
+%\index{monomorphic type}
+%if it contains type variables
+%but is not polymorphic (in Milner's original terminology,
+%it is monomorphic if it contains no generic type variables).
+
+The \Haskell{} type system attributes a {\em type} to each
+\index{type}
+expression in the program.  In general, a type is of the form
+"\forall \overline{u}.~cx \Rightarrow t",
+where "\overline{u}" is a set of type variables "u_1, ..., u_n".
+In any such type, any of the universally-quantified type variables "u_i"
+that are free in "cx" must also be free in "t".
+Furthermore, the context "cx" must be of the form given above in
+Section~\ref{classes&contexts}.  For example, here are some
+valid types:
+\bprog
+@
+  Eq a => a -> a
+  (Eq a, Show a, Eq b) => [a] -> [b] -> String
+  (Eq (f a), Functor f) => (a -> b) -> f a -> f b -> Bool
+@
+\eprog
+In the third type, the constraint @Eq (f a)@ cannot be made
+simpler because @f@ is universally quantified.
+
+The type of an expression "e" depends 
+on a {\em type environment}\index{type environment} that gives types 
+for the free variables in "e", and a
+{\em class environment}\index{class environment} that 
+declares which types are instances of which classes (a type becomes
+an instance of a class only via the presence of an
+@instance@ declaration or a @deriving@ clause).
+
+Types are related by a generalization preorder
+\index{generalization preorder}
+(specified below);
+the most general type, up to the equivalence induced by the generalization preorder,
+that can be assigned to a particular
+expression (in a given environment) is called its {\em
+principal type}.
+\index{principal type}
+\Haskell{}'s extended Hindley-Milner type system can infer the principal
+type of all expressions, including the proper use of overloaded
+class methods (although certain ambiguous overloadings could arise, as
+described in Section~\ref{default-decls}).  Therefore, explicit typings (called
+{\em type signatures})
+\index{type signature}
+are usually optional (see
+Sections~\ref{expression-type-sigs} and~\ref{type-signatures}).
+
+The type "\forall \overline{u}.~cx_1 \Rightarrow t_1" is
+{\em more general than} the 
+type "\forall \overline{w}.~cx_2 \Rightarrow t_2" if and only if there is 
+a substitution "S" whose domain is "\overline{u}" such that:
+\begin{itemize}
+\item "t_2" is identical to "S(t_1)".
+\item Whenever "cx_2" holds in the class environment, "S(cx_1)" also holds.
+\end{itemize}
+
+A value of type
+"\forall \overline{u}.~cx \Rightarrow t",
+may be instantiated at types "\overline{s}" if and only if
+the context "cx[\overline{s}/\overline{u}]" holds.
+For example, consider the function @double@:
+\bprog
+@
+  double x = x + x
+@
+\eprog
+The most general type of @double@ is
+"\forall a.~@Num@~a \Rightarrow a \rightarrow a".
+@double@ may be applied to values of type @Int@ (instantiating "a" to
+@Int@), since @Num Int@ holds, because @Int@ is an instance of the class @Num@.
+However, @double@ may not normally be applied to values
+of type @Char@, because @Char@ is not normally an instance of class @Num@.  The
+user may choose to declare such an instance, in which case @double@ may
+indeed be applied to a @Char@.
+
+
+\subsection{User-Defined Datatypes}
+\index{datatype}
+\label{user-defined-datatypes}
+
+In this section, we describe algebraic datatypes (@data@
+declarations), renamed datatypes (@newtype@ declarations), and type
+synonyms (@type@ declarations).  These declarations may only appear at
+the top level of a module.
+
+\subsubsection{Algebraic Datatype Declarations}
+\index{algebraic datatype}
+\label{datatype-decls}
+
+@@@
+topdecl	   -> @data@ [context @=>@] simpletype \hprime{[}@=@ constrs\hprime{]} [deriving]
+
+simpletype -> tycon tyvar_1 ... tyvar_k	 & (k>=0) 
+
+constrs	   -> constr_1 @|@ ... @|@ constr_n	& (n>=1)
+constr	   -> con [@!@] atype_1 ... [@!@] atype_k	& (\tr{arity} con = k, k>=0)
+           |  (btype | @!@ atype) conop (btype | @!@ atype) & (\tr{infix} conop)
+           |  con @{@ fielddecl_1 @,@ ... @,@ fielddecl_n @}@ & (n>=0)
+fielddecl  -> vars @::@ (type | @!@ atype)
+
+deriving   -> @deriving@ (dclass | @(@dclass_1@,@ ... @,@ dclass_n@)@)& (n>=0)
+dclass     -> qtycls
+@@@
+\index{topdecl@@{\em topdecl} (@data@)}%
+\indexsyn{simpletype}%
+\indexsyn{constrs}%
+\indexsyn{constr}%
+\indexsyn{fielddecl}%
+\indexsyn{deriving}%
+\indexsyn{dclass}%
+\index{data declaration@@{\tt data} declaration}
+The precedence\index{precedence} for "constr" is the same as that for
+expressions---normal constructor application has higher precedence
+than infix constructor application (thus @a : Foo a@ parses as 
+@a : (Foo a)@).
+
+An algebraic datatype declaration has the form:
+\[
+"@data@ cx @=>@ T u_1 ... u_k @=@ K_1 t_{11} ... t_{1k_1} @|@ \cdots @|@ \
+                                K_n t_{n1} ... t_{nk_n}"
+\]
+where "cx" is a context.
+%\index{context!in data declaration@@in {\tt data} declaration}
+This declaration
+introduces a new {\em type constructor} "T" with \hprime{zero} or more constituent {\em data
+constructors} "K_1, ..., K_n".
+\index{data constructor}\index{type constructor}
+In this Report, the unqualified term ``constructor'' always means ``data constructor''.
+
+The types of the data constructors are given by:
+\[
+"K_i :: \forall u_1 ... u_k.~ cx_i \Rightarrow t_{i1} \rightarrow \cdots \rightarrow t_{ik_i} \rightarrow (T u_1 ... u_k)"
+\]
+where "cx_i" is the largest subset of "cx" that constrains only those type
+variables free in the types "t_{i1}, ..., t_{ik_i}".
+The type variables "u_1" through "u_k" must be distinct and may appear
+in "cx" and the "t_{ij}"; it is a static error
+for any other type variable to appear in "cx" or on the right-hand-side.
+The new type constant "T" has a kind of the form
+$\kappa_1\rightarrow\ldots\rightarrow\kappa_k\rightarrow\ast$
+where the kinds "\kappa_i" of the argument variables "u_i" are
+determined by kind inference
+as described in Section~\ref{kindinference}\index{kind}\index{kind inference}.
+This means that "T" may be used in type expressions with anywhere
+between "0" and "k" arguments.
+
+For example, the declaration
+\bprog
+@
+  data Eq a => Set a = NilSet | ConsSet a (Set a)
+@
+\eprog
+introduces a type constructor @Set@ of kind $\ast\rightarrow\ast$, and constructors @NilSet@ and
+@ConsSet@ with types
+\[\ba{ll}
+@NilSet@  & ":: \forall a.~ @Set@~ a" \\
+@ConsSet@ & ":: \forall a.~ @Eq@~ a \Rightarrow a \rightarrow @Set@~ a \rightarrow @Set@~ a"
+\ea\]
+In the example given, the overloaded
+type for @ConsSet@ ensures that @ConsSet@ can only be applied to values whose
+type is an instance of the class @Eq@.  
+Pattern matching against @ConsSet@ also gives rise to an @Eq a@ constraint. 
+For example: 
+\bprog
+@
+  f (ConsSet a s) = a
+@
+\eprog
+the function @f@ has inferred type @Eq a => Set a -> a@.
+The context in the @data@ declaration has no other effect whatsoever.
+
+The visibility of a datatype's constructors (i.e.~the ``abstractness''
+\index{abstract datatype}
+of the datatype) outside of the module in which the datatype is
+defined is controlled by the form of the datatype's name in the export
+list as described in Section~\ref{abstract-types}.
+
+The optional "@deriving@" part of a @data@ declaration has to do
+with {\em derived instances}, and is described in
+Section~\ref{derived-decls}.
+
+\paragraph{Labelled Fields}
+\label{field-labels}
+\index{field label}
+A data constructor of arity "k" creates an object with "k" components.
+These components are normally accessed positionally as arguments to the
+constructor in expressions or patterns.  For large datatypes it is
+useful to assign "field labels" to the components of a data object.
+This allows a specific field to be referenced independently of its
+location within the constructor.
+
+A constructor definition in a @data@ declaration may assign labels to the
+fields of the constructor, using the record syntax (@C { ... }@).
+Constructors using field labels may be freely mixed with constructors
+without them. 
+A constructor with associated field labels may still be used as an
+ordinary constructor; features using labels are
+simply a shorthand for operations using an underlying positional
+constructor.  The arguments to the positional constructor occur in the
+same order as the labeled fields.  For example, the declaration
+\bprog
+@
+  data C = F { f1,f2 :: Int, f3 :: Bool }
+@
+\eprog
+defines a type and constructor identical to the one produced by
+\bprog
+@
+  data C = F Int Int Bool
+@
+\eprog
+Operations using field labels are described in Section~\ref{field-ops}.
+A @data@ declaration may use the same field label in multiple
+constructors as long as the typing of the field is the same in all
+cases after type synonym expansion.  A label cannot be shared by
+more than one type in scope.  Field names share the top level namespace
+with ordinary variables and class methods and must not conflict with
+other top level names in scope.
+
+The pattern @F {}@ matches any value built with constructor @F@, 
+{\em whether or not @F@ was declared with record syntax}. 
+
+\paragraph{Strictness Flags}
+\label{strictness-flags}
+\index{strictness flag}
+Whenever a data constructor is applied, each argument to the
+constructor is evaluated if and only if the corresponding type in the
+algebraic datatype declaration has a strictness flag, denoted by
+an exclamation point, ``@!@''.
+\index{""!@@{\tt  {\char'041}}}
+Lexically, ``@!@'' is an ordinary varsym not a "reservedop"; 
+it has special significance only in the context of the argument types of 
+a data declaration.
+
+
+\outline{
+\paragraph*{Translation:}
+A declaration of the form
+\[
+"@data@ cx @=>@ T u_1 ... u_k @=@ ... @|@ K s_{1} ... s_{n} @|@ ... "
+\]
+where each "s_i" is either of the form @!@" t_i" or "t_i", replaces
+every occurrence of "K" in an expression by 
+\[
+"@(\ @x_1 ... x_n @->@ ( ((K op_1 x_1) op_2 x_2) ... ) op_n x_n)"
+\]
+where "op_i" is the non-strict apply function @$@ if "s_i" is of the form "t_i",
+and "op_i" is the strict apply function @$!@ (see
+Section~\ref{strict-eval}) if "s_i" is of the form "@!@ t_i".  Pattern
+matching on "K" is not affected by strictness flags.
+}
+
+
+\subsubsection{Type Synonym Declarations}
+\index{type synonym}
+\label{type-synonym-decls}
+
+@@@
+topdecl	   -> @type@ simpletype @=@ type
+simpletype ->  tycon tyvar_1 ... tyvar_k & (k>=0) 
+@@@
+\index{topdecl@@{\em topdecl} (@type@)}%
+\indexsyn{simpletype}%
+A type synonym declaration introduces a new type that
+is equivalent to an old type.  It has the form
+\[
+"@type@ T u_1 ... u_k @=@ t"
+\]
+which introduces a new type constructor, "T".  The type "(T t_1 ...
+t_k)" is equivalent to the type "t[t_1/u_1, ..., t_k/u_k]".  The type
+variables "u_1" through "u_k" must be distinct and are scoped only
+over "t"; it is a static error for any other type variable to appear
+in "t".  The kind of the new type constructor "T" is of the form
+$\kappa_1\rightarrow\ldots\rightarrow\kappa_k\rightarrow\kappa$ where
+the kinds "\kappa_i" of the arguments "u_i" and "\kappa" of the right hand
+side "t" are determined by kind inference as described in
+Section~\ref{kindinference}\index{kind}\index{kind inference}.
+For example, the following definition can be used to provide an alternative
+way of writing the list type constructor: 
+\bprog
+@
+  type List = []
+@
+\eprog
+Type constructor symbols "T" introduced by type synonym declarations cannot
+be partially applied; it is a static error to use "T" without the full number
+of arguments.
+
+Although recursive and mutually recursive datatypes are allowed,
+\index{recursive datatype}
+\index{type synonym!recursive}
+this is not so for type synonyms, {\em unless an algebraic datatype
+intervenes}.  For example,
+\bprog
+@
+  type Rec a   =  [Circ a]
+  data Circ a  =  Tag [Rec a]
+@
+\eprog
+is allowed, whereas
+\bprog
+@
+  type Rec a   =  [Circ a]        -- invalid
+  type Circ a  =  [Rec a]         -- invalid
+@
+\eprog
+is not. Similarly, @type Rec a = [Rec a]@ is not allowed.
+
+Type synonyms are a convenient, but strictly syntactic, mechanism to make type
+signatures more readable.  A synonym and its definition are completely
+interchangeable, except in the instance type of an @instance@ declaration (Section~\ref{instance-decls}).
+
+\subsubsection{Datatype Renamings}
+\index{newtype declaration@@{\tt newtype} declaration}
+\label{datatype-renaming}
+
+@@@
+topdecl    -> @newtype@ [context @=>@] simpletype @=@ newconstr [deriving]
+newconstr  -> con atype
+	   |  con @{@ var @::@ type @}@ 
+simpletype ->  tycon tyvar_1 ... tyvar_k		& (k>=0)
+@@@
+\index{topdecl@@{\em topdecl} (@newtype@)}%
+\indexsyn{simpletype}%
+\indexsyn{newconstr}%
+
+\noindent \noindent A declaration of the form
+\[
+"@newtype@ cx @=>@ T u_1 ... u_k @=@ N t"
+\]
+introduces a new type whose
+representation is the same as an existing type.  The type "@(@T u_1
+... u_k@)@" renames the datatype "t".
+It differs from a type synonym in
+that it creates a distinct type that must be explicitly coerced to or
+from the original type.  Also, unlike type synonyms, @newtype@ may be
+used to define recursive types.
+The constructor "N" in an expression 
+coerces a value from type "t" to type "@(@T u_1 ... u_k@)@".
+Using "N" in a pattern coerces a value from type "@(@T u_1 ... u_k@)@"
+to type "t".  These coercions may be implemented without
+execution time overhead; @newtype@ does not change the underlying
+representation of an object.
+
+New instances (see Section \ref{instance-decls}) can be defined for a
+type defined by @newtype@ but may not be defined for a type synonym.  A type
+created by @newtype@ differs from an algebraic datatype in that the
+representation of an
+algebraic datatype has an extra level of indirection.  This difference
+may make access to the representation less efficient.  The difference is
+reflected in different rules for pattern matching (see
+Section~\ref{pattern-matching}).  Unlike algebraic datatypes, the
+newtype constructor "N" is {\em unlifted}, so that "N \bot"
+is the same as "\bot".
+
+The following examples clarify the differences between @data@ (algebraic
+datatypes), @type@ (type synonyms), and @newtype@ (renaming types.)
+Given the declarations 
+\bprog
+@
+  data D1 = D1 Int
+  data D2 = D2 !Int
+  type S = Int
+  newtype N = N Int
+  d1 (D1 i) = 42
+  d2 (D2 i) = 42
+  s i = 42
+  n (N i) = 42
+@
+\eprog
+the expressions "@(d1@ \bot@)@", "@(d2@ \bot@)@" and 
+"@(d2 (D2@ \bot@))@" are all
+equivalent to "\bot", whereas "@(n@ \bot@)@", "@(n (N@ \bot@))@",
+"@(d1 (D1@ \bot@))@" and "@(s@ \bot@)@"
+are all equivalent to @42@.  In particular, "@(N@ \bot@)@" is equivalent to
+"\bot" while "@(D1@ \bot@)@" is not equivalent to "\bot".
+
+The optional deriving part of a @newtype@ declaration is treated in
+the same way as the deriving component of a @data@ declaration; see
+Section~\ref{derived-decls}.
+
+A @newtype@ declaration may use field-naming syntax, though of course
+there may only be one field.  Thus:
+\bprog
+@
+  newtype Age = Age { unAge :: Int }
+@
+\eprog
+brings into scope both a constructor and a de-constructor:
+\bprog
+@
+  Age   :: Int -> Age
+  unAge :: Age -> Int
+@
+\eprog
+
+\subsection{Type Classes and Overloading}
+\index{class}
+\index{overloading}
+\label{overloading}
+\label{classes}
+
+\subsubsection{Class Declarations}
+\index{class declaration}
+%\index{class declaration@@{\tt class} declaration}
+\label{class-decls}
+
+@@@
+topdecl	-> @class@ [scontext @=>@] tycls tyvar [@where@ cdecls]
+scontext -> simpleclass
+        |  @(@ simpleclass_1 @,@ ... @,@ simpleclass_n @)@		& (n>=0)
+simpleclass -> qtycls tyvar			
+cdecls	-> @{@ cdecl_1 @;@ ... @;@ cdecl_n @}@		& (n>=0)
+cdecl	-> gendecl
+	|  (funlhs | var) rhs
+@@@
+\index{topdecl@@{\em topdecl} (@class@)}%
+\indexsyn{gendecl}%
+\indexsyn{cdecls}%
+\indexsyn{cdecl}%
+\index{declaration!within a {\tt class} declaration}
+
+\noindent
+A {\em class declaration} introduces a new class and the operations
+({\em class methods}) on it.
+A class declaration has the general form:
+\[\ba{rl}
+"@class@ cx @=>@ C u @where@ cdecls"
+% "@{@"&"...@;@ v_i @::@ cx_i @=>@ t_i @;@ ...@;@"\\
+% 				&"...@;@ @infix@ n v_i@;@ ...@;@"\\
+%                               &"valdef_1 @;@ ... @;@ valdef_m @}@"
+\ea\]
+This introduces a new class name "C"; the type variable "u" is
+scoped only over the class method signatures in the class body.
+The context "cx" specifies the superclasses\index{superclass} of "C", as
+described below; the only type variable that may be referred to in "cx"
+is "u".
+
+The superclass relation must not be cyclic; i.e.~it must form a
+directed acyclic graph.\index{superclass}
+
+The "cdecls" part of a @class@ declaration contains three kinds
+of declarations:
+\begin{itemize}
+\item
+The class declaration introduces new {\em class methods}
+\index{class method}
+"v_i", whose scope extends outside the @class@ declaration.
+The class methods of a class declaration are precisely the "v_i" for
+which there is an explicit type signature
+\[
+"v_i @::@ cx_i @=>@ t_i"
+\]
+in "cdecls".  
+Class methods share the top level namespace with variable
+bindings and field names; they must not conflict with other top level
+bindings in scope. 
+That is, a class method can 
+not have the same name as a top level definition, a field name, or
+another class method.
+
+The type of the top-level class method "v_i" is:
+\[
+v_i :: \forall u,\overline{w}.~(C u, cx_i) \Rightarrow t_i
+\]
+The "t_i" must mention "u"; it may mention type variables
+"\overline{w}" other than "u", in which case the type of "v_i" is
+polymorphic in both "u" and "\overline{w}\/".
+The "cx_i" may constrain only "\overline{w}"; in particular,
+the "cx_i" may not constrain "u".
+For example:
+\bprog
+@
+  class Foo a where
+    op :: Num b => a -> b -> a
+@
+\eprog
+Here the type of @op@ is
+"\forall a, b.~(@Foo@~a,~@Num@~b)~ \Rightarrow a \rightarrow b \rightarrow a".
+
+\item
+The "cdecls" may also contain a {\em fixity declaration} for any of the class methods 
+(but for no other values).
+\index{fixity declaration}
+However, since class methods declare top-level values, the fixity declaration for a class
+method may alternatively appear at top level, outside the class declaration.
+
+\item
+Lastly, the "cdecls" may contain a
+{\em default class method}
+\index{default class method}
+for any of the "v_i".  The default class method for "v_i" is used if no binding for it
+is given in a particular @instance@ declaration (see
+Section~\ref{instance-decls}).
+The default method declaration is a normal value definition, except that the
+left hand side may only be a variable or function definition.  For example:
+\bprog
+@
+  class Foo a where
+    op1, op2 :: a -> a
+    (op1, op2) = ...
+@
+\eprog
+is not permitted, because the left hand side of the default declaration is a
+pattern.
+\end{itemize}
+Other than these cases, no other declarations are permitted in "cdecls".
+
+%Figure~\ref{standard-classes} shows some standard \Haskell{} classes,
+%including the use of superclasses.
+%; note the class inclusion diagram on the right.
+%For example, @Eq@ is a superclass of @Ord@, and thus in
+%any context @Ord a@ is equivalent to @(Eq a, Ord a)@.  Figures~\ref{data-class},
+%\ref{prelude-bool} and \ref{numeric-inclusions} show the remaining
+%standard \Haskell{} classes.
+
+A @class@
+declaration with no @where@ part
+\index{class declaration!with an empty @where@ part}
+may be useful for combining a
+collection of classes into a larger one that inherits all of the
+class methods in the original ones.  For example:
+\bprog
+@
+  class  (Read a, Show a) => Textual a
+@
+\eprog
+In such a case, if a type is an instance of all
+superclasses,\index{superclass} it is 
+not {\em automatically} an instance of the subclass, even though the
+subclass has no immediate class methods.  The @instance@ declaration must be
+given explicitly with no @where@ part.
+\index{instance declaration!with an empty @where@ part}
+
+\subsubsection{Instance Declarations}
+\label{instance-decls}
+\index{instance declaration}
+
+@@@
+topdecl	-> @instance@ [scontext @=>@] qtycls inst [@where@ idecls]
+inst	-> gtycon
+	|  @(@ gtycon tyvar_1 ... tyvar_k @)@	& (k>=0, tyvars {\rm distinct})
+	|  @(@ tyvar_1 @,@ ... @,@ tyvar_k @)@	& (k>=2, tyvars {\rm distinct})
+	|  @[@ tyvar @]@
+	|  @(@ tyvar_1 @->@ tyvar_2 @)@		& (tyvar_1 {\rm and} tyvar_2 {\rm distinct})
+idecls	-> @{@ idecl_1 @;@ ... @;@ idecl_n @}@		& (n>=0)
+idecl	-> (funlhs | var) rhs
+	|						& (empty)
+@@@
+\index{topdecl@@{\em topdecl} (@instance@)}
+\indexsyn{inst}%
+\indexsyn{valdefs}%
+\indexsyn{gtycon}%
+\indexsyn{idecl}%
+\indexsyn{idecls}%
+%\index{instance declaration@@{\tt instance} declaration}
+\index{declaration!within an {\tt instance} declaration}
+%\ToDo{tycls left off above}
+An {\em instance declaration} introduces an instance of a class.  Let
+\[ "@class@ cx @=>@ C u @where@ @{@ cbody @}@" \]
+be a @class@ declaration.  The general form of the corresponding
+instance declaration is:
+\[ "@instance@ cx' @=>@ C (T u_1 ... u_k) @where@ @{@ d @}@" \]
+where "k\geq0".
+The type "(T u_1 ... u_k)" must take the form of
+a type constructor "T" applied to simple type variables "u_1, ... u_k";
+furthermore, "T" must not be a type synonym\index{type synonym}, 
+and the "u_i" must all be distinct.
+
+This prohibits instance declarations
+such as:
+\bprog
+@
+  instance C (a,a) where ...
+  instance C (Int,a) where ...
+  instance C [[a]] where ...
+@
+\eprog
+The declarations "d" may contain bindings only for the class
+methods\index{class method} of "C".  It is illegal to give a 
+binding for a class method that is not in scope, but the name under
+which it is in scope is immaterial; in particular, it may be a qualified
+name.  (This rule is identical to that used for subordinate names in
+export lists --- Section~\ref{export}.)
+For example, this is legal, even though @range@ is in scope only
+with the qualified name @Data.Ix.range@.
+\bprog
+@
+  module A where
+    import qualified Data.Ix
+
+    instance Data.Ix.Ix T where
+      range = ...
+@
+\eprog
+The declarations may not contain any type
+signatures or fixity declarations,\index{type signature}\index{fixity declaration}
+since these have already been given in the @class@
+declaration.  As in the case of default class methods
+\index{default class method}%
+(Section~\ref{class-decls}), the method declarations must take the form of
+a variable or function definition.
+
+% However, unlike other declarations, the name of the bound
+% variable may be qualified.  So this is legal:
+% \bprog
+% 
+%  module A where
+%    import qualified B( Foo(op) )
+%    instance B.Foo Int where
+%      B.op = ...
+%
+%\eprog
+% Here, module @A@ imports class @Foo@ from module @B@, and then gives an 
+%instance declaration for @Foo@.  Since @B@ is imported @qualified@, the name
+%of the class method, @op@, is not in scope; so the definition must define @B.op@.
+% Hence the need for the "qfunlhs" and "qvar" left hand sides in "idecl".
+
+If no binding is given for some class method then the
+corresponding default class method
+\index{default class method}
+in the @class@ declaration is used (if
+present); if such a default does
+not exist then the class method of this instance
+is bound to @undefined@ 
+and no compile-time error results.
+
+An @instance@ declaration that makes the type "T" to be an instance
+of class "C" is called a {\em C-T instance declaration}
+\index{instance declaration} and is
+subject to these static restrictions:
+%\index{instance declaration!with respect to modules}
+\begin{itemize}
+
+\item A type may not be declared as an instance of a
+particular class more than once in the program.
+
+\item The class and type must have the same kind; 
+this can be determined using kind inference as described
+in Section~\ref{kindinference}\index{kind}\index{kind inference}.
+
+\item 
+Assume that the type variables in the instance type "(T u_1 ... u_k)"
+satisfy the constraints in the instance context "cx'".  Under this
+assumption, the following two conditions must also be satisfied:
+\begin{enumerate}
+\item
+The constraints expressed by the superclass context "cx[(T u1 ... uk)/u]"
+	of "C" must be satisfied.  In other words, "T" must be an instance
+	of each of "C"'s superclasses and the contexts of all
+        superclass instances must be implied by "cx'".
+\item
+Any constraints on the type variables in the instance type
+      that are required for the class method declarations in "d" to be
+      well-typed must also be satisfied.
+\end{enumerate}
+
+% "T" must be an instance of each of "C"'s superclasses.  More precisely,
+% under the assumption that the constraints expressed by the
+% instance context "cx'" are satisfied, the constraints expressed by the
+% superclass context "cx[(T u1 ... uk)/u]" must also be satisfied.
+% 
+% Furthermore, under the same assumption, any constraints arising from the
+% class method declarations in "d" must also be satisfied.  
+
+In fact, except in pathological cases 
+it is possible to infer from the instance declaration the
+most general instance context "cx'" satisfying the above two constraints, 
+but it is nevertheless mandatory
+to write an explicit instance context.
+\end{itemize}
+The following example illustrates the restrictions imposed by superclass instances:
+\bprog
+@
+  class Foo a => Bar a where ...
+  
+  instance (Eq a, Show a) => Foo [a] where ...
+  
+  instance Num a => Bar [a] where ...
+@
+\eprog
+This example is valid Haskell.  Since @Foo@ is a superclass of @Bar@,
+the second instance declaration is only valid if @[a]@ is an
+instance of @Foo@ under the assumption @Num a@.  
+The first instance declaration does indeed say that @[a]@ is an instance
+of @Foo@ under this assumption, because @Eq@ and @Show@ are superclasses
+of @Num@.
+
+If the two instance declarations instead read like this:
+\bprog
+@
+  instance Num a => Foo [a] where ...
+  
+  instance (Eq a, Show a) => Bar [a] where ...
+@
+\eprog
+then the program would be invalid.  The second instance declaration is
+valid only if @[a]@ is an instance of @Foo@ under the assumptions
+@(Eq a, Show a)@.  But this does not hold, since @[a]@ is only an
+instance of @Foo@ under the stronger assumption @Num a@.
+
+Further examples of 
+@instance@ declarations may be found in Chapter~\ref{stdprelude}.
+
+\subsubsection{Derived Instances}
+\index{derived instance}
+\label{derived-decls}
+
+As mentioned in Section~\ref{datatype-decls}, @data@ and @newtype@
+declarations 
+contain an optional @deriving@ form.  If the form is included, then
+{\em derived instance declarations} are automatically generated for
+the datatype in each of the named classes.
+These instances are subject to the same restrictions as user-defined
+instances.  When deriving a class "C" for a type "T", instances for
+all superclasses of "C" must exist for "T", either via an explicit
+@instance@ declaration or by including the superclass in the
+@deriving@ clause.
+
+Derived instances provide convenient commonly-used operations for
+user-de\-fined da\-ta\-types.  For example, derived instances for datatypes
+in the class @Eq@ define the operations @==@ and @/=@, freeing the
+programmer from the need to define them.
+%and taking advantage of
+%\Haskell{}'s class mechanism to overload these operations.
+
+The only classes in the Prelude for
+which derived instances are allowed are
+@Eq@\indexdi{Eq},
+@Ord@\indexdi{Ord},
+@Enum@\indexdi{Enum},
+@Bounded@\indexdi{Bounded},
+@Show@\indexdi{Show},
+and @Read@\indexdi{Read},
+all mentioned in Figure~\ref{standard-classes}.
+The
+precise details of how the derived instances are generated for each of
+these classes are provided in Chapter~\ref{derived-appendix}, including
+a specification of when such derived instances are possible. 
+%(which is important for the following discussion).
+Classes defined by the standard libraries may also be derivable.
+
+A static error results if it is not possible to derive an @instance@
+declaration over a class named in a @deriving@ form.  For example,
+not all datatypes can properly support class methods in
+@Enum@.\indexclass{Enum}  It is 
+also a static error to give an explicit @instance@ declaration for
+a class that is also derived.
+%These rules also apply to the superclasses
+%of the class in question.
+
+If the @deriving@ form is omitted from a @data@ or @newtype@
+declaration, then {\em no} instance declarations
+are derived for 
+that datatype; that is, omitting a @deriving@ form is equivalent to
+including an empty deriving form: @deriving ()@.
+
+% OLD:
+%On the other hand, if the @deriving@ form is omitted from a @data@
+%declaration, then @instance@ declarations are derived for the datatype
+%in as many of the six classes mentioned above as is possible (see
+%Appendix~\ref{derived-appendix}); that is, no
+%static error will result if the @instance@ declarations cannot be generated.
+
+%OLD:
+%If {\em no} derived @instance@ declarations for a datatype
+%are wanted, then the empty deriving form @deriving ()@ must be given
+%in the @data@ declaration for that type.
+
+\subsubsection{Ambiguous Types, and Defaults for Overloaded Numeric Operations}
+\label{default-decls}
+\index{default declaration@@{\tt default} declaration}
+\index{overloading!defaults}
+
+@@@
+topdecl -> @default@ @(@type_1 @,@ ... @,@ type_n@)@ & (n>=0)
+@@@
+\index{topdecl@@{\em topdecl} (@default@)}
+
+\noindent
+A problem inherent with \Haskell{}-style overloading is the
+possibility of an {\em ambiguous type}.
+\index{ambiguous type}
+For example, using the
+@read@ and @show@ functions defined in Chapter~\ref{derived-appendix},
+and supposing that just @Int@ and @Bool@ are members of @Read@ and
+@Show@, then the expression
+\bprog
+@
+  let x = read "..." in show x	-- invalid
+@
+\eprog
+is ambiguous, because the types for @show@ and @read@,
+\[\ba{ll}
+@show@ & ":: \forall a.~@Show@~ a \Rightarrow a \rightarrow  @String@" \\
+@read@ & ":: \forall a.~@Read@~ a \Rightarrow @String@ \rightarrow a"
+\ea\]
+could be satisfied by instantiating @a@ as either @Int@
+in both cases, or @Bool@.  Such expressions
+are considered ill-typed, a static error.
+
+We say that an expression @e@ has an {\em ambiguous type}
+if, in its type "\forall \overline{u}.~cx \Rightarrow t", 
+there is a type variable "u" in "\overline{u}" that occurs in "cx" 
+but not in "t".  Such types are invalid.
+
+For example, the earlier expression involving @show@ and @read@ has
+an ambiguous type since its type is 
+"\forall a.~ @Show@~ a, @Read@~ a \Rightarrow @String@".
+
+Ambiguous types can only be circumvented by
+input from the user.  One way is through the use of {\em expression
+type-signatures}
+\index{expression type-signature}
+as described in Section~\ref{expression-type-sigs}.
+For example, for the ambiguous expression given earlier, one could
+write:
+\bprog
+@
+  let x = read "..." in show (x::Bool)
+@
+\eprog
+which disambiguates the type.
+
+Occasionally, an otherwise ambiguous expression needs to be made
+the same type as some variable, rather than being given a fixed
+type with an expression type-signature.  This is the purpose
+of the function @asTypeOf@ (Chapter~\ref{stdprelude}):
+"x" @`asTypeOf`@ "y" has the value of "x", but "x" and "y" are
+forced to have the same type.  For example,
+\bprog
+@
+  approxSqrt x = encodeFloat 1 (exponent x `div` 2) `asTypeOf` x
+@
+\eprog
+(See Section~\ref{coercion} for a description of @encodeFloat@ and @exponent@.)
+
+Ambiguities in the class @Num@\indexclass{Num}
+are most common, so \Haskell{}
+provides another way to resolve them---with a {\em
+default declaration}:
+\[
+"@default (@t_1 @,@ ... @,@ t_n@)@"
+\]
+where "n\geq0", and each
+"t_i" must be a type for which "@Num @t_i" holds.
+In situations where an ambiguous type is discovered, an ambiguous type variable, "v", 
+is defaultable if:
+\begin{itemize}
+\item "v" appears only in constraints of the form "C v", where "C" is a class, and
+\item at least one of these classes is a numeric class,
+	(that is, @Num@ or a subclass of @Num@), and 
+\item all of these classes are defined in the Prelude or a standard library
+(Figures~\ref{basic-numeric-1}--\ref{basic-numeric-2}
+show the numeric classes, and
+Figure~\ref{standard-classes}
+shows the classes defined in the Prelude.)
+\end{itemize}
+Each defaultable variable is replaced by the first type in the
+default list that is an instance of all the ambiguous variable's classes.
+It is a static error if no such type is found.
+
+Only one default declaration is permitted per module, and its effect
+is limited to that module.  If no default declaration is given in a
+module then it assumed to be:
+\bprog
+@
+  default (Integer, Double)
+@
+\eprog
+The empty default declaration, @default ()@, turns off all defaults in a module.
+
+\subsection{Nested Declarations}
+\label{nested}
+
+The following declarations may be used in any declaration list,
+including the top level of a module.
+
+\subsubsection{Type Signatures}
+\index{type signature}
+\label{type-signatures}
+
+@@@
+gendecl -> vars @::@ [context @=>@] type
+vars	-> var_1 @,@ ...@,@ var_n		& (n>=1)
+@@@
+\indexsyn{signdecl}%
+\indexsyn{vars}%
+A type signature specifies types for variables, possibly with respect
+to a context.  A type signature has the form:
+\[
+"v_1, ..., v_n @::@ cx @=>@ t"
+\]
+which is equivalent to asserting
+"v_i @::@ cx @=>@ t"
+for each "i" from "1" to "n".  Each "v_i" must have a value binding in
+the same declaration list that contains the type signature; i.e.~it is
+invalid to give a type signature for a variable bound in an
+outer scope.
+Moreover, it is invalid to give more than one type signature for one
+variable, even if the signatures are identical.
+
+As mentioned in Section~\ref{type-syntax},
+every type variable appearing in a signature
+is universally quantified over that signature, and hence
+the scope of a type variable is limited to the type
+signature that contains it.  For example, in the following
+declarations
+\bprog
+@
+  f :: a -> a
+  f x = x :: a			-- invalid
+@
+\eprog
+the @a@'s in the two type signatures are quite distinct.  Indeed,
+these declarations contain a static error, since @x@ does not have
+type "\forall a.~a".  (The type of @x@ is dependent on the type of
+@f@; there is currently no way in \Haskell{} to specify a signature
+for a variable with a dependent type; this is explained in Section
+\ref{monomorphism}.)
+
+If a given program includes a signature
+for a variable "f", then each use of "f" is treated as having the
+declared type.  It is a static error if the same type cannot also be
+inferred for the defining occurrence of "f".
+
+If a variable "f" is defined without providing a corresponding type
+signature declaration, then each use of "f" outside its own declaration
+group (see Section~\ref{dependencyanalysis}) is treated as having the
+corresponding inferred, or {\em principal} type \index{principal type}.
+However, to ensure that type inference is still possible, the defining
+occurrence, and all uses of "f" within its declaration group must have
+the same monomorphic type (from which the principal type is obtained
+by generalization, as described in Section~\ref{generalization}).
+
+%%A type signature for "x" may be more specific than the principal
+%%type derivable from the value binding of "x" (see
+%%Section~\ref{type-semantics}), but it is an error to give a type
+%%that is more
+%%general than, or incomparable to, the principal type.
+%%\index{principal type}
+%%If a more specific type is given then all occurrences of the
+%%variable must be used at the more specific type or at a more
+%%specific type still.
+%
+For example, if we define\nopagebreak[4]
+\bprog
+@
+  sqr x  =  x*x
+@
+\eprog
+then the principal type is 
+"@sqr@ :: \forall a.~ @Num@~ a \Rightarrow a \rightarrow a", 
+which allows
+applications such as @sqr 5@ or @sqr 0.1@.  It is also valid to declare
+a more specific type, such as
+\bprog
+@
+  sqr :: Int -> Int
+@
+\eprog
+but now applications such as @sqr 0.1@ are invalid.  Type signatures such as
+\bprog
+@
+  sqr :: (Num a, Num b) => a -> b     -- invalid
+  sqr :: a -> a                       -- invalid
+@
+\eprog
+are invalid, as they are more general than the principal type of @sqr@.
+
+Type signatures can also be used to support
+{\em polymorphic recursion}\index{polymorphic recursion}.
+The following definition is pathological, but illustrates how a type
+signature can be used to specify a type more general than the one that
+would be inferred:
+\bprog
+@
+  data T a  =  K (T Int) (T a)
+  f         :: T a -> a
+  f (K x y) =  if f x == 1 then f y else undefined
+@
+\eprog
+If we remove the signature declaration, the type of @f@ will be
+inferred as @T Int -> Int@ due to the first recursive call for which
+the argument to @f@ is @T Int@.  Polymorphic recursion allows the user
+to supply the more general type signature, @T a -> a@.
+
+\subsubsection{Fixity Declarations}
+\index{fixity declaration}
+\label{fixity}
+
+@@@
+gendecl	-> fixity [integer] ops
+fixity	-> @infixl@ | @infixr@ | @infix@
+ops	-> op_1 @,@ ... @,@ op_n		&  (n>=1)
+op	-> varop | conop 
+@@@
+\indexsyn{gendecl}%
+\indexsyn{fixity}%
+\indexsyn{ops}%
+\indexsyn{op}%
+%\indextt{infixl}\indextt{infixr}\indextt{infix}
+A fixity declaration gives the fixity and binding
+precedence of one or more operators.  The "integer" in a fixity declaration
+must be in the range "0" to "9".
+A fixity declaration may appear anywhere that 
+a type signature appears and, like a type signature, declares a property of
+a particular operator.  Also like a type signature,
+a fixity declaration can only occur in the same sequence of declarations as
+the declaration of the operator itself, and at most one fixity declaration
+may be given for any operator.  (Class methods are a minor exception;
+their fixity declarations can occur either in the class declaration itself
+or at top level.)
+
+There are three kinds of fixity, non-, left- and right-associativity
+(@infix@, @infixl@, and @infixr@, respectively), and ten precedence
+levels, 0 to 9 inclusive (level 0 binds least tightly, and level 9
+binds most tightly).  If the "digit" is omitted, level 9 is assumed.
+Any operator lacking a fixity declaration
+is assumed to be @infixl 9@ (See Section~\ref{expressions} for more on
+the use of fixities).
+Table~\ref{prelude-fixities} lists the fixities and precedences of
+the operators defined in the Prelude.
+
+\begin{table}[htb]
+\[
+\centerline{
+\bto{|r||l|l|l|}
+\hline 
+Prec-  & Left associative 	& Non-associative	& Right associative \\
+edence & operators		& operators     	& operators \\ \hline\hline
+%9  & @!@, @!!@, @//@	&				& @.@             \\ \hline
+9  & @!!@         	&				& @.@		  \\ \hline
+8  &			&				& @^@, @^^@, @**@ \\ \hline
+7  & @*@, @/@, @`div`@, 		&		&  \\
+   & @`mod`@, @`rem`@, @`quot`@  	&		&  \\ \hline
+6  & @+@, @-@		& 				&		  \\ \hline
+5  &			& 				& @:@, @++@	  \\ \hline
+4  & 			& @==@, @/=@, @<@, @<=@, @>@, @>=@, &		  \\
+   & 			& @`elem`@, @`notElem`@ 	&		  \\ \hline
+3  &			&				& @&&@		  \\ \hline
+2  &			&				& @||@		  \\ \hline
+1  &	@>>@, @>>=@	&				& 	  	\\ \hline
+0  &			&				& @$@, @$!@, @`seq`@    \\ \hline
+\eto}
+\]
+%**<div align=center> <h4>Table 2</h4> </div>
+\ecaption{Precedences and fixities of prelude operators}
+% Removed (:%) -- infixl 7, on the grounds that it's not exported from 
+% PreludeRatio!
+\label{prelude-fixities}
+\index{""!""!@@{\tt  {\char'041}{\char'041}}}
+\indextt{.}
+\indextt{**}
+\index{^@@{\tt  {\char'136}}} % this is ^
+\index{^^@@{\tt  {\char'136}{\char'136}}} % this is ^^
+\indextt{*}
+\indextt{/}
+\indextt{div}
+\indextt{mod}
+\indextt{rem}
+\indextt{+}
+\indextt{-}
+\indextt{:}
+\indextt{++}
+\indextt{/=}
+\indextt{<}
+\indextt{<=}
+\indextt{==}
+\indextt{>}
+\indextt{>=}
+\indextt{elem}
+\indextt{notElem}
+\index{&&@@{\tt  \&\&}}
+\index{\vert\vert@@{\tt  {\char'174}{\char'174}}}
+\indextt{>>}
+\indextt{>>=}
+\index{$@@{\tt  {\char'044}}}
+\end{table}
+
+% Old table
+% \begin{tabular}{|c|l|l|}\hline
+% Precedence & Fixity & Operators \\ \hline
+% 9 & @infixl@ & @!@, @!!@, @//@ \\
+%   & @infixr@ & @.@ \\
+% 8 & @infixr@ & @**@, @^@, @^^@ \\
+% 7 & @infixl@ & @%@, @*@ \\
+%   & @infix@  & @/@, @`div`@, @`mod`@, @`rem`@ \\
+% 6 & @infixl@ & @+@, @-@ \\
+%   & @infix@  & @:+@ \\
+% 5 & @infixr@ & @:@, @++@ \\
+%   & @infix@  & @\\@ \\
+% 4 & @infix@  & @/=@, @<@, @<=@, @==@, @>@, @>=@, @`elem`@, @`notElem`@ \\
+% 3 & @infixr@ & @&&@ \\
+% 2 & @infixr@ & @||@ \\
+% 1 & @infixr@  & @>>@, @>>=@ \\
+% 0 & @infixr@ & @$@ \\ \hline
+% \end{tabular}}
+
+Fixity is a property of a particular entity (constructor or variable), just like
+its type; fixity is not a property of that entity's {\em name}.
+For example: 
+\bprog
+@
+  module Bar( op ) where
+    infixr 7 `op`
+    op = ...
+  
+  module Foo where
+    import qualified Bar
+    infix 3 `op`
+  
+    a `op` b = (a `Bar.op` b) + 1
+  
+    f x = let
+	     p `op` q = (p `Foo.op` q) * 2
+	  in ...
+@
+\eprog
+Here, @`Bar.op`@ is @infixr 7@, @`Foo.op`@ is @infix 3@, and
+the nested definition of @op@ in @f@'s right-hand side has the
+default fixity of @infixl 9@.  (It would also be possible
+to give a fixity to the nested definition of @`op`@ with a nested
+fixity declaration.)
+
+
+
+\subsubsection{Function and Pattern Bindings}
+ \label{function-bindings}\label{pattern-bindings}
+\index{function binding}\index{pattern binding}
+
+@@@
+decl	->  (funlhs | \hprime{pat}) rhs
+
+funlhs	->  var apat \{ apat \}
+        |   \hprime{pat varop pat}
+	|   @(@ funlhs @)@  apat \{ apat \}
+
+rhs	->  @=@ exp [@where@ decls]
+	|   gdrhs [@where@ decls]
+
+gdrhs	->  \hprime{guards @=@ exp [gdrhs]}
+
+\hprime{guards}	->  \hprime{@|@ guard_1, ..., guard_n}             & \hprime{(n>=1)}
+
+\indexsyn{guard}\hprime{guard}	-> \hprime{pat @<-@ infixexp} 	& (\hprime{\tr{pattern guard}})
+         | \hprime{@let@ decls}		& (\hprime{\tr{local declaration}})
+         | infixexp		& (\tr{boolean guard})
+@@@
+\indexsyn{decl}%
+\indexsyn{pat}%
+\indexsyn{rhs}%
+\indexsyn{gdrhs}%
+\indexsyn{guards}%
+\indexsyn{guard}%
+
+We distinguish two cases within this syntax: a {\em pattern binding}
+occurs when the left hand side is a \hprime{"pat"}; 
+otherwise, the binding is called a {\em function
+binding}.  Either binding may appear at the top-level of a module or
+within a @where@ or @let@ construct.  
+
+\subsubsubsection{Function bindings}
+\index{function binding}
+A function binding binds a variable to a function value.  The general
+form of a function binding for variable "x" is:
+\[\ba{lll}
+"x" & "p_{11} ... p_{1k}" & "match_1"\\
+"..." \\
+"x" & "p_{n1} ... p_{nk}" & "match_n"
+\ea\]
+where each "p_{ij}" is a pattern, and where each "match_i" is of the
+general form:
+\[\ba{l}
+"@=@ e_i @where {@ decls_i @}@"
+\ea\]
+or
+\[\ba{lll}
+
+"@|@ \hprime{gs_{i1}}"   & "@=@ e_{i1} " \\
+"..." \\
+"@|@ \hprime{gs_{im_i}}" & "@=@ e_{im_i}" \\
+               & \multicolumn{2}{l}{"@where {@ decls_i @}@"}
+\ea\]
+and where "n>=1", "1<=i<=n", "m_i>=1".  The former is treated
+as shorthand for a particular case of the latter, namely:
+\[\ba{l}
+"@| True =@ e_i @where {@ decls_i @}@"
+\ea\]
+
+Note that all clauses defining a function must be contiguous, and the
+number of patterns in each clause must be the same.  The set of
+patterns corresponding to each match must be {\em
+linear}\index{linearity}\index{linear pattern}---no variable is
+allowed to appear more than once in the entire set.
+
+Alternative syntax is provided for binding functional values to infix
+operators.  For example, these three function
+definitions are all equivalent:
+\bprog
+@
+  plus x y z = x+y+z
+  x `plus` y = \ z -> x+y+z
+  (x `plus` y) z = x+y+z
+@
+\eprog
+
+\begin{haskellprime}
+
+Note that fixity resolution applies to the infix variants of the
+function binding in the same way as for expressions
+(Section~\ref{fixity-resolution}).  Applying fixity resolution to the
+left side of the equals in a function binding must leave the "varop"
+being defined at the top level.  For example, if we are defining a new
+operator @##@ with precedence 6, then this definition would be
+illegal:
+\bprog
+@
+  a ## b : xs = exp
+@
+\eprog
+because @:@ has precedence 5, so the left hand side resolves to
+@(a ## x) : xs@, and this cannot be a pattern binding because @(a ## x)@
+is not a valid pattern.
+
+\end{haskellprime}
+
+\outline{
+\paragraph*{Translation:}
+The general binding form for functions is semantically
+equivalent to the equation (i.e.~simple pattern binding):
+\[
+"x @= \@ x_1 ... x_k @-> case (@x_1@, @...@, @x_k@) of@"
+\ba[t]{lcl}
+"@(@p_{11}, ..., p_{1k}@)@ match_1"  \\
+"..." \\
+"@(@p_{n1}, ..., p_{nk}@)@ match_n"
+\ea\]
+where the "x_i" are new identifiers.
+}
+
+\subsubsubsection{Pattern bindings}
+\label{patbind}
+\index{pattern binding}
+
+A pattern binding binds variables to values.  A {\em simple} pattern
+binding has form "p = e".
+\index{simple pattern binding}
+The pattern "p" is
+matched ``lazily'' as an irrefutable pattern\index{irrefutable
+pattern}, as if there were an implicit @~@ in front 
+of it.  See the translation in
+Section~\ref{let-expressions}.
+
+The {\em general} form of a pattern binding is "p match", where a
+"match" is the same structure as for function bindings above; in other
+words, a pattern binding is:
+\[\ba{rcl}
+"p" & "@|@ \hprime{gs_{1}}"   & "@=@ e_{1}" \\
+    & "@|@ \hprime{gs_{2}}"   & "@=@ e_{2}" \\
+    & "..." \\
+    & "@|@ \hprime{gs_{m}}"   & "@=@ e_{m}" \\
+    & \multicolumn{2}{l}{"@where {@ decls @}@"}
+\ea\]
+
+%{\em Note}: the simple form
+%\WeSay{Yes}
+%"p @=@ e" is equivalent to "p @| True =@ e".
+
+\outline{
+\paragraph*{Translation:}
+The pattern binding above is semantically equivalent to this
+simple pattern binding:
+\[\ba{lcl}
+"p" &@=@& "@let@ decls @in@" \\
+    &   & \hprime{@case () of @} \\
+    &   & \hprime{"@  () | @gs_{1}@ -> @e_{1}"} \\
+    &   & \hprime{"@     | @gs_{2}@ -> @e_{2}"} \\
+    &   & \hprime{"@       @..."} \\
+    &   & \hprime{"@     | @gs_{m}@ -> @e_{m}"} \\
+    &   & \hprime{"@  _ -> error "Unmatched pattern"@"}
+\ea\]
+}
+
+\subsection{Static Semantics of Function and Pattern Bindings}
+\label{dependencyanalysis}
+
+The static semantics of the function and pattern bindings of
+a @let@ expression or @where@ clause
+% (including that of the top-level of
+% a program that has been translated into a @let@ expression as
+% described at the beginning of Section~\ref{modules})
+are discussed in this section.
+
+\subsubsection{Dependency Analysis}
+\label{depend-anal}
+
+In general the static semantics are given by \hprime{applying} the
+normal Hindley-Milner\index{Hindley-Milner type system} inference
+rules.  \hprime{In order to increase polymorphism, these rules are applied to
+groups of bindings identified by a \emph{dependency analysis}.}
+
+\begin{haskellprime}
+
+A binding "b1" \emph{depends} on a binding "b2" in the same list of
+declarations if either
+
+\begin{enumerate}
+\item "b1" contains a free identifier that has no type signature and
+is bound by "b2", or
+\item "b1" depends on a binding that depends on "b2".
+\end{enumerate}
+
+A \emph{declaration group} is a minimal set of mutually dependent
+bindings. Hindley-Milner type inference is applied to each declaration
+group in dependency order. The order of declarations in @where@/@let@
+constructs is irrelevant.
+
+\end{haskellprime}
+
+% Notes: from http://hackage.haskell.org/trac/haskell-prime/wiki/RelaxedDependencyAnalysis
+% 
+%     * also tightens up the original wording, which didn't mention that the declarations had to be in the same list and also defined declaration group but not dependency.
+%     * defining dependencies between bindings is a little simpler than dependencies between variables.
+%     * the dependency analysis transformation formerly listed in this
+%     * section is no longer always possible. 
+
+%----------------
+
+\subsubsection{Generalization}
+\label{generalization}
+
+\begin{haskellprime}
+
+The Hindley-Milner type system assigns types to a let-expression in two stages:
+
+\begin{enumerate}
+\item The declaration groups are considered in dependency order. For
+each group, a type with no universal quantification is inferred for
+each variable bound in the group. Then, all type variables that occur
+in these types are universally quantified unless they are associated
+with bound variables in the type environment; this is called
+generalization.
+
+\item Finally, the body of the let-expression is typed.
+\end{enumerate}
+
+\end{haskellprime}
+
+% Notes: from http://hackage.haskell.org/trac/haskell-prime/wiki/RelaxedDependencyAnalysis
+% 
+%     * The original deals with let's consisting of a single binding, instead of declaration groups. Note that we can no longer assume that a let has a single declaration group.
+%     * The original does not deal with functions, non-trivial patterns
+%     * or recursion. 
+
+For example, consider the declaration
+\bprog
+@
+  f x = let g y = (y,y)
+        in ...
+
+@
+\eprog
+The type of @g@'s definition is 
+"a \rightarrow (a,a)".  The generalization step
+attributes to @g@ the polymorphic type 
+"\forall a.~ a \rightarrow (a,a)",
+after which the typing of the ``@...@'' part can proceed.
+
+When typing overloaded definitions, all the overloading 
+constraints from a single declaration group are collected together, 
+to form the context for the type of each variable declared in the group.
+For example, in the definition:
+\bprog
+@
+  f x = let g1 x y = if x>y then show x else g2 y x
+            g2 p q = g1 q p
+        in ...
+@
+\eprog
+The types of the definitions of @g1@ and @g2@ are both
+"a \rightarrow a \rightarrow @String@", and the accumulated constraints are
+"@Ord@~a" (arising from the use of @>@), and "@Show@~a" (arising from the
+use of @show@).
+The type variables appearing in this collection of constraints are
+called the {\em constrained type variables}.
+
+The generalization step attributes to both @g1@ and @g2@ the type
+\[
+"\forall a.~(@Ord@~a,~@Show@~a) \Rightarrow a \rightarrow a \rightarrow @String@"
+\]
+Notice that @g2@ is overloaded in the same way as @g1@ even though the
+occurrences of @>@ and @show@ are in the definition of @g1@.
+
+If the programmer supplies explicit type signatures for more than one variable
+in a declaration group, the contexts of these signatures must be 
+identical up to renaming of the type variables.
+
+\subsubsection{Context Reduction Errors}
+\label{context-reduction}
+\index{context reduction}
+As mentioned in Section~\ref{type-semantics}, the context of a type
+may constrain only a type variable, or the application of a type variable
+to one or more types.  Hence, types produced by
+generalization must be expressed in a form in which all context
+constraints have be reduced to this ``head normal form''.
+Consider, for example, the
+definition:
+\bprog
+@
+  f xs y  =  xs == [y]
+@
+\eprog
+Its type is given by
+\bprog
+@
+  f :: Eq a => [a] -> a -> Bool
+@
+\eprog
+and not
+\bprog
+@
+  f :: Eq [a] => [a] -> a -> Bool
+@
+\eprog
+Even though the equality is taken at the list type, the context must
+be simplified, using the instance declaration for @Eq@ on lists,
+before generalization.  If no such instance is in scope, a static
+error occurs.
+
+Here is an example that shows the need for a
+constraint of the form "C (m t)" where m is one of the type
+variables being generalized; that is, where the class "C" applies to a type
+expression that is not a type variable or a type constructor.
+Consider:
+\bprog
+@
+  f :: (Monad m, Eq (m a)) => a -> m a -> Bool
+  f x y = return x == y
+@
+\eprog
+The type of @return@ is @Monad m => a -> m a@; the type of @(==)@ is
+@Eq a => a -> a -> Bool@.  The type of @f@ should be
+therefore @(Monad m, Eq (m a)) => a -> m a -> Bool@, and the context
+cannot be simplified further.
+
+The instance declaration derived from a data type @deriving@ clause
+(see Section~\ref{derived-decls})
+must, like any instance declaration, have a {\em simple} context; that is,
+all the constraints must be of the form "C a", where "a" is a type variable.
+For example, in the type
+\bprog
+@
+  data Apply a b = App (a b)  deriving Show
+@
+\eprog
+the derived Show instance will produce a context @Show (a b)@, which
+cannot be reduced and is not simple; thus a static error results.
+
+\subsubsection{Monomorphism}
+\label{monomorphism}
+Sometimes it is not possible to generalize over all the type variables
+used in the type of the definition.
+For example, consider the declaration\nopagebreak[4]
+\bprog
+@
+  f x = let g y z = ([x,y], z)
+        in ...
+@
+\eprog
+In an environment where @x@ has type "a",
+the type of @g@'s definition is 
+"a \rightarrow b \rightarrow @([@a@]@,b@)@".
+The generalization step attributes to @g@ the type 
+"\forall b.~ a \rightarrow b \rightarrow @([@a@]@,b@)@";
+only "b" can be universally quantified because "a" occurs in the
+type environment.
+We say that the type of @g@ is {\em monomorphic in the type variable "a"}.
+\index{monomorphic type variable}
+
+The effect of such monomorphism is that the first argument of all 
+applications of @g@ must be of a single type.  
+For example, it would be valid for
+the ``@...@'' to be
+\bprog
+@
+  (g True, g False)
+@
+\eprog
+(which would, incidentally, force @x@ to have type @Bool@) but invalid
+for it to be 
+\bprog
+@
+  (g True, g 'c')
+@
+\eprog
+In general, a type "\forall \overline{u}.~cx \Rightarrow t"
+is said to be {\em monomorphic}
+\index{monomorphic type variable}
+in the type variable "a" if "a" is free in
+"\forall \overline{u}.~cx \Rightarrow t".
+
+It is worth noting that the explicit type signatures provided by \Haskell{}
+are not powerful enough to express types that include monomorphic type
+variables.  For example, we cannot write
+\bprog
+@
+  f x = let 
+          g :: a -> b -> ([a],b)
+          g y z = ([x,y], z)
+        in ...
+@
+\eprog
+because that would claim that @g@ was polymorphic in both @a@ and @b@
+(Section~\ref{type-signatures}).  In this program, @g@ can only be given
+a type signature if its first argument is restricted to a type not involving
+type variables; for example
+\bprog
+@
+  g :: Int -> b -> ([Int],b)
+@
+\eprog
+This signature would also cause @x@ to have type @Int@.
+
+\subsubsection{The Monomorphism Restriction}
+\index{monomorphism restriction}
+\label{sect:monomorphism-restriction}
+
+\Haskell{} places certain extra restrictions on the generalization
+step, beyond the standard Hindley-Milner restriction described above,
+which further reduces polymorphism in particular cases.
+
+The monomorphism restriction depends on the binding syntax of a
+variable.  Recall that a variable is bound by either a {\em function
+binding} or a {\em pattern binding}, and that a {\em simple} pattern
+binding is a pattern binding in which the pattern consists of only a
+single variable (Section~\ref{pattern-bindings}).
+
+The following two rules define the monomorphism restriction:
+\outline{
+\paragraph*{The monomorphism restriction}
+
+\begin{description}
+\item[Rule 1.]
+We say that a given declaration group is {\em unrestricted} if and only if:
+\begin{description}
+\item[(a):]
+every variable in the group is bound by a function binding or a simple
+pattern binding\index{simple pattern binding} (Section~\ref{patbind}), {\em and}
+\item[(b):]
+an explicit type signature is given for every variable in the group
+that is bound by simple pattern binding.
+\end{description}
+The usual Hindley-Milner restriction on polymorphism is that
+only type variables that do not occur free in the environment may be generalized.
+In addition, {\em the constrained type variables of
+a restricted declaration group may not be generalized}
+in the generalization step for that group.
+(Recall that a type variable is constrained if it must belong
+to some type class; see Section~\ref{generalization}.)
+% 
+% \item[Rule 1.]
+% The variables of a given declaration group are monomorphic in
+% all their constrained type variables if and only if:
+% \begin{description}
+% \item[either (a):]
+% one or more variables in the declaration group 
+% is bound by a non-simple pattern binding.
+% \item[or (b):]
+% one or more variables in the declaration group is bound 
+% by a simple pattern binding, and
+% no type signature is given for any of the variables in the group.
+% \end{description}
+
+\item[Rule 2.]
+Any monomorphic type variables that remain when type inference for
+an entire module is complete, are considered {\em ambiguous}\index{ambiguous type},
+and are resolved to particular types using the defaulting 
+rules (Section~\ref{default-decls}).
+\end{description}
+}
+
+% When all variables in a declaration group are declared using function
+% binding the monomorphism restriction will not apply.  Any variable
+% declared in a non-simple pattern binding will invoke monomorphism for
+% the entire group containing it.  Simple pattern bindings will be
+% monomorphic unless a type signature is supplied.
+%
+
+\paragraph*{Motivation}
+
+Rule 1 is required for two reasons, both of which are fairly subtle.
+\begin{itemize}
+\item
+{\em Rule 1 prevents computations from being unexpectedly repeated.}
+For example, @genericLength@ is a standard function (in library @Data.List@) whose
+type is given by
+\bprog
+@
+  genericLength :: Num a => [b] -> a
+@
+\eprog
+Now consider the following expression:
+\bprog
+@
+  let { len = genericLength xs } in (len, len)
+@
+\eprog
+It looks as if @len@ should be computed only once, but without Rule~1 it might
+be computed twice, once at each of two different overloadings.  If the 
+programmer does actually wish the computation to be repeated, an explicit
+type signature may be added:
+\bprog
+@
+  let { len :: Num a => a; len = genericLength xs } in (len, len)
+@
+\eprog
+
+\item {\em Rule~1 prevents ambiguity.}  For example, consider the declaration
+group
+\bprog
+@
+  [(n,s)] = reads t
+@
+\eprog
+Recall that @reads@ is a standard function whose type is given by the
+signature
+\bprog
+@
+  reads :: (Read a) => String -> [(a,String)]
+@
+\eprog
+Without Rule~1, @n@ would be assigned the 
+type "\forall a.~@Read@~a \Rightarrow a" 
+and @s@ the type "\forall a." "@Read@~a" "\Rightarrow @String@".
+The latter is an invalid type, because it is inherently ambiguous.
+It is not possible to determine at what overloading to use @s@, nor
+can this be solved by adding a type signature for @s@.
+Hence, when {\em non-simple} pattern bindings\index{simple pattern binding}
+are used (Section~\ref{patbind}), the types inferred are 
+always monomorphic in their constrained type variables, irrespective of whether
+a type signature is provided.
+In this case, both @n@ and @s@ are monomorphic in "a".
+
+The same constraint applies to pattern-bound functions.  For example, in
+\bprog
+@
+  (f,g) = ((+),(-))
+@
+\eprog
+both @f@ and @g@ are monomorphic regardless of any type
+signatures supplied for @f@ or @g@.
+\end{itemize}
+
+Rule~2 is required because there is no way to enforce monomorphic use
+of an {\em exported} binding, except by performing type inference on modules
+outside the current module.  Rule~2 states that the exact types of all
+the variables bound in a module must be determined by that module alone, and not
+by any modules that import it.
+\bprog
+@
+  module M1(len1) where
+    default( Int, Double )
+    len1 = genericLength "Hello"
+
+  module M2 where
+    import M1(len1)
+    len2 = (2*len1) :: Rational
+@
+\eprog
+When type inference on module @M1@ is complete, @len1@ has the 
+monomorphic type @Num a => a@ (by Rule 1).  Rule 2 now states that
+the monomorphic type variable @a@ is ambiguous, and must be resolved using
+the defaulting rules of Section~\ref{default-decls}.
+Hence, @len1@ gets type @Int@, and its use in @len2@ is type-incorrect.
+(If the above code is actually what is wanted, a type signature on
+@len1@ would solve the problem.)
+
+This issue does not arise for nested bindings, because their entire scope is 
+visible to the compiler.
+
+\paragraph*{Consequences}
+
+The monomorphism rule has a number of consequences for the programmer.
+Anything defined with function syntax usually
+generalizes as a function is expected to.  Thus in
+\bprog
+@
+  f x y = x+y
+@
+\eprog
+the function @f@ may be used at any overloading in class @Num@.
+There is no danger of recomputation here.  However, the same function
+defined with pattern syntax:
+\bprog
+@
+  f = \x -> \y -> x+y
+@
+\eprog
+requires a type signature if @f@ is to be fully overloaded.
+Many functions are most naturally defined using simple pattern
+bindings; the user must be careful to affix these with type signatures
+to retain full overloading.  The standard prelude contains many
+examples of this:
+\bprog
+@
+  sum  :: (Num a) => [a] -> a
+  sum  =  foldl (+) 0  
+@
+\eprog
+
+Rule~1 applies to both top-level and nested definitions.  Consider
+\bprog
+@
+  module M where
+    len1 = genericLength "Hello"
+    len2 = (2*len1) :: Rational
+@
+\eprog
+Here, type inference finds that @len1@ has the monomorphic type (@Num a => a@);
+and the type variable @a@ is resolved to @Rational@ when performing type
+inference on @len2@.
+
+% Even when a function is defined using a function binding, it may still
+% be made monomorphic by another variable in the same declaration group.
+% Since groups defined through mutually recursive functions need not be
+% syntacticly adjacent, it may be difficult to see where overloading is
+% being lost.  In this example @fact'@ is defined with a pattern binding
+% and forces @fact@ to be monomorphic in the absence of a type signature
+% for either @fact@ or @fact'@.  This would in turn result in an error as
+% per Rule~2.
+% \bprog
+% 
+% module Mod1(fact)
+% import Mod2
+% fact 0 = 1
+% fact n = n*fact'(n-1)
+% 
+% module Mod2(fact')
+% import Mod1
+% fact' = fact
+% 
+% \eprog
+
+\subsection{Kind Inference}
+\index{kind}
+\index{kind inference}
+\label{kindinference}
+
+This section describes the rules that are used to perform {\em kind
+inference}, i.e. to calculate a suitable kind for each type
+constructor and class appearing in a given
+program.
+
+The first step in the kind inference process is to arrange the set of
+datatype, synonym, and class definitions into dependency groups.  This can
+be achieved in much the same way as the dependency analysis for value
+declarations that was described in Section~\ref{dependencyanalysis}.
+For example, the following program fragment includes the definition
+of a datatype constructor @D@, a synonym @S@ and a class @C@, all of
+which would be included in the same dependency group:
+\bprog
+@
+  data C a => D a = Foo (S a)
+  type S a = [D a]
+  class C a where
+      bar :: a -> D a -> Bool
+@
+\eprog
+The kinds of variables, constructors, and classes within each group
+are determined using standard techniques of type inference and
+kind-preserving unification \cite{jones:cclasses}.  For example, in the
+definitions above, the parameter @a@ appears as an argument of the
+function constructor @(->)@ in the type of @bar@ and hence must
+have kind $\ast$.  It follows that both @D@ and @S@ must have
+kind $\ast\rightarrow\ast$ and that every instance of class @C@ must
+have kind $\ast$.
+
+% The kind of any constructor that is exported from a module without
+% exposing its definition must be specified explicitly in the interface
+% for that module.  This is described in Section~\ref{somebodyneedstofillthisin}.
+
+It is possible that some parts of an inferred kind may not be fully
+determined by the corresponding definitions; in such cases, a default
+of $\ast$ is assumed.  For example, we could assume an arbitrary kind
+$\kappa$ for the @a@ parameter in each of the following examples:
+\bprog
+@
+  data App f a = A (f a)
+  data Tree a  = Leaf | Fork (Tree a) (Tree a)
+@
+\eprog
+This would give kinds
+$(\kappa\rightarrow\ast)\rightarrow\kappa\rightarrow\ast$ and
+$\kappa\rightarrow\ast$ for @App@ and @Tree@, respectively, for any
+kind $\kappa$, and would require an extension to allow polymorphic
+kinds.  Instead, using the default binding $\kappa=\ast$, the
+actual kinds for these two constructors are
+$(\ast\rightarrow\ast)\rightarrow\ast\rightarrow\ast$ and
+$\ast\rightarrow\ast$, respectively.
+
+Defaults are applied to each dependency group without consideration of
+the ways in which particular type constructor constants or classes are
+used in later dependency groups or elsewhere in the program.  For example,
+adding the following definition to those above does not influence the
+kind inferred for @Tree@ (by changing it to
+$(\ast\rightarrow\ast)\rightarrow\ast$, for instance), and instead
+generates a static error because the kind of @[]@, $\ast\rightarrow\ast$,
+does not match the kind $\ast$ that is expected for an argument of @Tree@:
+\bprog
+@
+  type FunnyTree = Tree []     -- invalid
+@
+\eprog
+This is important because it ensures that each constructor and class are
+used consistently with the same kind whenever they are in scope.
+
+%**~footer
+
+% Local Variables: 
+% mode: latex
+% End:

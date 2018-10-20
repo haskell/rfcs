@@ -1,0 +1,524 @@
+% Formatting for double-sided
+\documentclass[twoside,10pt]{book}
+
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{makeidx}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[dvipsnames,usenames]{color}
+\usepackage[bookmarks=true]{hyperref}
+
+% allegedly produces nicer spacing, see
+%     http://stackoverflow.com/questions/414179/what-are-the-relative-merits-of-pdflatex
+% However, it didn't seem to make any difference for me other than 
+% make pdflatex slower:
+%\usepackage{microtype}
+
+\evensidemargin=0in
+\oddsidemargin=.5in
+\sloppy
+
+%---------------------------------------------------------------------
+% Joe Fasel said this "twosidefix" is necessary if you really
+% have a two-sided printer:
+%	(note: double @@'s for verbatim-ery)
+\makeatletter
+\def\titlepage{\@@restonecolfalse\if@@twocolumn\@@restonecoltrue\onecolumn
+ \else \newpage \fi \thispagestyle{empty}\c@@page\m@@ne}
+\def\endtitlepage{\if@@twoside\newpage\thispagestyle{empty}\hbox{}
+			\else \c@@page\@@z \fi
+   \if@@restonecol\twocolumn \else \newpage \fi}
+\makeatother
+%---------------------------------------------------------------------
+
+% conditional compilation for HTML/typeset
+\newcommand{\ifhtml}[2]{%
+\ifx \HCode\Undef
+#2
+\else
+#1
+\fi
+}
+
+% the major sections have \cleardoublepages between them
+% if you want those between EVERY section, change the
+% following defn:
+\newcommand{\startnewsection}{\clearpage}
+%
+% if doing one-sided printing, change this defn to
+% be just "\clearpage":
+\newcommand{\startnewstuff}{\cleardoublepage}
+% keep some pages from looking unbelievably appalling
+\raggedbottom
+
+% Fix those ugly floating figures.
+\renewcommand{\floatpagefraction}{0.1}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\topfraction}{1.0}
+\renewcommand{\bottomfraction}{1.0}
+
+% table of contents: show only down to subsections
+\setcounter{tocdepth}{3}
+\setcounter{secnumdepth}{3}
+
+% general formatting
+\textheight=8.5in
+\textwidth=6.0in
+\topmargin=0in
+\pagestyle{headings}
+
+\makeindex
+% an extra thing for makeindex
+\newcommand{\hseealso}[2]{{\em see also\/} #1}
+
+% NEWCOMMANDS
+
+% general
+\newcommand{\folks}[1]{\begin{quote}\sf#1\end{quote}}
+\newcommand{\sectionpart}[1]{\vspace{2 ex}\noindent{\bf #1}}
+\newcommand{\bq}{\begin{quote}}
+\newcommand{\eq}{\end{quote}}
+\newcommand{\bt}{\begin{tabular}}
+\newcommand{\et}{\end{tabular}}
+\newcommand{\bto}{\begin{tabular}}
+\newcommand{\eto}{\end{tabular}}
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\struthack}[1]{\rule{0pt}{#1}}
+\newcommand{\inputHS}[1]{{\small \input{#1}}}
+% Use smaller font 
+
+\newcommand{\ToDo}[1]{}
+%\newcommand{\ToDo}[1]{({\bf $\spadesuit$ ToDo:} {\em #1})}
+
+\newcommand{\WeSay}[1]{}
+%\newcommand{\WeSay}[1]{({\bf $\clubsuit$ YaleSays:} {\em #1})}
+
+\newcommand{\anchor}[2]{#2}
+
+% indexing
+\newcommand{\indextt}[1]{\index{#1@@{\tt #1}}}
+\newcommand{\indexsyn}[1]{\index{#1@@{\it #1}}}
+\newcommand{\indexmodule}[1]{\index{#1@@{\tt #1} (module)}}
+\newcommand{\indextycon}[1]{\index{#1@@{\tt #1} (datatype)}}
+\newcommand{\indexsynonym}[1]{\index{#1@@{\tt #1} (type synonym)}}
+\newcommand{\indexclass}[1]{\index{#1@@{\tt #1} (class)}}
+\newcommand{\indexdi}[1]{\index{#1@@{\tt #1} (class)!derived instance}}
+\newcommand{\indexnote}[1]{#1n}
+\newcommand{\emptystr}{[\,]}
+\newcommand{\ignorehtml}[1]{#1}
+
+\makeatletter
+\def\theindex{\@@restonecoltrue\if@@twocolumn\@@restonecolfalse\fi
+\columnseprule \z@@
+\columnsep 35pt\twocolumn[\section*{Index}
+	\addcontentsline{toc}{part}{Index}
+	\input{index-intro}\vskip 20pt]
+ \@@mkboth{INDEX}{INDEX}\thispagestyle{plain}\parindent\z@@
+ \parskip\z@@ plus .3pt\relax\let\item\@@idxitem
+}
+\makeatother
+
+% outlined figures
+\newcommand{\ecaption}[1]{\vspace{-1 ex}\caption{#1}\vspace{1 ex}}
+\newsavebox{\fmbox}
+
+\newenvironment{outlineenv}
+  {\begin{lrbox}{\fmbox}%
+   \begin{minipage}{415pt}%
+   \vspace{1 ex}}
+  {\end{minipage}%
+   \vspace{1 ex}%
+    \end{lrbox}%
+    \begin{center}%
+    \fbox{\usebox{\fmbox}}%
+     \end{center}}
+
+\newcommand{\outline}[1]{%
+\begin{lrbox}{\fmbox}%
+\begin{minipage}{415pt}%
+\vspace{1 ex}
+#1  
+\end{minipage}%
+\vspace{1 ex}%
+\end{lrbox}%
+\begin{center}%
+\fbox{\usebox{\fmbox}}%
+\end{center}
+}
+
+\newcommand{\outlinec}{\outline}
+
+% we used to have a complicated arrangement with a tabular environment
+% to indent the code blocks a little, but it ran into difficulties
+% when I started using the verbatim environment for code, also it
+% looked bad in the HTML output.  The simple way works best: just use
+% the quote environment. --SDM 4/2010
+\newcommand{\bprog}{\vspace{-1ex}\begin{quote}}
+\newcommand{\eprog}{\end{quote}\vspace{-1ex}}
+\newcommand{\bprogB}{}
+\newcommand{\eprogB}{}
+\newcommand{\eprogNoSkip}{\eprog}
+
+% general from ffi.tex
+%
+\newcommand{\clearemptydoublepage}{%
+  \newpage{\pagestyle{empty}\cleardoublepage}}
+
+%special characters
+\newcommand{\bkq}{\mbox{\tt \char'022}} % (syntax) backquote char
+\newcommand{\bkqB}{\bkq\hspace{-.2em}} % (syntax) backquote char (Before)
+\newcommand{\bkqA}{\hspace{-.2em}\bkq}% (syntax) backquote char (After)
+%\newcommand{\fwq}{\mbox{\it \char'023}} % (syntax) (forward) quote char
+% math formatting
+\newcommand{\ba}{\begin{array}}
+\newcommand{\ea}{\end{array}}
+\newcommand{\mc}{\multicolumn}
+\newcommand{\pile}[1]{\ba[t]{@@{}l@@{}} #1 \ea}
+\newcommand{\eqn}[1]{\ba[t]{@@{}lcl@@{}} #1 \ea}
+\newcommand{\equate}[1]{\[\eqn{#1}\]}
+\newcommand{\la}{\leftarrow}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\sq}[1]{[\,#1\,]}
+\newcommand{\ab}[1]{\langle#1\rangle}
+\newcommand{\ablarge}[1]{\langle \pile{#1\,\rangle}}
+\newcommand{\lb}{[\![}
+\newcommand{\rb}{]\!]}
+\newcommand{\db}[1]{\lb#1\rb}
+\newcommand{\ti}[1]{\mbox{{\it #1}}}
+\newcommand{\tr}[1]{\mbox{{\rm #1}}}
+\newcommand{\tb}[1]{\mbox{{\bf #1}}}
+\newcommand{\x}{\times}
+\newcommand{\lam}{\lambda}
+\newcommand{\kr}{\kappa_{\rho}}
+\newcommand{\syneq}{\rightarrow}
+% denotational semantics
+\newcommand{\denote}[3]{\[\ba{c} {\cal #1} : #2 \\[1 ex] #3 \ea\]}
+\newcommand{\den}[2]{{\cal #1}\db{#2}\,}
+
+\newcommand{\A}{\den{A}}
+\newcommand{\B}{\den{B}}
+\newcommand{\D}{\den{D}}
+\newcommand{\E}{\den{E}}
+\newcommand{\F}{\den{F}}
+\newcommand{\G}{\den{G}}
+\newcommand{\I}{\den{I}}
+%%% \renewcommand{\L}{\den{L}}
+\newcommand{\LE}{\den{L_E}}
+\newcommand{\LH}{\den{L_H}}
+\newcommand{\M}{\den{M}}
+%%% \renewcommand{\O}{\den{O}}
+\renewcommand{\P}{\den{P}}
+\newcommand{\Pbot}{\den{P_{\bot}}}
+\newcommand{\Q}{\den{Q}}
+\newcommand{\R}{\den{R}}
+\renewcommand{\S}{\den{S}}
+\newcommand{\V}{\den{V}}
+\newcommand{\W}{\den{W}}
+\newcommand{\T}[2]{\den{T}{#1}\,\db{#2}}
+% meta language
+\newcommand{\PP}{\den{P'}}
+\newcommand{\PS}{\den{P_S}}
+\newcommand{\otherwise}{\quad\tr{otherwise}}
+\newcommand{\case}[2]{\pile{
+ \tr{case}\ (#1)\ \tr{of} \\
+ \ba{@@{\quad}l@@{\ \ra\ }l@@{}} #2 \ea}}
+\newcommand{\where}[2]{#1 \quad\tr{where}\quad #2}
+\newcommand{\wherelarge}[2]{\pile{#1 \\ \tr{where} \\ \eqn{#2}}}
+\newcommand{\cond}[3]{#1 \ra #2,\ #3}
+\newcommand{\condlarge}[1]{\ba[t]{@@{}l@@{\ \ra\ }l@@{}} #1 \ea}
+\newcommand{\range}[2]{{}_{#1}^{#2}\,}
+% semantic operators
+\newcommand{\concat}{\frown}
+\newcommand{\seq}[1]{\ti{List}\ #1}
+\newcommand{\opt}[1]{\widetilde{#1}}
+\newcommand{\ov}{\opt{v}}
+\newcommand{\fail}{\ti{none}}
+\newcommand{\nonfail}{\ti{proper}}
+\newcommand{\sym}{\bigtriangledown}
+\newcommand{\pri}{\mathbin{\vec{\sym}}}
+\newcommand{\mrg}{\mathbin{\dot{\sym}}}
+\newcommand{\Sym}{\mathbin{\nabla}}
+\newcommand{\Pri}{\mathbin{\vec{\Sym}}}
+\newcommand{\Mrg}{\mathbin{\dot{\Sym}}}
+\newcommand{\optSym}{\mathbin{\opt{\Sym}}}
+\newcommand{\optodot}{\mathbin{\opt{\odot}}}
+\newcommand{\proj}{\mid}
+\newcommand{\restrict}{\setminus}
+\newcommand{\sel}[4]{\ti{sel}_{#3#2}\ #4}
+\newcommand{\bindnone}{\ti{bindnone}}
+\newcommand{\bindvar}[2]{\ti{bindvar}\ \db{#1}\ #2}
+\newcommand{\bindcon}[2]{\ti{bindcon}\ \db{#1}\ #2}
+\newcommand{\bindconlarge}[4]{
+ #4\ \bindcon{#1}{\ablarge{ #2, \\ #3}}}
+\newcommand{\bindmod}[2]{\ti{bindmod}\ \db{#1}\ #2}
+
+\newcommand{\lookupval}[2]{\ti{lookupval}\ #1\ \db{#2}} %%% NEW
+\newcommand{\lookupcon}[1]{\ti{lookupcon}\ \db{#1}} %%% NEW
+\newcommand{\lookupdecon}[2]{\ti{lookupdecon}\ #1\ \db{#2}} %%% NEW
+
+% used in static.verb
+\newcommand{\TT}{\den{T_T}}
+\newcommand{\TA}{\den{T_A}}
+\newcommand{\TB}{\den{T_B}}
+\newcommand{\TD}{\den{T_D}}
+\newcommand{\TDA}{\den{T_{D_A}}}
+\newcommand{\TDB}{\den{T_{D_B}}}
+\newcommand{\TDP}{\den{T_{P_D}}}
+\newcommand{\TE}{\den{T_E}}
+\newcommand{\TLE}{\den{T_{L_E}}}
+\newcommand{\TLH}{\den{T_{L_H}}}
+%%% \newcommand{\TG}{\den{T_G}}
+\newcommand{\TQ}{\den{T_Q}}
+%%% \newcommand{\TR}{\den{T_R}}
+\newcommand{\TF}{\den{T_F}}
+\newcommand{\TFA}{\den{T_F'}}
+\newcommand{\TP}{\den{T_P}}
+\newcommand{\TPP}{\den{T_P'}}
+\newcommand{\TPS}{\den{T_{PS}}}
+\newcommand{\MGU}{\ti{MGU}}
+\newcommand{\TI}{\den{T_I}}
+\newcommand{\TL}{\den{T_L}}
+\newcommand{\TM}{\den{T_M}}
+%%% \newcommand{\TO}{\den{T_O}}
+\newcommand{\TS}{\den{T_S}}
+\newcommand{\TV}{\den{T_V}}
+\newcommand{\tenvm}{\ddot{\nabla}}
+\renewcommand{\tb}[1]{\triangleright#1\triangleleft}
+\newcommand{\unbindvar}[2]{\ti{unbindvar}\ \db{#1}\ #2}
+\newcommand{\unbindcon}[2]{\ti{unbindcon}\ \db{#1}\ #2}
+
+% Haskell syntax macros: math mode assumed
+\newcommand{\system}[2]{#1@;;@\cdots@;;@#2}
+\newcommand{\module}[4]{module\ #1@:@\ #2\ #3\ #4}
+\newcommand{\exposing}[1]{@expose@\ #1}
+\newcommand{\hiding}[1]{@hide@\ #1}
+\newcommand{\importnone}{\;}
+\newcommand{\importcomb}[2]{#1\ @;;@\ #2}
+\newcommand{\import}[2]{@import@\ #1\ #2}
+\newcommand{\rename}[2]{#1\ @=@\ #2}
+\newcommand{\declcomb}[2]{#1\ @;;@\ #2}
+
+\newcommand{\type}[2]{@type@\ #1\ @=@\;#2}
+\newcommand{\data}[2]{@data@\ #1\ @=@\;#2}
+\newcommand{\tuple}[2]{@tuple@\ #1\ @=@\;#2} %%% NEW!
+\newcommand{\view}[3]{@view@\ #1\ @=@\;#2\ @where@\ @{@\ #3\ @}@}
+\newcommand{\class}[2]{@class@\ #1\ @where@\ @{@\ #2\ @}@}
+\newcommand{\instance}[2]{@instance@\ #1\ @where@\ @{@\ #2\ @}@}
+\newcommand{\signature}[2]{#1\ @::@\ #2}
+\newcommand{\binding}[2]{#1\ @=@\ #2}
+\newcommand{\lamexpr}[2]{@\@ #1 @->@ #2}
+
+% While lambda defs. change...  if change, take care of preceding line MMG
+\newcommand{\lamb}{@\ @}
+\newcommand{\whereexpr}[2]{#1\ @where@\ @{@\ #2\ @}@}
+\newcommand{\compexpr}[2]{@[@#1\ @|@\ #2@]@}
+\newcommand{\genclause}[2]{#1\ @<-@\ #2}
+\newcommand{\qualcomb}[2]{#1\ @,@\ #2}
+\newcommand{\genguard}[1]{\ #1\ }
+\newcommand{\caseexpr}[2]{@case@\ #1\ @of@\ @{@\ #2\ @}@}
+\newcommand{\simplecaseexpr}[5]{@case@\ #1\ @of@\ @{@\ #2\ @->@\ #3;\ #4\ @->@\ #5\ @}@} 
+\newcommand{\iteexpr}[3]{@if@\ #1\ @then@\ #2\ @else@\ #3}
+\newcommand{\itexpr}[2]{@if@\ #1\ @then@\ #2}
+\newcommand{\gpat}[2]{#1\ @|@\ #2}
+\newcommand{\aspat}[2]{#1 @ @@ @ #2}
+\newcommand{\fclause}[2]{#1\ @=@\ #2}
+\newcommand{\fsym}[2]{#1\ @;@\ #2}
+\newcommand{\fpri}[2]{#1\ @;@\ @else@\ @;@\ #2}
+\newcommand{\aclause}[2]{#1\ @->@\ #2}
+\newcommand{\saclause}[4]{#1\ @->@\ #2;\ #3\ @->@\ #4}
+\newcommand{\asym}[2]{#1\ @;@\ #2}
+\newcommand{\apri}[2]{#1\ @;@\ @else@\ @;@\ #2}
+\newcommand{\dotted}[3]{#1\ #2\ \ldots\ #3}
+\newcommand{\functype}[2]{#1\ @->@\ #2}
+\newcommand{\predtype}[2]{#1\ @=>@ #2}
+\newcommand{\xp}{\dotted{x}{p_1}{p_n}}
+\newcommand{\xpg}{\dotted{x}{p_1}{p_n\ @{@\ g\ @}@}}
+\newcommand{\es}{e_1\ \ldots\ e_n}
+\newcommand{\ps}{p_1\ \ldots\ p_n}
+\newcommand{\vs}{v_1\ \ldots\ v_n} %%% NEW
+\newcommand{\xs}{x_1\ \ldots\ x_n} %%% NEW
+\newcommand{\cT}{\dotted{c}{T_1}{T_n}}
+\newcommand{\cTm}{\dotted{c_i}{T_{i1}}{T_{in_i}}\, @|@\range{i=1}{m}}
+% syntax meta-language
+\newcommand{\arity}[1]{\tr{arity}\ #1}
+\newcommand{\infix}[1]{\tr{infix}\ #1}
+\newcommand{\prefix}[1]{\tr{prefix}\ #1}
+%
+\newcommand{\tl}[1]{{\sc #1}}
+\newcommand{\Haskell}{Haskell}
+
+\newcommand{\subsubsubsection}{\subsubsection*}
+\newcommand{\subsubsubsubsection}{\subsubsubsection*}
+
+% Haskell-prime markup: this annotates the new/changed parts of the report.
+\definecolor{prime}{named}{DarkOrchid}
+\newcommand{\hprime}[1]{\color{prime}#1\normalcolor}
+\newenvironment{haskellprime}{\color{prime}}{\normalcolor}
+
+%\sloppy
+
+% a few hyphenation patterns, anyone?
+\hyphenation{da-ta-type da-ta-types}
+\hyphenation{Has-kell}
+
+% Macros for Haddock output
+\usepackage{haddock}
+
+\begin{document}
+
+\input{iso-chars}
+
+% Set the float fractions to sensible values
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{0}
+\setcounter{totalnumber}{2}
+\setcounter{dbltopnumber}{2}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.9}
+\renewcommand{\dblfloatpagefraction}{0.9}
+
+\setcounter{page}{0}
+
+% ------------------------- Title page -----------------------------------
+
+\pdfbookmark{Title page}{title}
+\begin{titlepage}
+
+\setcounter{page}{0}
+
+% tex4ht wants to use display:table with fbox, which seems to interact
+% badly with centering.  Hence dropping the box around the title in HTML:
+\ifhtml{%
+\begin{center}
+{\LARGE\bf Haskell 2010} \\[.1in]
+{\LARGE\bf Language Report} \\[.3in]
+\end{center}
+}{%
+\outline{
+\vspace{.3in}
+\begin{center}
+{\LARGE\bf Haskell 2010} \\[.1in]
+{\LARGE\bf Language Report} \\[.3in]
+\end{center}
+\vspace{.3in}
+}
+}
+
+\vspace{.15in}
+\begin{center} \large
+Simon Marlow\\
+(editor)
+\end{center}
+\vspace{.15in}
+
+\vspace{3in}
+
+\begin{center} \emph{Copyright notice.} \end{center}
+
+The authors and publisher intend this Report to belong to the entire Haskell
+community, and grant permission to copy and distribute it for any
+purpose, provided that it is reproduced in its
+entirety, including this Notice. Modified versions of this Report may
+also be copied and distributed for any 
+purpose,
+provided that the modified version is clearly presented as such, and
+that it does not claim to be a definition of the language Haskell 2010.
+\end{titlepage}
+
+% ------------------------- Preface -----------------------------------
+
+\pagenumbering{roman}
+
+\clearpage
+\clearpage
+\pdfbookmark{Contents}{contents}
+\tableofcontents
+\startnewstuff
+
+\parskip=10pt plus2pt minus2pt
+\setlength{\parindent}{0cm}
+
+\input{preface}
+
+% ------------------------- Part I: language report -----------------------------------
+
+\pagestyle{headings}
+\startnewstuff
+\pagenumbering{arabic}
+
+\part{The Haskell 2010 Language}
+
+\input{intro}\startnewsection
+\input{lexemes}\startnewsection
+\input{exps}\startnewsection
+\input{decls}\startnewsection
+\input{modules}\startnewsection
+\input{basic}\startnewsection
+\input{io-13}\startnewsection
+\input{ffi}\startnewsection
+
+% \appendix
+\input{standard-prelude}\startnewsection
+\input{syntax-iso}\startnewsection
+\input{fixity}\startnewsection
+\input{derived}\startnewsection
+\input{pragmas}
+%%
+
+% ------------------------- Part II: libraries report -----------------------------------
+
+\part{The Haskell 2010 Libraries}
+\label{libraries}
+
+\input{libs/Control-Monad}
+\input{libs/Data-Array}
+\input{libs/Data-Bits}
+\input{libs/Data-Char}
+\input{libs/Data-Complex}
+\input{libs/Data-Int}
+\input{libs/Data-Ix}
+\input{libs/Data-List}
+\input{libs/Data-Maybe}
+\input{libs/Data-Ratio}
+\input{libs/Data-Word}
+\input{libs/Foreign}
+\input{libs/Foreign-C}
+\input{libs/Foreign-C-Error}
+\input{libs/Foreign-C-String}
+\input{libs/Foreign-C-Types}
+\input{libs/Foreign-ForeignPtr}
+\input{libs/Foreign-Marshal}
+\input{libs/Foreign-Marshal-Alloc}
+\input{libs/Foreign-Marshal-Array}
+\input{libs/Foreign-Marshal-Error} 
+\input{libs/Foreign-Marshal-Utils}
+\input{libs/Foreign-Ptr}
+\input{libs/Foreign-StablePtr}
+\input{libs/Foreign-Storable}
+\input{libs/Numeric}
+\input{libs/System-Environment}
+\input{libs/System-Exit}
+\input{libs/System-IO}
+\input{libs/System-IO-Error}
+
+% ------------------------- Index and references -----------------------------------
+
+\startnewstuff
+% insert the extra indexing things LAST
+\input{index-extra}
+
+% Add a contents line for the References -- may be off by one page
+\ifhtml{}{\addcontentsline{toc}{part}{References}}
+\bibliographystyle{plain}
+\bibliography{haskell}
+%
+\startnewstuff
+\ifhtml{}{\printindex}
+
+\end{document}
+
+% Local Variables: 
+% mode: latex
+% End:

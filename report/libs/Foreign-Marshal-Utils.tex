@@ -1,0 +1,127 @@
+\haddockmoduleheading{Foreign.Marshal.Utils}
+\label{module:Foreign.Marshal.Utils}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.Marshal.Utils (
+    with,  new,  fromBool,  toBool,  maybeNew,  maybeWith,  maybePeek, 
+    withMany,  copyBytes,  moveBytes
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{General marshalling utilities
+}
+\subsection{Combined allocation and marshalling
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+with\ ::\ Storable\ a\ =>\ a\ ->\ (Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+\haddocktt{with\ val\ f} executes the computation \haddocktt{f}, passing as argument
+ a pointer to a temporarily allocated block of memory into which
+ \haddocktt{val} has been marshalled (the combination of \haddockid{alloca} and \haddockid{poke}).
+\par
+The memory is freed when \haddocktt{f} terminates (either normally or via an
+ exception), so the pointer passed to \haddocktt{f} must \emph{not} be used after this.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+new\ ::\ Storable\ a\ =>\ a\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Allocate a block of memory and marshal a value into it
+ (the combination of \haddockid{malloc} and \haddockid{poke}).
+ The size of the area allocated is determined by the \haddocktt{Foreign.Storable.sizeOf}
+ method from the instance of \haddockid{Storable} for the appropriate type.
+\par
+The memory may be deallocated using \haddocktt{Foreign.Marshal.Alloc.free} or
+ \haddocktt{Foreign.Marshal.Alloc.finalizerFree} when no longer required.
+\par
+
+\end{haddockdesc}
+\subsection{Marshalling of Boolean values (non-zero corresponds to \haddockid{True})
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+fromBool\ ::\ Num\ a\ =>\ Bool\ ->\ a
+\end{tabular}]\haddockbegindoc
+Convert a Haskell \haddockid{Bool} to its numeric representation
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+toBool\ ::\ Num\ a\ =>\ a\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+Convert a Boolean in numeric representation to a Haskell value
+\par
+
+\end{haddockdesc}
+\subsection{Marshalling of Maybe values
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+maybeNew\ ::\ (a\ ->\ IO\ (Ptr\ a))\ ->\ Maybe\ a\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Allocate storage and marshal a storable value wrapped into a \haddockid{Maybe}
+\par
+\begin{itemize}
+\item
+ the \haddockid{nullPtr} is used to represent \haddockid{Nothing}
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+maybeWith\ ::\ (a\ ->\ (Ptr\ b\ ->\ IO\ c)\ ->\ IO\ c)\\\ \ \ \ \ \ \ \ \ \ \ \ \ ->\ Maybe\ a\ ->\ (Ptr\ b\ ->\ IO\ c)\ ->\ IO\ c
+\end{tabular}]\haddockbegindoc
+Converts a \haddocktt{withXXX} combinator into one marshalling a value wrapped
+ into a \haddockid{Maybe}, using \haddockid{nullPtr} to represent \haddockid{Nothing}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+maybePeek\ ::\ (Ptr\ a\ ->\ IO\ b)\ ->\ Ptr\ a\ ->\ IO\ (Maybe\ b)
+\end{tabular}]\haddockbegindoc
+Convert a peek combinator into a one returning \haddockid{Nothing} if applied to a
+ \haddockid{nullPtr} 
+\par
+
+\end{haddockdesc}
+\subsection{Marshalling lists of storable objects
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withMany\ ::\ (a\ ->\ (b\ ->\ res)\ ->\ res)\ ->\ {\char 91}a{\char 93}\ ->\ ({\char 91}b{\char 93}\ ->\ res)\ ->\ res
+\end{tabular}]\haddockbegindoc
+Replicates a \haddocktt{withXXX} combinator over a list of objects, yielding a list of
+ marshalled objects
+\par
+
+\end{haddockdesc}
+\subsection{Haskellish interface to memcpy and memmove
+}
+(argument order: destination, source)
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+copyBytes\ ::\ Ptr\ a\ ->\ Ptr\ a\ ->\ Int\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Copies the given number of bytes from the second area (source) into the
+ first (destination); the copied areas may \emph{not} overlap
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+moveBytes\ ::\ Ptr\ a\ ->\ Ptr\ a\ ->\ Int\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Copies the given number of bytes from the second area (source) into the
+ first (destination); the copied areas \emph{may} overlap
+\par
+
+\end{haddockdesc}

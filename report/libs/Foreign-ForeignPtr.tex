@@ -1,0 +1,258 @@
+\haddockmoduleheading{Foreign.ForeignPtr}
+\label{module:Foreign.ForeignPtr}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.ForeignPtr (
+    ForeignPtr,  FinalizerPtr,  FinalizerEnvPtr,  newForeignPtr, 
+    newForeignPtr_,  addForeignPtrFinalizer,  newForeignPtrEnv, 
+    addForeignPtrFinalizerEnv,  withForeignPtr,  finalizeForeignPtr, 
+    unsafeForeignPtrToPtr,  touchForeignPtr,  castForeignPtr, 
+    mallocForeignPtr,  mallocForeignPtrBytes,  mallocForeignPtrArray, 
+    mallocForeignPtrArray0
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{Finalised data pointers
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ ForeignPtr\ a
+\end{tabular}]\haddockbegindoc
+The type \haddockid{ForeignPtr} represents references to objects that are
+ maintained in a foreign language, i.e., that are not part of the
+ data structures usually managed by the Haskell storage manager.
+ The essential difference between \haddockid{ForeignPtr}s and vanilla memory
+ references of type \haddocktt{Ptr\ a} is that the former may be associated
+ with \emph{finalizers}. A finalizer is a routine that is invoked when
+ the Haskell storage manager detects that - within the Haskell heap
+ and stack - there are no more references left that are pointing to
+ the \haddockid{ForeignPtr}.  Typically, the finalizer will, then, invoke
+ routines in the foreign language that free the resources bound by
+ the foreign object.
+\par
+The \haddockid{ForeignPtr} is parameterised in the same way as \haddockid{Ptr}.  The
+ type argument of \haddockid{ForeignPtr} should normally be an instance of
+ class \haddockid{Storable}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ (ForeignPtr\ a)\\instance\ Ord\ (ForeignPtr\ a)\\instance\ Show\ (ForeignPtr\ a)
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+type\ FinalizerPtr\ a\ =\ FunPtr\ (Ptr\ a\ ->\ IO\ ())
+\end{tabular}]\haddockbegindoc
+A finalizer is represented as a pointer to a foreign function that, at
+ finalisation time, gets as an argument a plain pointer variant of the
+ foreign pointer that the finalizer is associated with.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+type\ FinalizerEnvPtr\ env\ a\ =\ FunPtr\ (Ptr\ env\ ->\ Ptr\ a\ ->\ IO\ ())
+\end{tabular}]
+\end{haddockdesc}
+\subsection{Basic operations
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newForeignPtr\ ::\ FinalizerPtr\ a\ ->\ Ptr\ a\ ->\ IO\ (ForeignPtr\ a)
+\end{tabular}]\haddockbegindoc
+Turns a plain memory reference into a foreign pointer, and
+ associates a finalizer with the reference.  The finalizer will be
+ executed after the last reference to the foreign object is dropped.
+ There is no guarantee of promptness, however the finalizer will be
+ executed before the program exits.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newForeignPtr{\char '137}\ ::\ Ptr\ a\ ->\ IO\ (ForeignPtr\ a)
+\end{tabular}]\haddockbegindoc
+Turns a plain memory reference into a foreign pointer that may be
+ associated with finalizers by using \haddockid{addForeignPtrFinalizer}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+addForeignPtrFinalizer\ ::\ FinalizerPtr\ a\ ->\ ForeignPtr\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+This function adds a finalizer to the given foreign object.  The
+ finalizer will run \emph{before} all other finalizers for the same
+ object which have already been registered.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newForeignPtrEnv\ ::\ FinalizerEnvPtr\ env\ a\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ Ptr\ env\ ->\ Ptr\ a\ ->\ IO\ (ForeignPtr\ a)
+\end{tabular}]\haddockbegindoc
+This variant of \haddockid{newForeignPtr} adds a finalizer that expects an
+ environment in addition to the finalized pointer.  The environment
+ that will be passed to the finalizer is fixed by the second argument to
+ \haddockid{newForeignPtrEnv}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+addForeignPtrFinalizerEnv\ ::\ FinalizerEnvPtr\ env\ a\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ Ptr\ env\ ->\ ForeignPtr\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Like \haddockid{addForeignPtrFinalizerEnv} but allows the finalizer to be
+ passed an additional environment parameter to be passed to the
+ finalizer.  The environment passed to the finalizer is fixed by the
+ second argument to \haddockid{addForeignPtrFinalizerEnv}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withForeignPtr\ ::\ ForeignPtr\ a\ ->\ (Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+This is a way to look at the pointer living inside a
+ foreign object.  This function takes a function which is
+ applied to that pointer. The resulting \haddockid{IO} action is then
+ executed. The foreign object is kept alive at least during
+ the whole action, even if it is not used directly
+ inside. Note that it is not safe to return the pointer from
+ the action and use it after the action completes. All uses
+ of the pointer should be inside the
+ \haddockid{withForeignPtr} bracket.  The reason for
+ this unsafeness is the same as for
+ \haddockid{unsafeForeignPtrToPtr} below: the finalizer
+ may run earlier than expected, because the compiler can only
+ track usage of the \haddockid{ForeignPtr} object, not
+ a \haddockid{Ptr} object made from it.
+\par
+This function is normally used for marshalling data to
+ or from the object pointed to by the
+ \haddockid{ForeignPtr}, using the operations from the
+ \haddockid{Storable} class.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+finalizeForeignPtr\ ::\ ForeignPtr\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Causes the finalizers associated with a foreign pointer to be run
+ immediately.
+\par
+
+\end{haddockdesc}
+\subsection{Low-level operations
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unsafeForeignPtrToPtr\ ::\ ForeignPtr\ a\ ->\ Ptr\ a
+\end{tabular}]\haddockbegindoc
+This function extracts the pointer component of a foreign
+ pointer.  This is a potentially dangerous operations, as if the
+ argument to \haddockid{unsafeForeignPtrToPtr} is the last usage
+ occurrence of the given foreign pointer, then its finalizer(s) will
+ be run, which potentially invalidates the plain pointer just
+ obtained.  Hence, \haddockid{touchForeignPtr} must be used
+ wherever it has to be guaranteed that the pointer lives on - i.e.,
+ has another usage occurrence.
+\par
+To avoid subtle coding errors, hand written marshalling code
+ should preferably use \haddocktt{Foreign.ForeignPtr.withForeignPtr} rather
+ than combinations of \haddockid{unsafeForeignPtrToPtr} and
+ \haddockid{touchForeignPtr}.  However, the latter routines
+ are occasionally preferred in tool generated marshalling code.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+touchForeignPtr\ ::\ ForeignPtr\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+This function ensures that the foreign object in
+ question is alive at the given place in the sequence of IO
+ actions. In particular \haddockid{withForeignPtr}
+ does a \haddockid{touchForeignPtr} after it
+ executes the user action.
+\par
+Note that this function should not be used to express dependencies
+ between finalizers on \haddockid{ForeignPtr}s.  For example, if the finalizer
+ for a \haddockid{ForeignPtr} \haddocktt{F1} calls \haddockid{touchForeignPtr} on a second
+ \haddockid{ForeignPtr} \haddocktt{F2}, then the only guarantee is that the finalizer
+ for \haddocktt{F2} is never started before the finalizer for \haddocktt{F1}.  They
+ might be started together if for example both \haddocktt{F1} and \haddocktt{F2} are
+ otherwise unreachable.
+\par
+In general, it is not recommended to use finalizers on separate
+ objects with ordering constraints between them.  To express the
+ ordering robustly requires explicit synchronisation between
+ finalizers.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castForeignPtr\ ::\ ForeignPtr\ a\ ->\ ForeignPtr\ b
+\end{tabular}]\haddockbegindoc
+This function casts a \haddockid{ForeignPtr}
+ parameterised by one type into another type.
+\par
+
+\end{haddockdesc}
+\subsection{Allocating managed memory
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mallocForeignPtr\ ::\ Storable\ a\ =>\ IO\ (ForeignPtr\ a)
+\end{tabular}]\haddockbegindoc
+Allocate some memory and return a \haddockid{ForeignPtr} to it.  The memory
+ will be released automatically when the \haddockid{ForeignPtr} is discarded.
+\par
+\haddockid{mallocForeignPtr} is equivalent to
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+    do { p <- malloc; newForeignPtr finalizerFree p }
+\end{verbatim}}
+\end{quote}
+although it may be implemented differently internally: you may not
+ assume that the memory returned by \haddockid{mallocForeignPtr} has been
+ allocated with \haddocktt{Foreign.Marshal.Alloc.malloc}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mallocForeignPtrBytes\ ::\ Int\ ->\ IO\ (ForeignPtr\ a)
+\end{tabular}]\haddockbegindoc
+This function is similar to \haddockid{mallocForeignPtr}, except that the
+ size of the memory required is given explicitly as a number of bytes.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mallocForeignPtrArray\ ::\ Storable\ a\ =>\ Int\ ->\ IO\ (ForeignPtr\ a)
+\end{tabular}]\haddockbegindoc
+This function is similar to \haddocktt{Foreign.Marshal.Array.mallocArray},
+ but yields a memory area that has a finalizer attached that releases
+ the memory area.  As with \haddockid{mallocForeignPtr}, it is not guaranteed that
+ the block of memory was allocated by \haddocktt{Foreign.Marshal.Alloc.malloc}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mallocForeignPtrArray0\ ::\ Storable\ a\ =>\ Int\ ->\ IO\ (ForeignPtr\ a)
+\end{tabular}]\haddockbegindoc
+This function is similar to \haddocktt{Foreign.Marshal.Array.mallocArray0},
+ but yields a memory area that has a finalizer attached that releases
+ the memory area.  As with \haddockid{mallocForeignPtr}, it is not guaranteed that
+ the block of memory was allocated by \haddocktt{Foreign.Marshal.Alloc.malloc}.
+\par
+
+\end{haddockdesc}

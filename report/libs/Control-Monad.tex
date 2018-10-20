@@ -1,0 +1,516 @@
+\haddockmoduleheading{Control.Monad}
+\label{module:Control.Monad}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Control.Monad (
+    Functor(fmap),  Monad((>>=), (>>), return, fail),  MonadPlus(mzero, mplus), 
+    mapM,  mapM_,  forM,  forM_,  sequence,  sequence_,  (=<<),  (>=>),  (<=<), 
+    forever,  void,  join,  msum,  filterM,  mapAndUnzipM,  zipWithM, 
+    zipWithM_,  foldM,  foldM_,  replicateM,  replicateM_,  guard,  when, 
+    unless,  liftM,  liftM2,  liftM3,  liftM4,  liftM5,  ap
+  ) where\end{verbatim}}
+\haddockendheader
+
+The \haddocktt{Control.Monad} module provides the \haddockid{Functor}, \haddockid{Monad} and
+ \haddockid{MonadPlus} classes, together with some useful operations on monads.
+\par
+
+\section{Functor and monad classes
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+class\ Functor\ f\ where
+\end{tabular}]\haddockbegindoc
+The \haddockid{Functor} class is used for types that can be mapped over.
+Instances of \haddockid{Functor} should satisfy the following laws:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ fmap id  ==  id
+ fmap (f . g)  ==  fmap f . fmap g
+\end{verbatim}}
+\end{quote}
+The instances of \haddockid{Functor} for lists, \haddocktt{Data.Maybe.Maybe} and \haddocktt{System.IO.IO}
+satisfy these laws.
+\par
+
+\haddockpremethods{}\textbf{Methods}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+fmap\ ::\ (a\ ->\ b)\ ->\ f\ a\ ->\ f\ b
+\end{tabular}]
+\end{haddockdesc}
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Functor\ {\char 91}{\char 93}\\instance\ Functor\ IO\\instance\ Functor\ Maybe\\instance\ Ix\ i\ =>\ Functor\ (Array\ i)
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+class\ Monad\ m\ where
+\end{tabular}]\haddockbegindoc
+The \haddockid{Monad} class defines the basic operations over a \emph{monad},
+a concept from a branch of mathematics known as \emph{category theory}.
+From the perspective of a Haskell programmer, however, it is best to
+think of a monad as an \emph{abstract datatype} of actions.
+Haskell's \haddocktt{do} expressions provide a convenient syntax for writing
+monadic expressions.
+\par
+Minimal complete definition: \haddockid{>>=} and \haddockid{return}.
+\par
+Instances of \haddockid{Monad} should satisfy the following laws:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ return a >>= k  ==  k a
+ m >>= return  ==  m
+ m >>= (\x -> k x >>= h)  ==  (m >>= k) >>= h
+\end{verbatim}}
+\end{quote}
+Instances of both \haddockid{Monad} and \haddockid{Functor} should additionally satisfy the law:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ fmap f xs  ==  xs >>= return . f
+\end{verbatim}}
+\end{quote}
+The instances of \haddockid{Monad} for lists, \haddocktt{Data.Maybe.Maybe} and \haddocktt{System.IO.IO}
+defined in the \haddocktt{Prelude} satisfy these laws.
+\par
+
+\haddockpremethods{}\textbf{Methods}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(>>=)\ ::\ m\ a\ ->\ (a\ ->\ m\ b)\ ->\ m\ b
+\end{tabular}]\haddockbegindoc
+Sequentially compose two actions, passing any value produced
+ by the first as an argument to the second.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(>>)\ ::\ m\ a\ ->\ m\ b\ ->\ m\ b
+\end{tabular}]\haddockbegindoc
+Sequentially compose two actions, discarding any value produced
+ by the first, like sequencing operators (such as the semicolon)
+ in imperative languages.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+return\ ::\ a\ ->\ m\ a
+\end{tabular}]\haddockbegindoc
+Inject a value into the monadic type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+fail\ ::\ String\ ->\ m\ a
+\end{tabular}]\haddockbegindoc
+Fail with a message.  This operation is not part of the
+ mathematical definition of a monad, but is invoked on pattern-match
+ failure in a \haddocktt{do} expression.
+\par
+
+\end{haddockdesc}
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Monad\ {\char 91}{\char 93}\\instance\ Monad\ IO\\instance\ Monad\ Maybe
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+class\ Monad\ m\ =>\ MonadPlus\ m\ where
+\end{tabular}]\haddockbegindoc
+Monads that also support choice and failure.
+\par
+
+\haddockpremethods{}\textbf{Methods}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mzero\ ::\ m\ a
+\end{tabular}]\haddockbegindoc
+the identity of \haddockid{mplus}.  It should also satisfy the equations
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ mzero >>= f  =  mzero
+ v >> mzero   =  mzero
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mplus\ ::\ m\ a\ ->\ m\ a\ ->\ m\ a
+\end{tabular}]\haddockbegindoc
+an associative operation
+\par
+
+\end{haddockdesc}
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ MonadPlus\ {\char 91}{\char 93}\\instance\ MonadPlus\ Maybe
+\end{tabular}]
+\end{haddockdesc}
+\section{Functions
+}
+\subsection{Naming conventions
+}
+The functions in this library use the following naming conventions: 
+\par
+\begin{itemize}
+\item
+ A postfix '\haddocktt{M}' always stands for a function in the Kleisli category:
+  The monad type constructor \haddocktt{m} is added to function results
+  (modulo currying) and nowhere else.  So, for example, 
+\par
+
+\end{itemize}
+\begin{quote}
+{\haddockverb\begin{verbatim}
+  filter  ::              (a ->   Bool) -> [a] ->   [a]
+  filterM :: (Monad m) => (a -> m Bool) -> [a] -> m [a]
+\end{verbatim}}
+\end{quote}
+\begin{itemize}
+\item
+ A postfix '\haddocktt{{\char '137}}' changes the result type from \haddocktt{(m\ a)} to \haddocktt{(m\ ())}.
+  Thus, for example: 
+\par
+
+\end{itemize}
+\begin{quote}
+{\haddockverb\begin{verbatim}
+  sequence  :: Monad m => [m a] -> m [a] 
+  sequence_ :: Monad m => [m a] -> m () 
+\end{verbatim}}
+\end{quote}
+\begin{itemize}
+\item
+ A prefix '\haddocktt{m}' generalizes an existing function to a monadic form.
+  Thus, for example: 
+\par
+
+\end{itemize}
+\begin{quote}
+{\haddockverb\begin{verbatim}
+  sum  :: Num a       => [a]   -> a
+  msum :: MonadPlus m => [m a] -> m a
+\end{verbatim}}
+\end{quote}
+
+\subsection{Basic \haddocktt{Monad} functions
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mapM\ ::\ Monad\ m\ =>\ (a\ ->\ m\ b)\ ->\ {\char 91}a{\char 93}\ ->\ m\ {\char 91}b{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddocktt{mapM\ f} is equivalent to \haddocktt{sequence\ .\ map\ f}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mapM{\char '137}\ ::\ Monad\ m\ =>\ (a\ ->\ m\ b)\ ->\ {\char 91}a{\char 93}\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+\haddocktt{mapM{\char '137}\ f} is equivalent to \haddocktt{sequence{\char '137}\ .\ map\ f}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+forM\ ::\ Monad\ m\ =>\ {\char 91}a{\char 93}\ ->\ (a\ ->\ m\ b)\ ->\ m\ {\char 91}b{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{forM} is \haddockid{mapM} with its arguments flipped
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+forM{\char '137}\ ::\ Monad\ m\ =>\ {\char 91}a{\char 93}\ ->\ (a\ ->\ m\ b)\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+\haddockid{forM{\char '137}} is \haddockid{mapM{\char '137}} with its arguments flipped
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+sequence\ ::\ Monad\ m\ =>\ {\char 91}m\ a{\char 93}\ ->\ m\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+Evaluate each action in the sequence from left to right,
+ and collect the results.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+sequence{\char '137}\ ::\ Monad\ m\ =>\ {\char 91}m\ a{\char 93}\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+Evaluate each action in the sequence from left to right,
+ and ignore the results.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(=<<)\ ::\ Monad\ m\ =>\ (a\ ->\ m\ b)\ ->\ m\ a\ ->\ m\ b
+\end{tabular}]\haddockbegindoc
+Same as \haddockid{>>=}, but with the arguments interchanged.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(>=>)\ ::\ Monad\ m\ =>\ (a\ ->\ m\ b)\ ->\ (b\ ->\ m\ c)\ ->\ a\ ->\ m\ c
+\end{tabular}]\haddockbegindoc
+Left-to-right Kleisli composition of monads.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(<=<)\ ::\ Monad\ m\ =>\ (b\ ->\ m\ c)\ ->\ (a\ ->\ m\ b)\ ->\ a\ ->\ m\ c
+\end{tabular}]\haddockbegindoc
+Right-to-left Kleisli composition of monads. \haddocktt{(>=>)}, with the arguments flipped
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+forever\ ::\ Monad\ m\ =>\ m\ a\ ->\ m\ b
+\end{tabular}]\haddockbegindoc
+\haddocktt{forever\ act} repeats the action infinitely.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+void\ ::\ Functor\ f\ =>\ f\ a\ ->\ f\ ()
+\end{tabular}]\haddockbegindoc
+\haddocktt{void\ value} discards or ignores the result of evaluation, such as the return value of an \haddockid{IO} action.
+\par
+
+\end{haddockdesc}
+\subsection{Generalisations of list functions
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+join\ ::\ Monad\ m\ =>\ m\ (m\ a)\ ->\ m\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{join} function is the conventional monad join operator. It is used to
+ remove one level of monadic structure, projecting its bound argument into the
+ outer level.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+msum\ ::\ MonadPlus\ m\ =>\ {\char 91}m\ a{\char 93}\ ->\ m\ a
+\end{tabular}]\haddockbegindoc
+This generalizes the list-based \haddockid{concat} function.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+filterM\ ::\ Monad\ m\ =>\ (a\ ->\ m\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ m\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+This generalizes the list-based \haddockid{filter} function.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mapAndUnzipM\ ::\ Monad\ m\ =>\ (a\ ->\ m\ (b,\ c))\ ->\ {\char 91}a{\char 93}\ ->\ m\ ({\char 91}b{\char 93},\ {\char 91}c{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{mapAndUnzipM} function maps its first argument over a list, returning
+ the result as a pair of lists. This function is mainly used with complicated
+ data structures or a state-transforming monad.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zipWithM\ ::\ Monad\ m\ =>\ (a\ ->\ b\ ->\ m\ c)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ m\ {\char 91}c{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zipWithM} function generalizes \haddockid{zipWith} to arbitrary monads.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zipWithM{\char '137}\ ::\ Monad\ m\ =>\ (a\ ->\ b\ ->\ m\ c)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+\haddockid{zipWithM{\char '137}} is the extension of \haddockid{zipWithM} which ignores the final result.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+foldM\ ::\ Monad\ m\ =>\ (a\ ->\ b\ ->\ m\ a)\ ->\ a\ ->\ {\char 91}b{\char 93}\ ->\ m\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{foldM} function is analogous to \haddockid{foldl}, except that its result is
+encapsulated in a monad. Note that \haddockid{foldM} works from left-to-right over
+the list arguments. This could be an issue where \haddocktt{(>>)} and the `folded
+function' are not commutative.
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+       foldM f a1 [x1, x2, ..., xm]
+\end{verbatim}}
+\end{quote}
+==  
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+       do
+         a2 <- f a1 x1
+         a3 <- f a2 x2
+         ...
+         f am xm
+\end{verbatim}}
+\end{quote}
+If right-to-left evaluation is required, the input list should be reversed.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+foldM{\char '137}\ ::\ Monad\ m\ =>\ (a\ ->\ b\ ->\ m\ a)\ ->\ a\ ->\ {\char 91}b{\char 93}\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+Like \haddockid{foldM}, but discards the result.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+replicateM\ ::\ Monad\ m\ =>\ Int\ ->\ m\ a\ ->\ m\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddocktt{replicateM\ n\ act} performs the action \haddocktt{n} times,
+ gathering the results.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+replicateM{\char '137}\ ::\ Monad\ m\ =>\ Int\ ->\ m\ a\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+Like \haddockid{replicateM}, but discards the result.
+\par
+
+\end{haddockdesc}
+\subsection{Conditional execution of monadic expressions
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+guard\ ::\ MonadPlus\ m\ =>\ Bool\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+\haddocktt{guard\ b} is \haddocktt{return\ ()} if \haddocktt{b} is \haddockid{True},
+ and \haddockid{mzero} if \haddocktt{b} is \haddockid{False}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+when\ ::\ Monad\ m\ =>\ Bool\ ->\ m\ ()\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+Conditional execution of monadic expressions. For example, 
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+       when debug (putStr "Debugging\n")
+\end{verbatim}}
+\end{quote}
+will output the string \haddocktt{Debugging{\char '134}n} if the Boolean value \haddocktt{debug} is \haddockid{True},
+and otherwise do nothing.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unless\ ::\ Monad\ m\ =>\ Bool\ ->\ m\ ()\ ->\ m\ ()
+\end{tabular}]\haddockbegindoc
+The reverse of \haddockid{when}.
+\par
+
+\end{haddockdesc}
+\subsection{Monadic lifting operators
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+liftM\ ::\ Monad\ m\ =>\ (a1\ ->\ r)\ ->\ m\ a1\ ->\ m\ r
+\end{tabular}]\haddockbegindoc
+Promote a function to a monad.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+liftM2\ ::\ Monad\ m\ =>\ (a1\ ->\ a2\ ->\ r)\ ->\ m\ a1\ ->\ m\ a2\ ->\ m\ r
+\end{tabular}]\haddockbegindoc
+Promote a function to a monad, scanning the monadic arguments from
+ left to right.  For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+    liftM2 (+) [0,1] [0,2] = [0,2,1,3]
+    liftM2 (+) (Just 1) Nothing = Nothing
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+liftM3\ ::\ Monad\ m\ =>\ (a1\ ->\ a2\ ->\ a3\ ->\ r)\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ m\ a1\ ->\ m\ a2\ ->\ m\ a3\ ->\ m\ r
+\end{tabular}]\haddockbegindoc
+Promote a function to a monad, scanning the monadic arguments from
+ left to right (cf. \haddockid{liftM2}).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+liftM4\ ::\ Monad\ m\ =>\ (a1\ ->\ a2\ ->\ a3\ ->\ a4\ ->\ r)\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ m\ a1\ ->\ m\ a2\ ->\ m\ a3\ ->\ m\ a4\ ->\ m\ r
+\end{tabular}]\haddockbegindoc
+Promote a function to a monad, scanning the monadic arguments from
+ left to right (cf. \haddockid{liftM2}).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+liftM5\ ::\ Monad\ m\ =>\ (a1\ ->\ a2\ ->\ a3\ ->\ a4\ ->\ a5\ ->\ r)\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ m\ a1\ ->\ m\ a2\ ->\ m\ a3\ ->\ m\ a4\ ->\ m\ a5\ ->\ m\ r
+\end{tabular}]\haddockbegindoc
+Promote a function to a monad, scanning the monadic arguments from
+ left to right (cf. \haddockid{liftM2}).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+ap\ ::\ Monad\ m\ =>\ m\ (a\ ->\ b)\ ->\ m\ a\ ->\ m\ b
+\end{tabular}]\haddockbegindoc
+In many situations, the \haddockid{liftM} operations can be replaced by uses of
+\haddockid{ap}, which promotes function application. 
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+       return f `ap` x1 `ap` ... `ap` xn
+\end{verbatim}}
+\end{quote}
+is equivalent to 
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+       liftMn f x1 x2 ... xn
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}

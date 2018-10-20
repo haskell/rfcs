@@ -1,0 +1,1079 @@
+%
+% $Header: /home/cvs/root/haskell-report/report/basic.verb,v 1.17 2003/01/13 13:08:54 simonpj Exp $
+%
+%**<title>The Haskell 98 Report: Predefined Types and Classes</title>
+%*section 6
+%**~header
+\section{Predefined Types and Classes}
+\label{basic-types-and-classes}
+The \Haskell{} Prelude contains predefined classes, types,
+and functions that are implicitly imported into every Haskell
+program.  In this chapter, we describe the types and classes found in
+the Prelude.
+Most functions are not described in detail here as they
+can easily be understood from their definitions as given in Chapter~\ref{stdprelude}.
+Other predefined types such as arrays, complex numbers, and rationals
+are defined in Part~\ref{libraries}.
+
+\subsection{Standard Haskell Types}
+\label{basic-types}
+These types are defined by the \Haskell{} Prelude.  Numeric types are
+described in Section \ref{numbers}.  When appropriate, the \Haskell{}
+definition of the type is given.  Some definitions may not be
+completely valid on syntactic grounds but they faithfully convey the
+meaning of the underlying type.
+
+\subsubsection{Booleans}
+\label{booleans}
+\index{boolean}
+\bprog
+@
+data  Bool  =  False | True deriving 
+                             (Read, Show, Eq, Ord, Enum, Bounded)
+@
+\eprog
+The boolean type @Bool@ is an enumeration. % ; Figure~\ref{prelude-bool}
+The basic boolean functions are @&&@ (and), @||@ (or), and @not@.
+The name @otherwise@ is defined as @True@ to make guarded expressions
+more readable.
+
+\label{prelude-bool}
+\indextycon{Bool}
+\indextt{False}\indextt{True}
+\index{\vert\vert@@{\tt  {\char'174}{\char'174}}}
+\index{&&@@{\tt  \&\&}}
+\indextt{not}
+\indextt{otherwise}
+
+\subsubsection{Characters and Strings}
+\label{characters}
+\index{character}\index{string}
+
+The character type @Char@\indextycon{Char}
+is an enumeration whose values represent Unicode characters~\cite{unicode}.
+% and consists of 16 bit values, conforming to
+% the Unicode standard~\cite{unicode}.
+% of which the first 128
+% are the ASCII\index{ASCII character set} character set.  
+The lexical syntax for
+characters is defined in Section~\ref{lexemes-char}; character
+literals are nullary constructors in the datatype @Char@.  Type @Char@
+is an instance of the classes @Read@, @Show@, @Eq@, @Ord@, 
+@Enum@, and @Bounded@.  The @toEnum@ and @fromEnum@ functions,
+standard functions from class @Enum@, map characters to and from the
+@Int@ type.
+% @Int@ values in the range "[ 0 , 2^{16}-1 ]".
+
+Note that ASCII control characters each have several representations
+in character literals: numeric escapes, ASCII mnemonic escapes,
+and the @\^@"X" notation.
+In addition, there are the following equivalences:
+@\a@ and @\BEL@, @\b@ and @\BS@, @\f@ and @\FF@, @\r@ and @\CR@,
+@\t@ and @\HT@, @\v@ and @\VT@, and @\n@ and @\LF@.
+
+A {\em string} is a list of characters:\nopagebreak[4]
+\bprog
+@
+type  String  =  [Char]
+@
+\eprog
+\indexsynonym{String}
+Strings may be abbreviated using the lexical syntax described in
+Section~\ref{lexemes-char}.  For example, @"A string"@ abbreviates
+\[
+@[ 'A',' ','s','t','r', 'i','n','g']@
+\]
+
+\subsubsection{Lists}
+\label{basic-lists}
+\index{list}
+\bprog
+@
+data  [a]  =  [] | a : [a]  deriving (Eq, Ord)
+@
+\eprog
+Lists are an algebraic datatype of two constructors, although
+with special syntax, as described in Section~\ref{lists}.
+The first constructor is the null list, written `@[]@' (``nil''),
+\index{[]@@{\tt  []} (nil)}%
+and the second is `@:@' (``cons'').
+\indextt{:}
+The module @PreludeList@ (see Section~\ref{preludelist})
+defines many standard list functions.  
+Arithmetic sequences
+\index{arithmetic sequence}
+and list comprehensions,
+\index{list comprehension}
+two convenient
+syntaxes for special kinds of lists, are described in
+Sections~\ref{arithmetic-sequences} and \ref{list-comprehensions},
+respectively.  Lists are an instance of classes @Read@, @Show@, @Eq@, @Ord@, 
+@Monad@, @Functor@, and @MonadPlus@.
+
+\subsubsection{Tuples}
+\label{basic-tuples}
+\index{tuple}
+
+Tuples are algebraic datatypes with special syntax, as defined
+in Section~\ref{tuples}.  Each tuple type has a single constructor.
+All tuples are instances of @Eq@, @Ord@, @Bounded@, @Read@,
+and @Show@ (provided, of course, that all their component types are).
+
+There is no upper bound on the size of a tuple, but some \Haskell{}
+implementations may restrict the size of tuples, and limit the
+instances associated with larger tuples.  However, every Haskell
+implementation must support tuples up to size 15, together with the instances
+for @Eq@, @Ord@, @Bounded@, @Read@, and @Show@.  The Prelude and
+libraries define tuple functions such as @zip@ for tuples up to a size
+of 7.
+
+The constructor for a tuple is written by omitting the expressions
+surrounding the commas; thus @(x,y)@ and @(,) x y@ produce the same
+value. The same holds for tuple type constructors; thus, @(Int,Bool,Int)@
+and @(,,) Int Bool Int@ denote the same type.
+\indextt{(,)}
+\indextt{(,,)}
+
+The following functions are defined for pairs (2-tuples):
+@fst@, @snd@, @curry@, and @uncurry@.  Similar functions are not
+predefined for larger tuples.
+\indextt{fst}
+\indextt{snd}
+\indextt{curry}
+\indextt{uncurry}
+\indextt{zip}
+
+\subsubsection{The Unit Datatype}
+\label{basic-trivial}
+\bprog
+@
+data  () = () deriving (Eq, Ord, Bounded, Enum, Read, Show)
+@
+\eprog
+The unit datatype @()@ has one non-"\bot"
+member, the nullary constructor @()@.  See also Section~\ref{unit-expression}.
+\index{trivial type}
+
+\subsubsection{Function Types}
+\index{function}
+Functions are an abstract type: no constructors directly create
+functional values.  The following simple functions are found in the Prelude:
+@id@, @const@, @(.)@, @flip@, @($)@, and @until@.
+\indextt{id}
+\indextt{const}
+\indextt{.}
+\indextt{flip}
+\indextt{until}
+
+\subsubsection{The IO and IOError Types}
+The @IO@ type serves as a tag for operations (actions) that interact
+with the outside world.  The @IO@ type is abstract: no constructors are
+visible to the user.  @IO@ is an instance of the @Monad@ and @Functor@
+classes.  Chapter~\ref{io} describes I/O operations.
+
+@IOError@ is an abstract type representing errors raised by I/O
+operations.  It is an instance of @Show@ and @Eq@.  Values of this type
+are constructed by the various I/O functions and are not presented in
+any further detail in this report.  The Prelude contains a few
+I/O functions (defined in Section~\ref{preludeio}), and Part~\ref{libraries}
+contains many more.
+\indextycon{IO}
+\indextycon{IOError}
+
+\subsubsection{Other Types}
+{\small
+\bprog
+@
+data  Maybe a     =  Nothing | Just a  deriving (Eq, Ord, Read, Show)
+data  Either a b  =  Left a | Right b  deriving (Eq, Ord, Read, Show)
+data  Ordering    =  LT | EQ | GT deriving
+                                  (Eq, Ord, Bounded, Enum, Read, Show)
+@
+\indextt{Just}
+\indextt{Nothing}
+\indextycon{Maybe}
+\indextt{Left}
+\indextt{Right}
+\indextycon{Either}
+\indextt{LT}
+\indextt{EQ}
+\indextt{GT}
+\indextycon{Ordering}
+\indextt{maybe}
+\indextt{either}
+\eprog
+}
+The @Maybe@ type is an instance of classes @Functor@, @Monad@,
+and @MonadPlus@.  The @Ordering@ type is used by @compare@
+in the class @Ord@. The functions @maybe@ and @either@ are found in
+the Prelude.
+
+\subsection{Strict Evaluation}
+\label{strict-eval}
+\index{$""!@@{\tt  {\char'044}{\char'041}}}
+\index{$@@{\tt  {\char'044}}}
+\indextt{seq}
+Function application in Haskell is non-strict; that is, a function
+argument is evaluated only when required.  Sometimes it is desirable to
+force the evaluation of a value, using the @seq@ function:
+\bprog
+@
+  seq :: a -> b -> b
+@
+\eprog
+The function @seq@ is defined by the equations:
+\[\ba{l}
+"@seq@ \bot b = \bot" \\
+"@seq@  a b =  b,  if a \ne \bot" \\
+\ea\]\ifhtml{\\}{}
+@seq@ is usually introduced to improve performance by
+avoiding unneeded laziness.  Strict datatypes (see
+\index{strictness flags}
+Section~\ref{strictness-flags}) are defined in terms of the @$!@
+operator. 
+However, the provision of @seq@ has important semantic consequences, because it is available
+{\em at every type}.
+As a consequence, "\bot" is
+not the same as @\x -> @ "\bot", since @seq@ can be used to distinguish them.
+For the same reason, the existence of @seq@ weakens Haskell's parametricity properties.
+
+The operator @$!@ is strict (call-by-value) application, and is defined
+in terms of @seq@.  The Prelude also defines the @$@ operator to perform 
+non-strict application.
+\bprog
+@
+  infixr 0 $, $!
+  ($), ($!) :: (a -> b) -> a -> b
+  f $  x   =          f x
+  f $! x   =  x `seq` f x
+@
+\eprog
+The non-strict application operator @$@ may appear redundant, since 
+ordinary application @(f x)@ means the same as @(f $ x)@.
+However, @$@ has low, right-associative binding precedence,
+so it sometimes allows parentheses to be omitted; for example:
+\bprog
+@
+  f $ g $ h x  =  f (g (h x))
+@
+\eprog
+It is also useful in higher-order situations, such as @map ($ 0) xs@,
+or @zipWith ($) fs xs@.
+
+\subsection{Standard Haskell Classes}
+Figure~\ref{standard-classes} shows the hierarchy of 
+\Haskell{} classes defined in the Prelude and the Prelude types that
+are instances of these classes.
+\begin{figure}%
+%*ignore
+% \epsfbox{class-fig.eps}
+\includegraphics[scale=0.7]{classes}
+% \struthack{11pt}
+%*endignore
+%**<div align=center><img src="classes.gif" alt="Diagram of standard Haskell classes"> 
+%**<h4>Figure 5</h4> </div>
+\ecaption{Standard Haskell Classes}
+\label{standard-classes}
+\end{figure}
+
+Default class method declarations (Section~\ref{classes}) are provided
+for many of the methods in standard classes.  A comment with each
+@class@ declaration in Chapter~\ref{stdprelude} specifies the
+smallest collection of method definitions that, together with the
+default declarations, provide a reasonable definition for all the
+class methods.  If there is no such comment, then all class methods
+must be given to fully specify an instance.
+
+\subsubsection{The Eq Class}
+\indexclass{Eq}
+\indextt{==}
+\indextt{/=}
+\bprog
+@
+  class  Eq a  where
+        (==), (/=)  ::  a -> a -> Bool
+
+        x /= y  = not (x == y)
+        x == y  = not (x /= y)
+@
+\eprog
+The @Eq@ class provides equality (@==@) and inequality (@/=@) methods.
+All basic datatypes except for functions and @IO@ are instances of this class.
+Instances of @Eq@ can be derived for any user-defined datatype whose
+constituents are also instances of @Eq@.
+
+This declaration gives default method declarations for both @/=@ and @==@,
+each being defined in terms of the other.  If an instance declaration
+for @Eq@ defines neither @==@ nor @/=@, then both will loop.
+If one is defined, the default method for the other will make use of
+the one that is defined.  If both are defined, neither default method is used.
+
+\subsubsection{The Ord Class}
+\indexclass{Ord}
+\indextt{<}
+\indextt{<=}
+\indextt{>}
+\indextt{>=}
+\indextt{compare}
+\indextt{max}
+\indextt{min}
+\bprog
+@
+  class  (Eq a) => Ord a  where
+    compare              :: a -> a -> Ordering
+    (<), (<=), (>=), (>) :: a -> a -> Bool
+    max, min             :: a -> a -> a
+
+    compare x y | x == y    = EQ
+                | x <= y    = LT
+                | otherwise = GT
+
+    x <= y  = compare x y /= GT
+    x <  y  = compare x y == LT
+    x >= y  = compare x y /= LT
+    x >  y  = compare x y == GT
+
+    -- Note that (min x y, max x y) = (x,y) or (y,x)
+    max x y | x <= y    =  y
+            | otherwise =  x
+    min x y | x <= y    =  x
+            | otherwise =  y
+@
+\eprog
+The @Ord@ class is used for totally ordered datatypes.  All basic
+datatypes
+except for functions, @IO@, and @IOError@, are instances of this class.  Instances
+of @Ord@ 
+can be derived for any user-defined datatype whose constituent types
+are in @Ord@.  The declared order
+of the constructors in the data declaration determines the ordering in
+derived @Ord@ instances.
+The @Ordering@ datatype
+allows a single comparison to determine the precise ordering of two
+objects.
+
+The default declarations allow a user to create an @Ord@ instance 
+either with a type-specific @compare@ function or with type-specific
+@==@ and @<=@ functions.
+
+\subsubsection{The Read and Show Classes}
+\indexsynonym{ReadS}
+\indexsynonym{ShowS}
+\indexclass{Read}
+\indexclass{Show}
+\indextt{show}
+\indextt{readsPrec}
+\indextt{showsPrec}
+\indextt{readList}
+\indextt{showList}
+\bprog
+@
+type  ReadS a = String -> [(a,String)]
+type  ShowS   = String -> String
+
+class  Read a  where
+    readsPrec :: Int -> ReadS a
+    readList  :: ReadS [a]
+    -- ... default decl for readList given in Prelude
+
+class  Show a  where
+    showsPrec :: Int -> a -> ShowS
+    show      :: a -> String 
+    showList  :: [a] -> ShowS
+
+    showsPrec _ x s   = show x ++ s
+    show x            = showsPrec 0 x ""
+    -- ... default decl for showList given in Prelude
+@
+\eprog
+The @Read@ and @Show@ classes are used to convert values to
+or from strings. 
+The @Int@ argument to @showsPrec@ and @readsPrec@ gives the operator
+precedence of the enclosing context (see Section~\ref{derived-text}).
+
+@showsPrec@ and @showList@ return a @String@-to-@String@
+function, to allow constant-time concatenation of its results using function
+composition.
+A specialised variant, @show@, is also provided, which
+uses precedence context zero, and returns an ordinary @String@.
+The method @showList@ is provided to allow the programmer to
+give a specialised way of showing lists of values.  This is particularly
+useful for the @Char@ type, where values of type @String@ should be
+shown in double quotes, rather than between square brackets.
+
+Derived instances of @Read@ and @Show@ replicate the style in which a
+constructor is declared: infix constructors and field names are used
+on input and output.  Strings produced by @showsPrec@ are usually
+readable by @readsPrec@.  
+
+All @Prelude@ types, except function types and @IO@ types,
+are instances of @Show@ and @Read@.
+(If desired, a programmer can easily make functions and @IO@ types 
+into (vacuous) instances of @Show@, by providing an instance declaration.)
+
+\indextt{reads}
+\indextt{shows}
+\indextt{read}
+For convenience, the Prelude provides the following auxiliary
+functions: 
+\bprog
+@
+reads   :: (Read a) => ReadS a
+reads   =  readsPrec 0
+
+shows   :: (Show a) => a -> ShowS
+shows   =  showsPrec 0
+
+read    :: (Read a) => String -> a
+read s  =  case [x | (x,t) <- reads s, ("","") <- lex t] of
+              [x] -> x
+              []  -> error "PreludeText.read: no parse"
+              _   -> error "PreludeText.read: ambiguous parse"
+@
+\eprog
+\indextt{shows}\indextt{reads}\indextt{show}\indextt{read}
+@shows@ and @reads@ use a default precedence of 0.  The @read@ function reads
+input from a string, which must be completely consumed by the input
+process.  
+
+\indextt{lex}
+The function @lex :: ReadS String@, used by @read@, is also part of the Prelude.
+It reads a single lexeme from the input, discarding initial white space, and
+returning the characters that constitute the lexeme.  If the input string contains
+only white space, @lex@ returns a single successful ``lexeme'' consisting of the
+empty string.  (Thus @lex ""@ = @[("","")]@.)  If there is no legal lexeme at the
+beginning of the input string, @lex@ fails (i.e. returns @[]@).
+
+
+\subsubsection{The Enum Class}
+\label{enum-class}
+\indexclass{Enum}
+\indextt{toEnum}
+\indextt{fromEnum}
+\indextt{enumFrom}
+\indextt{enumFromThen}
+\indextt{enumFromTo}
+\indextt{enumFromThenTo}
+\bprog
+@
+class  Enum a  where
+    succ, pred     :: a -> a
+    toEnum         :: Int -> a
+    fromEnum       :: a -> Int
+    enumFrom       :: a -> [a]            -- [n..]
+    enumFromThen   :: a -> a -> [a]       -- [n,n'..]
+    enumFromTo     :: a -> a -> [a]       -- [n..m]
+    enumFromThenTo :: a -> a -> a -> [a]  -- [n,n'..m]
+
+    -- Default declarations given in Prelude
+@
+\eprog
+Class @Enum@ defines operations on sequentially ordered types.
+The functions @succ@ and @pred@ return the successor and predecessor,
+respectively, of a value.
+The functions @fromEnum@ and @toEnum@ map values from a type in
+@Enum@ to and from @Int@.  
+The @enumFrom@... methods are used when translating arithmetic
+sequences (Section~\ref{arithmetic-sequences}).
+
+Instances of @Enum@ may be derived for any enumeration type (types
+whose constructors have no fields); see Chapter~\ref{derived-appendix}.
+
+For any type that is an instance of class @Bounded@ as well as @Enum@, the following
+should hold:
+\begin{itemize}
+\item The calls @succ maxBound@ and @pred minBound@ should result in
+a runtime error.
+
+\item @fromEnum@ and @toEnum@ should give a runtime error if the 
+result value is not representable in the result type.  For example,
+@toEnum 7 :: Bool@ is an error.
+
+\item @enumFrom@ and @enumFromThen@ should be defined with 
+an implicit bound, thus:
+\bprog
+@
+  enumFrom     x   = enumFromTo     x maxBound
+  enumFromThen x y = enumFromThenTo x y bound
+    where
+      bound | fromEnum y >= fromEnum x = maxBound
+            | otherwise                = minBound
+@
+\eprog
+\end{itemize}
+
+The following @Prelude@ types are instances of @Enum@: 
+\begin{itemize}
+\item Enumeration types: @()@, @Bool@, and @Ordering@. The
+semantics of these instances is given by Chapter~\ref{derived-appendix}.
+For example, @[LT ..]@ is the list @[LT,EQ,GT]@.
+
+\item @Char@: the instance is given in Chapter~\ref{stdprelude}, based
+on the primitive functions that convert between a @Char@ and an @Int@.
+For example, @enumFromTo 'a' 'z'@ denotes
+the list of lowercase letters in alphabetical order.
+
+\item Numeric types: @Int@, @Integer@, @Float@, @Double@.  The semantics
+of these instances is given next.
+\end{itemize}
+For all four numeric types, @succ@ adds 1, and @pred@ subtracts 1.
+The conversions @fromEnum@ and @toEnum@ convert between the type and @Int@.
+In the case of @Float@ and @Double@, the digits after the decimal point may be lost.
+It is implementation-dependent what @fromEnum@ returns when applied to 
+a value that is too large to fit in an @Int@.
+
+For the types @Int@ and @Integer@, the enumeration functions 
+have the following meaning:
+\begin{itemize}
+\item The sequence "@enumFrom@~e_1" is the list "@[@e_1@,@e_1+1@,@e_1+2@,@...@]@".
+
+\item The sequence "@enumFromThen@~e_1~e_2" is the list "@[@e_1@,@e_1+i@,@e_1+2i@,@...@]@",
+where the increment, "i", is "e_2-e_1".  The increment may be zero or negative.
+If the increment is zero, all the list elements are the same.
+
+\item The sequence "@enumFromTo@~e_1~e_3" is 
+the list "@[@e_1@,@e_1+1@,@e_1+2@,@...e_3@]@".
+The list is empty if "e_1 > e_3".
+
+\item The sequence "@enumFromThenTo@~e_1~e_2~e_3" 
+is the list "@[@e_1@,@e_1+i@,@e_1+2i@,@...e_3@]@",
+where the increment, "i", is "e_2-e_1".  If the increment 
+is positive or zero, the list terminates when the next element would
+be greater than "e_3"; the list is empty if "e_1 > e_3".
+If the increment is negative, the list terminates when the next element would
+be less than "e_3"; the list is empty if "e1 < e_3".
+\end{itemize}
+For @Float@ and @Double@, the semantics of the @enumFrom@ family is
+given by the rules for @Int@ above, except that the list terminates
+when the elements become greater than "e_3+i/2" for positive increment
+"i", or when they become less than "e_3+i/2" for negative "i".
+
+For all four of these Prelude numeric types, all of the @enumFrom@ 
+family of functions are strict in all their arguments.
+
+\subsubsection{The Functor Class}
+\indexclass{Functor}
+\indextt{fmap}
+\index{functor}
+
+\bprog
+@
+class  Functor f  where
+    fmap    :: (a -> b) -> f a -> f b
+@
+\eprog
+The @Functor@
+class is used for types that can be mapped over.  Lists, @IO@, and
+@Maybe@ are in this class. 
+
+Instances of @Functor@ should satisfy the following laws:
+\[\ba{lcl}
+@fmap id@&=&@id@\\
+@fmap (f . g)@&=&@fmap f . fmap g@\\
+\ea\]\ifhtml{\\}{}
+All instances of @Functor@ defined in the Prelude satisfy these laws.
+
+
+\subsubsection{The Monad Class}
+\label{monad-class}
+\indexclass{Monad}
+\indextt{return}
+\indextt{fail}
+\indextt{>>}
+\indextt{>>=}
+\index{monad}
+\bprog
+@
+class  Monad m  where
+    (>>=)   :: m a -> (a -> m b) -> m b
+    (>>)    :: m a -> m b -> m b
+    return  :: a -> m a
+    fail    :: String -> m a
+
+    m >> k  =  m >>= \_ -> k
+    fail s  = error s
+@
+\eprog
+The @Monad@ class defines the basic operations over a {\em monad}.
+See Chapter~\ref{io} for more information about monads.
+
+``@do@'' expressions provide a convenient syntax for writing
+monadic expressions (see Section~\ref{do-expressions}).
+The @fail@ method is invoked on pattern-match failure in a @do@
+expression.
+
+In the Prelude, lists, 
+@Maybe@, and @IO@ are all instances of @Monad@.
+The @fail@ method for lists returns the empty list @[]@,
+for @Maybe@ returns @Nothing@, and for @IO@ raises a user
+exception in the IO monad (see Section~\ref{io-exceptions}).
+
+Instances of @Monad@ should satisfy the following laws:
+\[\ba{lcl}
+@return a >>= k@&=&@k a@ \\
+@m >>= return@&=&@m@ \\
+@m >>= (\x -> k x >>= h)@&=&@(m >>= k) >>= h@\\
+\ea\]\ifhtml{\\}{}
+Instances of both @Monad@ and @Functor@ should additionally satisfy the law:
+\[\ba{lcl}
+@fmap f xs@&=&@xs >>= return . f@\\
+\ea\]\ifhtml{\\}{}
+All instances of @Monad@ defined in the Prelude satisfy these laws.
+
+The Prelude provides the following auxiliary functions: 
+\bprog
+@
+sequence  :: Monad m => [m a] -> m [a] 
+sequence_ :: Monad m => [m a] -> m () 
+mapM      :: Monad m => (a -> m b) -> [a] -> m [b]
+mapM_     :: Monad m => (a -> m b) -> [a] -> m ()
+(=<<)     :: Monad m => (a -> m b) -> m a -> m b
+@
+\eprog
+\indextt{sequence}
+\index{sequence{\char '137}@@{\tt  sequence{\char '137}}}
+\index{mapM{\char '137}@@{\tt  mapM{\char '137}}}
+\indextt{mapM}
+\indextt{=<<}
+
+\subsubsection{The Bounded Class}
+\indexclass{Bounded}
+\indextt{minBound}
+\indextt{maxBound}
+@
+class  Bounded a  where
+    minBound, maxBound :: a
+@
+
+The @Bounded@ class is used to name the upper and lower limits of a
+type.  @Ord@ is not a superclass of @Bounded@ since types that are not
+totally ordered may also have upper and lower bounds.
+The types @Int@, @Char@, @Bool@,
+@()@, @Ordering@, and all tuples are instances of @Bounded@.  
+The @Bounded@ class may be derived
+for any enumeration type; @minBound@ is the first constructor listed
+in the @data@ declaration and @maxBound@ is the last.  @Bounded@ may
+also be derived for single-constructor datatypes whose constituent
+types are in @Bounded@.
+
+\subsection{Numbers}
+\label{numbers}
+\index{number}
+
+\Haskell{} provides several kinds of numbers; the numeric
+types and the operations upon them have been heavily influenced by
+%Common Lisp \cite{steele:common-lisp} and Scheme \cite{RRRRS}.
+Common Lisp and Scheme.
+Numeric function names and operators are usually overloaded, using
+several type classes with an inclusion relation shown in
+Figure~\ref{standard-classes}.
+The class @Num@\indexclass{Num} of numeric
+types is a subclass of @Eq@\indexclass{Eq}, since all numbers may be
+compared for equality; its subclass @Real@\indexclass{Real} is also a
+subclass of @Ord@\indexclass{Ord}, since the other comparison operations
+apply to all but complex numbers (defined in the @Complex@ library).
+The class @Integral@\indexclass{Integral} contains integers of both 
+limited and unlimited range; the class
+@Fractional@\indexclass{Fractional} contains all non-integral types; and
+the class @Floating@\indexclass{Floating} contains all floating-point
+types, both real and complex.
+
+The Prelude defines only the most basic numeric types: fixed sized
+integers (@Int@), arbitrary precision integers (@Integer@), single
+precision floating (@Float@), and double precision floating
+(@Double@).  Other numeric types such as rationals and complex numbers
+are defined in libraries.  In particular, the type @Rational@ is a
+ratio of two @Integer@ values, as defined in the @Ratio@
+library.  
+
+The default floating point operations defined by the \Haskell{}
+Prelude do not 
+conform to current language independent arithmetic (LIA) standards.  These
+standards require considerably more complexity in the numeric
+structure and have thus been relegated to a library.  Some, but not
+all, aspects of the IEEE floating point standard have been
+accounted for in Prelude class @RealFloat@.
+
+The standard numeric types are listed in Table~\ref{standard-numeric-types}.
+The finite-precision integer type @Int@\indextycon{Int} covers at
+least the range 
+"[ - 2^{29}, 2^{29} - 1]\/".  As @Int@ is an instance of the @Bounded@
+class, @maxBound@ and @minBound@ can be used to determine the exact
+@Int@ range defined by an implementation.
+%(Figure~\ref{basic-numeric-2}, page~\pageref{basic-numeric-2}) define the limits of
+%@Int@\indextycon{Int} in each implementation.
+@Float@\indextycon{Float} is implementation-defined; it is desirable that
+this type be at least equal in range and precision to the IEEE
+single-precision type.  Similarly, @Double@\indextycon{Double} should
+cover IEEE double-precision.  The results of exceptional
+conditions (such as overflow or underflow) on the fixed-precision
+numeric types are undefined; an implementation may choose error
+("\bot", semantically), a truncated value, or a special value such as
+infinity, indefinite, etc.
+
+\begin{table}[tb]
+\[
+\bto{|l|l|l|}
+\hline
+\multicolumn{1}{|c|}{Type} & 
+	\multicolumn{1}{c|}{Class} &
+	\multicolumn{1}{c|}{Description} \\ \hline
+@Integer@ & @Integral@ & Arbitrary-precision integers \\
+@Int@ & @Integral@ & Fixed-precision integers \\
+@(Integral a) => Ratio a@ & @RealFrac@ & Rational numbers \\
+@Float@ & @RealFloat@ & Real floating-point, single precision \\
+@Double@ & @RealFloat@ & Real floating-point, double precision \\
+@(RealFloat a) => Complex a@ & @Floating@ & Complex floating-point \\
+\hline
+\eto
+\]
+%**<div align=center> <h4>Table 2</h4> </div>
+\ecaption{Standard Numeric Types}
+\label{standard-numeric-types}
+\index{numeric type}
+\end{table}
+
+The standard numeric classes and other numeric functions defined in
+the Prelude are shown
+in Figures~\ref{basic-numeric-1}--\ref{basic-numeric-2}.
+Figure~\ref{standard-classes} shows the class dependencies and
+built-in types that are instances of the numeric classes.
+
+\begin{figure}[tb]
+\begin{outlineenv}
+@
+class  (Eq a, Show a) => Num a  where
+    (+), (-), (*)  :: a -> a -> a
+    negate         :: a -> a
+    abs, signum    :: a -> a
+    fromInteger    :: Integer -> a
+
+class  (Num a, Ord a) => Real a  where
+    toRational ::  a -> Rational
+
+class  (Real a, Enum a) => Integral a  where
+    quot, rem, div, mod :: a -> a -> a
+    quotRem, divMod     :: a -> a -> (a,a)
+    toInteger           :: a -> Integer
+
+class  (Num a) => Fractional a  where
+    (/)          :: a -> a -> a
+    recip        :: a -> a
+    fromRational :: Rational -> a
+
+class  (Fractional a) => Floating a  where
+    pi                  :: a
+    exp, log, sqrt      :: a -> a
+    (**), logBase       :: a -> a -> a
+    sin, cos, tan       :: a -> a
+    asin, acos, atan    :: a -> a
+    sinh, cosh, tanh    :: a -> a
+    asinh, acosh, atanh :: a -> a
+@
+\end{outlineenv}
+%**<div align=center> <h4>Figure 6</h4> </div>
+\ecaption{Standard Numeric Classes and Related Operations, Part 1}
+\label{basic-numeric-1}
+\indexclass{Num}
+\indextt{+}
+\indextt{-}
+\indextt{*}
+\indextt{negate}\indextt{abs}\indextt{signum}         
+\indextt{fromInteger}
+\indexclass{Real}\indextt{toRational}
+\indexclass{Integral}
+\indextt{quotRem}\indextt{divMod}\indextt{mod}\indextt{div}
+\indextt{rem}\indextt{quot}
+\indextt{even}\indextt{odd}
+\indexclass{Fractional}
+\indextt{/}
+\indextt{recip}\indextt{fromRational}       
+\indexclass{Floating}\indextt{pi}\indextt{exp}\indextt{log}\indextt{sqrt} 
+\indextt{**}
+\indextt{logBase}
+\indextt{sin}\indextt{cos}\indextt{tan}                        
+\indextt{asin}\indextt{acos}\indextt{atan}               
+\indextt{sinh}\indextt{cosh}\indextt{tanh}               
+\indextt{asinh}\indextt{acosh}\indextt{atanh}      
+\end{figure}
+
+\begin{figure}[tb]
+\begin{outlineenv}
+@
+class  (Real a, Fractional a) => RealFrac a  where
+    properFraction   :: (Integral b) => a -> (b,a)
+    truncate, round  :: (Integral b) => a -> b
+    ceiling, floor   :: (Integral b) => a -> b
+
+class  (RealFrac a, Floating a) => RealFloat a  where
+    floatRadix          :: a -> Integer
+    floatDigits         :: a -> Int
+    floatRange          :: a -> (Int,Int)
+    decodeFloat         :: a -> (Integer,Int)
+    encodeFloat         :: Integer -> Int -> a
+    exponent            :: a -> Int
+    significand         :: a -> a
+    scaleFloat          :: Int -> a -> a
+    isNaN, isInfinite, isDenormalized, isNegativeZero, isIEEE 
+                        :: a -> Bool
+    atan2               :: a -> a -> a
+
+gcd, lcm :: (Integral a) => a -> a-> a
+(^)      :: (Num a, Integral b) => a -> b -> a
+(^^)     :: (Fractional a, Integral b) => a -> b -> a
+
+fromIntegral :: (Integral a, Num b) => a -> b
+realToFrac   :: (Real a, Fractional b) => a -> b
+@
+\end{outlineenv}
+%**<div align=center> <h4>Figure 7</h4> </div>
+\ecaption{Standard Numeric Classes and Related Operations, Part 2}
+\label{basic-numeric-2}
+\indexclass{RealFrac}\indextt{properFraction}\indextt{approxRational}
+\indextt{truncate}\indextt{round}
+\indextt{ceiling}\indextt{floor}    
+\indexclass{RealFloat}
+\indextt{floatRadix}\indextt{floatDigits}\indextt{floatRange} 
+\indextt{decodeFloat}\indextt{encodeFloat}
+\indextt{exponent}\indextt{significand}\indextt{scaleFloat}
+\indextycon{Int}\indextycon{Integer}
+\indextt{fromIntegral}
+\indextt{gcd}\indextt{lcm} 
+\index{^@@{\tt  {\char'136}}} % this is ^.  Must have 2 spaces after tt!
+\index{^^@@{\tt  {\char'136}{\char'136}}} % this is ^^
+\indexclass{RealFrac}
+\indextycon{Float}\indextycon{Double}
+\indextt{realToFrac}
+\indextt{atan2}
+\end{figure}
+
+\subsubsection{Numeric Literals}
+\label{numeric-literals}
+
+The syntax of numeric literals is given in
+Section~\ref{lexemes-numeric}.  An integer literal represents the
+application
+of the function @fromInteger@\indextt{fromInteger} to the appropriate
+value of type 
+@Integer@.  Similarly, a floating literal stands for an application of
+@fromRational@\indextt{fromRational} to a value of type @Rational@ (that is, 
+@Ratio Integer@).  Given the typings:
+\bprog
+@
+fromInteger  :: (Num a) => Integer -> a
+fromRational :: (Fractional a) => Rational -> a
+@
+\eprog\indextt{fromInteger}\indextt{fromRational}%
+integer and floating literals have the
+typings @(Num a) => a@ and @(Fractional a) => a@, respectively.
+Numeric literals are defined in this indirect way so that they may be
+interpreted as values of any appropriate numeric type.
+See Section~\ref{default-decls} for a discussion of overloading ambiguity.
+
+\subsubsection{Arithmetic and Number-Theoretic Operations}
+\label{arithmetic-operators}
+\index{arithmetic operator}
+
+The infix class methods 
+@(+)@,
+\indextt{+}
+@(*)@,
+\indextt{*}
+@(-)@,
+\indextt{-}
+and the unary function
+@negate@\indextt{negate} (which can also be written as a prefix minus sign; see
+section~\ref{operators}) apply to all numbers.  The class methods
+@quot@\indextt{quot}, @rem@\indextt{rem}, @div@\indextt{div}, and
+@mod@\indextt{mod} apply only to integral numbers, while the class method
+@(/)@
+\indextt{/}
+applies only to fractional ones.  The @quot@, @rem@,
+@div@, and @mod@ class methods satisfy these laws if @y@ is non-zero:
+\bprog
+@
+(x `quot` y)*y + (x `rem` y) == x
+(x `div`  y)*y + (x `mod` y) == x
+@
+\eprog
+@`quot`@ is integer division truncated toward zero,
+while the result of @`div`@ is truncated toward
+negative infinity. 
+%Note that @quot@ should be used rather than
+%@div@ to give the semantics of Pascal's @div@.
+The @quotRem@ class method takes a dividend and a divisor as arguments
+and returns a (quotient, remainder) pair; @divMod@ is defined
+similarly:
+\bprog
+@
+quotRem x y  =  (x `quot` y, x `rem` y)
+divMod  x y  =  (x `div`  y, x `mod` y)
+@
+\eprog
+Also available on integral numbers are the even and odd predicates:
+\bprog
+@
+even x =  x `rem` 2 == 0
+odd    =  not . even
+@
+\eprog\indextt{even}\indextt{odd}
+Finally, there are the greatest common divisor and least common
+multiple functions.  @gcd@\indextt{gcd} "x" "y" is the greatest
+(positive) integer that divides both "x" and "y"; for example @gcd (-3) 6@ = @3@, @gcd (-3) (-6)@ = @3@, 
+@gcd 0 4@ = @4@. @gcd 0 0@ raises a runtime error.
+
+@lcm@\indextt{lcm} "x" "y" is the smallest positive integer that both "x" and "y" divide.
+
+\subsubsection{Exponentiation and Logarithms}
+\index{exponentiation}\index{logarithm}
+
+The one-argument exponential function @exp@\indextt{exp} and the
+logarithm function @log@\indextt{log} act on floating-point numbers and
+use base "e".  @logBase@\indextt{logBase} "a" "x" returns the
+logarithm of "x" in base "a".  @sqrt@\indextt{sqrt} returns the
+principal square root of a floating-point number.
+There are three two-argument exponentiation operations:
+@(^)@\index{^@@{\tt  {\char'136}}} raises any  % 
+number to a nonnegative integer power,
+@(^^)@\index{^^@@{\tt  {\char'136}{\char'136}}} raises a
+fractional number to any integer power, and @(**)@
+\indextt{**}
+takes two floating-point arguments.  The value of "x"@^0@ or "x"@^^0@
+is @1@ for any "x", including zero; @0**@"y" is @1@ if "y" is @0@, and
+@0@ otherwise.
+  
+\subsubsection{Magnitude and Sign}
+\label{magnitude-sign}
+\index{magnitude}\index{sign}
+
+A number has a {\em magnitude}
+and a {\em sign}.  The functions @abs@\indextt{abs} and
+@signum@\indextt{signum} apply to any number and satisfy the law:
+\bprog
+@
+abs x * signum x == x
+@
+\eprog
+For real numbers, these functions are defined by:
+\bprog
+@
+abs x    | x >= 0  = x
+         | x <  0  = -x
+
+signum x | x >  0  = 1
+         | x == 0  = 0
+         | x <  0  = -1
+@
+\eprog
+
+\subsubsection{Trigonometric Functions}
+\index{trigonometric function}
+
+Class @Floating@ provides the 
+circular and hyperbolic sine\index{sine}, cosine\index{cosine},
+and tangent\index{tangent} functions and their inverses.
+Default implementations of @tan@, @tanh@, @logBase@, @**@, and @sqrt@ are
+provided, but implementors are free to provide more accurate implementations.
+
+Class @RealFloat@ provides a version of arctangent
+taking two real floating-point arguments.
+For real floating "x" and "y", @atan2@\indextt{atan2} "y" "x"
+computes the angle (from the positive x-axis) of the vector from the origin
+to the point "(x,y)".  @atan2@\indextt{atan2} "y" "x"
+returns a value in the range @[-pi, pi]@.  It
+follows the Common Lisp semantics for the origin when signed zeroes are
+supported.  @atan2@ "y" @1@, with "y" in a type that is @RealFloat@, should return the
+same value as @atan@ "y".  A default definition of @atan2@ is provided, but
+implementors can provide a more accurate implementation. 
+
+The precise definition of the above functions is as in Common Lisp,
+which in turn follows Penfield's proposal for
+APL~\cite{penfield:complex-apl}.  See these references for discussions
+of branch cuts, discontinuities, and implementation.
+
+\subsubsection{Coercions and Component Extraction}
+\label{coercion}
+\index{coercion}
+
+The @ceiling@\indextt{ceiling}, @floor@\indextt{floor},
+@truncate@\indextt{truncate}, and @round@\indextt{round}
+functions each take a real fractional argument and return an integral
+result.  \mbox{@ceiling@ "x"} returns the least integer not less than "x", and
+\mbox{@floor@ "x"}, the greatest integer not greater than "x".  \mbox{@truncate@ "x"}
+yields the integer nearest "x" between "0" and "x", inclusive.
+\mbox{@round@ "x"} returns the nearest integer to "x", the even integer if
+"x" is equidistant between two integers.
+
+% 	Keith Wansbrough clarifies the above defn of @round@,
+%	which strangely rounds both 3.5 and 4.5 to 4
+%
+% This is generally considered the most accurate kind of rounding, since it 
+% avoids cumulative errors.  If you get lots of values on the 0.5 boundary, 
+% `round up' gives you an error of +0.5 for each, whereas round-to-even gives 
+% you a mean error of zero.
+% 
+% IEEE floating point does this by default for its basic operations.
+
+The function @properFraction@\indextt{properFraction} takes a real
+fractional number "x" and returns a pair "(n,f)" such that "x = n+f", and:
+"n" is an integral number with the same sign as "x"; and "f" is a
+fraction "f" with the same type and sign as "x", and with absolute
+value less than 1.
+The @ceiling@, @floor@, @truncate@, and @round@
+functions can be defined in terms of @properFraction@.
+
+Two functions convert numbers to type @Rational@:
+@toRational@\indextt{toRational} returns the rational equivalent of
+its real argument with full precision;
+@approxRational@\indextt{approxRational} takes two real fractional arguments
+"x" and "\epsilon" and returns the simplest rational number within
+"\epsilon" of "x", where a rational $ p/q $ in reduced form is
+{\em simpler} than another $ p^{\prime} / q^{\prime} $ if 
+$ |p| \leq |p^{\prime}| $ and $ q \leq q^{\prime} $.
+Every real interval contains a unique simplest rational;
+in particular, note that $ 0/1 $ is the simplest rational of all.%
+%\cite[Section 6.5.5]{RRRRS}.
+
+The class methods of class @RealFloat@\indexclass{RealFloat} allow
+efficient, machine-independent
+access to the components of a floating-point number.
+The functions @floatRadix@\indextt{floatRadix},
+@floatDigits@\indextt{floatDigits}, and
+@floatRange@\indextt{floatRange} give the parameters of a
+floating-point type:  the radix of the representation, the number of
+digits of this radix in the significand, and the lowest and highest
+values the exponent may assume, respectively.
+The function @decodeFloat@\indextt{decodeFloat}
+applied to a real floating-point number returns the significand
+expressed as an @Integer@ and an appropriately scaled exponent (an
+@Int@).  If \mbox{@decodeFloat x@} yields \mbox{@(@"m"@,@"n"@)@}, then @x@ is
+equal in value to "mb^n", where "b" is the floating-point radix, and
+furthermore, either "m" and "n" are both zero or else
+"b^{d-1}<=|m|<b^d", where "d" is the value of \mbox{@floatDigits x@}.
+@encodeFloat@\indextt{encodeFloat} performs the inverse of this
+transformation.  The functions @significand@\indextt{significand}
+and @exponent@\indextt{exponent} together provide the same
+information as @decodeFloat@,  but rather than an @Integer@,
+\mbox{@significand x@} yields a value of the same type as @x@, scaled to lie
+in the open interval "(-1,1)".  \mbox{@exponent 0@} is zero.  @scaleFloat@
+multiplies a floating-point number by an integer power of the radix.
+
+The functions @isNaN@, @isInfinite@, @isDenormalized@,
+@isNegativeZero@, and @isIEEE@ all support numbers represented using
+the IEEE standard.  For non-IEEE floating point numbers, these may all
+return false.
+
+Also available are the following coercion functions:
+\bprog
+@
+fromIntegral :: (Integral a, Num b)    => a -> b
+realToFrac   :: (Real a, Fractional b) => a -> b
+@
+\eprogNoSkip\indextt{fromIntegral}\indextt{realToFrac}
+
+
+%**~footer
+
+% Local Variables: 
+% mode: latex
+% End:

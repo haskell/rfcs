@@ -1,0 +1,1388 @@
+\haddockmoduleheading{Data.List}
+\label{module:Data.List}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Data.List (
+    (++),  head,  last,  tail,  init,  null,  length,  map,  reverse, 
+    intersperse,  intercalate,  transpose,  subsequences,  permutations, 
+    foldl,  foldl',  foldl1,  foldl1',  foldr,  foldr1,  concat,  concatMap, 
+    and,  or,  any,  all,  sum,  product,  maximum,  minimum,  scanl,  scanl1, 
+    scanr,  scanr1,  mapAccumL,  mapAccumR,  iterate,  repeat,  replicate, 
+    cycle,  unfoldr,  take,  drop,  splitAt,  takeWhile,  dropWhile,  span, 
+    break,  stripPrefix,  group,  inits,  tails,  isPrefixOf,  isSuffixOf, 
+    isInfixOf,  elem,  notElem,  lookup,  find,  filter,  partition,  (!!), 
+    elemIndex,  elemIndices,  findIndex,  findIndices,  zip,  zip3,  zip4, 
+    zip5,  zip6,  zip7,  zipWith,  zipWith3,  zipWith4,  zipWith5,  zipWith6, 
+    zipWith7,  unzip,  unzip3,  unzip4,  unzip5,  unzip6,  unzip7,  lines, 
+    words,  unlines,  unwords,  nub,  delete,  (\\),  union,  intersect,  sort, 
+    insert,  nubBy,  deleteBy,  deleteFirstsBy,  unionBy,  intersectBy, 
+    groupBy,  sortBy,  insertBy,  maximumBy,  minimumBy,  genericLength, 
+    genericTake,  genericDrop,  genericSplitAt,  genericIndex,  genericReplicate
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{Basic functions
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(++)\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+Append two lists, i.e.,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ [x1, ..., xm] ++ [y1, ..., yn] == [x1, ..., xm, y1, ..., yn]
+ [x1, ..., xm] ++ [y1, ...] == [x1, ..., xm, y1, ...]
+\end{verbatim}}
+\end{quote}
+If the first list is not finite, the result is the first list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+head\ ::\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+Extract the first element of a list, which must be non-empty.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+last\ ::\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+Extract the last element of a list, which must be finite and non-empty.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+tail\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+Extract the elements after the head of a list, which must be non-empty.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+init\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+Return all the elements of a list except the last one.
+ The list must be non-empty.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+null\ ::\ {\char 91}a{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+Test whether a list is empty.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+length\ ::\ {\char 91}a{\char 93}\ ->\ Int
+\end{tabular}]\haddockbegindoc
+\emph{O(n)}. \haddockid{length} returns the length of a finite list as an \haddockid{Int}.
+ It is an instance of the more general \haddocktt{Data.List.genericLength},
+ the result type of which may be any kind of number.
+\par
+
+\end{haddockdesc}
+\section{List transformations
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+map\ ::\ (a\ ->\ b)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{map} \haddocktt{f\ xs} is the list obtained by applying \haddocktt{f} to each element
+ of \haddocktt{xs}, i.e.,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ map f [x1, x2, ..., xn] == [f x1, f x2, ..., f xn]
+ map f [x1, x2, ...] == [f x1, f x2, ...]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+reverse\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{reverse} \haddocktt{xs} returns the elements of \haddocktt{xs} in reverse order.
+ \haddocktt{xs} must be finite.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+intersperse\ ::\ a\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{intersperse} function takes an element and a list and
+ `intersperses' that element between the elements of the list.
+ For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ intersperse ',' "abcde" == "a,b,c,d,e"
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+intercalate\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}{\char 91}a{\char 93}{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{intercalate} \haddocktt{xs\ xss} is equivalent to \haddocktt{(concat\ (intersperse\ xs\ xss))}.
+ It inserts the list \haddocktt{xs} in between the lists in \haddocktt{xss} and concatenates the
+ result.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+transpose\ ::\ {\char 91}{\char 91}a{\char 93}{\char 93}\ ->\ {\char 91}{\char 91}a{\char 93}{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{transpose} function transposes the rows and columns of its argument.
+ For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ transpose [[1,2,3],[4,5,6]] == [[1,4],[2,5],[3,6]]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+subsequences\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}{\char 91}a{\char 93}{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{subsequences} function returns the list of all subsequences of the argument.
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ subsequences "abc" == ["","a","b","ab","c","ac","bc","abc"]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+permutations\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}{\char 91}a{\char 93}{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{permutations} function returns the list of all permutations of the argument.
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ permutations "abc" == ["abc","bac","cba","bca","cab","acb"]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\section{Reducing lists (folds)
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+foldl\ ::\ (a\ ->\ b\ ->\ a)\ ->\ a\ ->\ {\char 91}b{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddockid{foldl}, applied to a binary operator, a starting value (typically
+ the left-identity of the operator), and a list, reduces the list
+ using the binary operator, from left to right:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ foldl f z [x1, x2, ..., xn] == (...((z `f` x1) `f` x2) `f`...) `f` xn
+\end{verbatim}}
+\end{quote}
+The list must be finite.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+foldl'\ ::\ (a\ ->\ b\ ->\ a)\ ->\ a\ ->\ {\char 91}b{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+A strict version of \haddockid{foldl}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+foldl1\ ::\ (a\ ->\ a\ ->\ a)\ ->\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddockid{foldl1} is a variant of \haddockid{foldl} that has no starting value argument,
+ and thus must be applied to non-empty lists.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+foldl1'\ ::\ (a\ ->\ a\ ->\ a)\ ->\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+A strict version of \haddockid{foldl1}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+foldr\ ::\ (a\ ->\ b\ ->\ b)\ ->\ b\ ->\ {\char 91}a{\char 93}\ ->\ b
+\end{tabular}]\haddockbegindoc
+\haddockid{foldr}, applied to a binary operator, a starting value (typically
+ the right-identity of the operator), and a list, reduces the list
+ using the binary operator, from right to left:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ foldr f z [x1, x2, ..., xn] == x1 `f` (x2 `f` ... (xn `f` z)...)
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+foldr1\ ::\ (a\ ->\ a\ ->\ a)\ ->\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddockid{foldr1} is a variant of \haddockid{foldr} that has no starting value argument,
+ and thus must be applied to non-empty lists.
+\par
+
+\end{haddockdesc}
+\subsection{Special folds
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+concat\ ::\ {\char 91}{\char 91}a{\char 93}{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+Concatenate a list of lists.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+concatMap\ ::\ (a\ ->\ {\char 91}b{\char 93})\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}
+\end{tabular}]\haddockbegindoc
+Map a function over a list and concatenate the results.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+and\ ::\ {\char 91}Bool{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+\haddockid{and} returns the conjunction of a Boolean list.  For the result to be
+ \haddockid{True}, the list must be finite; \haddockid{False}, however, results from a \haddockid{False}
+ value at a finite index of a finite or infinite list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+or\ ::\ {\char 91}Bool{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+\haddockid{or} returns the disjunction of a Boolean list.  For the result to be
+ \haddockid{False}, the list must be finite; \haddockid{True}, however, results from a \haddockid{True}
+ value at a finite index of a finite or infinite list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+any\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+Applied to a predicate and a list, \haddockid{any} determines if any element
+ of the list satisfies the predicate.  For the result to be
+ \haddockid{False}, the list must be finite; \haddockid{True}, however, results from a \haddockid{True}
+ value for the predicate applied to an element at a finite index of a finite or infinite list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+all\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+Applied to a predicate and a list, \haddockid{all} determines if all elements
+ of the list satisfy the predicate. For the result to be
+ \haddockid{True}, the list must be finite; \haddockid{False}, however, results from a \haddockid{False}
+ value for the predicate applied to an element at a finite index of a finite or infinite list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+sum\ ::\ Num\ a\ =>\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{sum} function computes the sum of a finite list of numbers.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+product\ ::\ Num\ a\ =>\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{product} function computes the product of a finite list of numbers.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+maximum\ ::\ Ord\ a\ =>\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddockid{maximum} returns the maximum value from a list,
+ which must be non-empty, finite, and of an ordered type.
+ It is a special case of \haddockid{maximumBy}, which allows the
+ programmer to supply their own comparison function.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+minimum\ ::\ Ord\ a\ =>\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddockid{minimum} returns the minimum value from a list,
+ which must be non-empty, finite, and of an ordered type.
+ It is a special case of \haddockid{minimumBy}, which allows the
+ programmer to supply their own comparison function.
+\par
+
+\end{haddockdesc}
+\section{Building lists
+}
+\subsection{Scans
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+scanl\ ::\ (a\ ->\ b\ ->\ a)\ ->\ a\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{scanl} is similar to \haddockid{foldl}, but returns a list of successive
+ reduced values from the left:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ scanl f z [x1, x2, ...] == [z, z `f` x1, (z `f` x1) `f` x2, ...]
+\end{verbatim}}
+\end{quote}
+Note that
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ last (scanl f z xs) == foldl f z xs.
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+scanl1\ ::\ (a\ ->\ a\ ->\ a)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{scanl1} is a variant of \haddockid{scanl} that has no starting value argument:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ scanl1 f [x1, x2, ...] == [x1, x1 `f` x2, ...]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+scanr\ ::\ (a\ ->\ b\ ->\ b)\ ->\ b\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{scanr} is the right-to-left dual of \haddockid{scanl}.
+ Note that
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ head (scanr f z xs) == foldr f z xs.
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+scanr1\ ::\ (a\ ->\ a\ ->\ a)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{scanr1} is a variant of \haddockid{scanr} that has no starting value argument.
+\par
+
+\end{haddockdesc}
+\subsection{Accumulating maps
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mapAccumL\ ::\ (acc\ ->\ x\ ->\ (acc,\ y))\ ->\ acc\ ->\ {\char 91}x{\char 93}\ ->\ (acc,\ {\char 91}y{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{mapAccumL} function behaves like a combination of \haddockid{map} and
+ \haddockid{foldl}; it applies a function to each element of a list, passing
+ an accumulating parameter from left to right, and returning a final
+ value of this accumulator together with the new list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mapAccumR\ ::\ (acc\ ->\ x\ ->\ (acc,\ y))\ ->\ acc\ ->\ {\char 91}x{\char 93}\ ->\ (acc,\ {\char 91}y{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{mapAccumR} function behaves like a combination of \haddockid{map} and
+ \haddockid{foldr}; it applies a function to each element of a list, passing
+ an accumulating parameter from right to left, and returning a final
+ value of this accumulator together with the new list.
+\par
+
+\end{haddockdesc}
+\subsection{Infinite lists
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+iterate\ ::\ (a\ ->\ a)\ ->\ a\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{iterate} \haddocktt{f\ x} returns an infinite list of repeated applications
+ of \haddocktt{f} to \haddocktt{x}:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ iterate f x == [x, f x, f (f x), ...]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+repeat\ ::\ a\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{repeat} \haddocktt{x} is an infinite list, with \haddocktt{x} the value of every element.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+replicate\ ::\ Int\ ->\ a\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{replicate} \haddocktt{n\ x} is a list of length \haddocktt{n} with \haddocktt{x} the value of
+ every element.
+ It is an instance of the more general \haddocktt{Data.List.genericReplicate},
+ in which \haddocktt{n} may be of any integral type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+cycle\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{cycle} ties a finite list into a circular one, or equivalently,
+ the infinite repetition of the original list.  It is the identity
+ on infinite lists.
+\par
+
+\end{haddockdesc}
+\subsection{Unfolding
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unfoldr\ ::\ (b\ ->\ Maybe\ (a,\ b))\ ->\ b\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{unfoldr} function is a `dual' to \haddockid{foldr}: while \haddockid{foldr}
+ reduces a list to a summary value, \haddockid{unfoldr} builds a list from
+ a seed value.  The function takes the element and returns \haddockid{Nothing}
+ if it is done producing the list or returns \haddockid{Just} \haddocktt{(a,b)}, in which
+ case, \haddocktt{a} is a prepended to the list and \haddocktt{b} is used as the next
+ element in a recursive call.  For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ iterate f == unfoldr (\x -> Just (x, f x))
+\end{verbatim}}
+\end{quote}
+In some cases, \haddockid{unfoldr} can undo a \haddockid{foldr} operation:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ unfoldr f' (foldr f z xs) == xs
+\end{verbatim}}
+\end{quote}
+if the following holds:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ f' (f x y) = Just (x,y)
+ f' z       = Nothing
+\end{verbatim}}
+\end{quote}
+A simple use of unfoldr:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ unfoldr (\b -> if b == 0 then Nothing else Just (b, b-1)) 10
+  [10,9,8,7,6,5,4,3,2,1]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\section{Sublists
+}
+\subsection{Extracting sublists
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+take\ ::\ Int\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{take} \haddocktt{n}, applied to a list \haddocktt{xs}, returns the prefix of \haddocktt{xs}
+ of length \haddocktt{n}, or \haddocktt{xs} itself if \haddocktt{n\ >\ length\ xs}:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ take 5 "Hello World!" == "Hello"
+ take 3 [1,2,3,4,5] == [1,2,3]
+ take 3 [1,2] == [1,2]
+ take 3 [] == []
+ take (-1) [1,2] == []
+ take 0 [1,2] == []
+\end{verbatim}}
+\end{quote}
+It is an instance of the more general \haddocktt{Data.List.genericTake},
+ in which \haddocktt{n} may be of any integral type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+drop\ ::\ Int\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{drop} \haddocktt{n\ xs} returns the suffix of \haddocktt{xs}
+ after the first \haddocktt{n} elements, or \haddocktt{{\char 91}{\char 93}} if \haddocktt{n\ >\ length\ xs}:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ drop 6 "Hello World!" == "World!"
+ drop 3 [1,2,3,4,5] == [4,5]
+ drop 3 [1,2] == []
+ drop 3 [] == []
+ drop (-1) [1,2] == [1,2]
+ drop 0 [1,2] == [1,2]
+\end{verbatim}}
+\end{quote}
+It is an instance of the more general \haddocktt{Data.List.genericDrop},
+ in which \haddocktt{n} may be of any integral type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+splitAt\ ::\ Int\ ->\ {\char 91}a{\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}a{\char 93})
+\end{tabular}]\haddockbegindoc
+\haddockid{splitAt} \haddocktt{n\ xs} returns a tuple where first element is \haddocktt{xs} prefix of
+ length \haddocktt{n} and second element is the remainder of the list:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ splitAt 6 "Hello World!" == ("Hello ","World!")
+ splitAt 3 [1,2,3,4,5] == ([1,2,3],[4,5])
+ splitAt 1 [1,2,3] == ([1],[2,3])
+ splitAt 3 [1,2,3] == ([1,2,3],[])
+ splitAt 4 [1,2,3] == ([1,2,3],[])
+ splitAt 0 [1,2,3] == ([],[1,2,3])
+ splitAt (-1) [1,2,3] == ([],[1,2,3])
+\end{verbatim}}
+\end{quote}
+It is equivalent to \haddocktt{(take\ n\ xs,\ drop\ n\ xs)}.
+ \haddockid{splitAt} is an instance of the more general \haddocktt{Data.List.genericSplitAt},
+ in which \haddocktt{n} may be of any integral type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+takeWhile\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{takeWhile}, applied to a predicate \haddocktt{p} and a list \haddocktt{xs}, returns the
+ longest prefix (possibly empty) of \haddocktt{xs} of elements that satisfy \haddocktt{p}:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ takeWhile (< 3) [1,2,3,4,1,2,3,4] == [1,2]
+ takeWhile (< 9) [1,2,3] == [1,2,3]
+ takeWhile (< 0) [1,2,3] == []
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+dropWhile\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{dropWhile} \haddocktt{p\ xs} returns the suffix remaining after \haddockid{takeWhile} \haddocktt{p\ xs}:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ dropWhile (< 3) [1,2,3,4,5,1,2,3] == [3,4,5,1,2,3]
+ dropWhile (< 9) [1,2,3] == []
+ dropWhile (< 0) [1,2,3] == [1,2,3]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+span\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}a{\char 93})
+\end{tabular}]\haddockbegindoc
+\haddockid{span}, applied to a predicate \haddocktt{p} and a list \haddocktt{xs}, returns a tuple where
+ first element is longest prefix (possibly empty) of \haddocktt{xs} of elements that
+ satisfy \haddocktt{p} and second element is the remainder of the list:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ span (< 3) [1,2,3,4,1,2,3,4] == ([1,2],[3,4,1,2,3,4])
+ span (< 9) [1,2,3] == ([1,2,3],[])
+ span (< 0) [1,2,3] == ([],[1,2,3])
+\end{verbatim}}
+\end{quote}
+\haddockid{span} \haddocktt{p\ xs} is equivalent to \haddocktt{(takeWhile\ p\ xs,\ dropWhile\ p\ xs)}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+break\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}a{\char 93})
+\end{tabular}]\haddockbegindoc
+\haddockid{break}, applied to a predicate \haddocktt{p} and a list \haddocktt{xs}, returns a tuple where
+ first element is longest prefix (possibly empty) of \haddocktt{xs} of elements that
+ \emph{do not satisfy} \haddocktt{p} and second element is the remainder of the list:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ break (> 3) [1,2,3,4,1,2,3,4] == ([1,2,3],[4,1,2,3,4])
+ break (< 9) [1,2,3] == ([],[1,2,3])
+ break (> 9) [1,2,3] == ([1,2,3],[])
+\end{verbatim}}
+\end{quote}
+\haddockid{break} \haddocktt{p} is equivalent to \haddocktt{span\ (not\ .\ p)}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+stripPrefix\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ Maybe\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{stripPrefix} function drops the given prefix from a list.
+ It returns \haddockid{Nothing} if the list did not start with the prefix
+ given, or \haddockid{Just} the list after the prefix, if it does.
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ stripPrefix "foo" "foobar" == Just "bar"
+ stripPrefix "foo" "foo" == Just ""
+ stripPrefix "foo" "barfoo" == Nothing
+ stripPrefix "foo" "barfoobaz" == Nothing
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+group\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}{\char 91}a{\char 93}{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{group} function takes a list and returns a list of lists such
+ that the concatenation of the result is equal to the argument.  Moreover,
+ each sublist in the result contains only equal elements.  For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ group "Mississippi" = ["M","i","ss","i","ss","i","pp","i"]
+\end{verbatim}}
+\end{quote}
+It is a special case of \haddockid{groupBy}, which allows the programmer to supply
+ their own equality test.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+inits\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}{\char 91}a{\char 93}{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{inits} function returns all initial segments of the argument,
+ shortest first.  For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ inits "abc" == ["","a","ab","abc"]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+tails\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}{\char 91}a{\char 93}{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{tails} function returns all final segments of the argument,
+ longest first.  For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ tails "abc" == ["abc", "bc", "c",""]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\subsection{Predicates
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isPrefixOf\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+The \haddockid{isPrefixOf} function takes two lists and returns \haddockid{True}
+ iff the first list is a prefix of the second.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isSuffixOf\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+The \haddockid{isSuffixOf} function takes two lists and returns \haddockid{True}
+ iff the first list is a suffix of the second.
+ Both lists must be finite.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isInfixOf\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+The \haddockid{isInfixOf} function takes two lists and returns \haddockid{True}
+ iff the first list is contained, wholly and intact,
+ anywhere within the second.
+\par
+Example:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+isInfixOf "Haskell" "I really like Haskell." == True
+isInfixOf "Ial" "I really like Haskell." == False
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\section{Searching lists
+}
+\subsection{Searching by equality
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+elem\ ::\ Eq\ a\ =>\ a\ ->\ {\char 91}a{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+\haddockid{elem} is the list membership predicate, usually written in infix form,
+ e.g., \haddocktt{x\ `elem`\ xs}.  For the result to be
+ \haddockid{False}, the list must be finite; \haddockid{True}, however, results from an element equal to \haddocktt{x} found at a finite index of a finite or infinite list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+notElem\ ::\ Eq\ a\ =>\ a\ ->\ {\char 91}a{\char 93}\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+\haddockid{notElem} is the negation of \haddockid{elem}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+lookup\ ::\ Eq\ a\ =>\ a\ ->\ {\char 91}(a,\ b){\char 93}\ ->\ Maybe\ b
+\end{tabular}]\haddockbegindoc
+\haddockid{lookup} \haddocktt{key\ assocs} looks up a key in an association list.
+\par
+
+\end{haddockdesc}
+\subsection{Searching with a predicate
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+find\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ Maybe\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{find} function takes a predicate and a list and returns the
+ first element in the list matching the predicate, or \haddockid{Nothing} if
+ there is no such element.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+filter\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{filter}, applied to a predicate and a list, returns the list of
+ those elements that satisfy the predicate; i.e.,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ filter p xs = [ x | x <- xs, p x]
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+partition\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}a{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{partition} function takes a predicate a list and returns
+ the pair of lists of elements which do and do not satisfy the
+ predicate, respectively; i.e.,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ partition p xs == (filter p xs, filter (not . p) xs)
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\section{Indexing lists
+}
+These functions treat a list \haddocktt{xs} as a indexed collection,
+ with indices ranging from 0 to \haddocktt{length\ xs\ -\ 1}.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(!!)\ ::\ {\char 91}a{\char 93}\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+List index (subscript) operator, starting from 0.
+ It is an instance of the more general \haddocktt{Data.List.genericIndex},
+ which takes an index of any integral type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+elemIndex\ ::\ Eq\ a\ =>\ a\ ->\ {\char 91}a{\char 93}\ ->\ Maybe\ Int
+\end{tabular}]\haddockbegindoc
+The \haddockid{elemIndex} function returns the index of the first element
+ in the given list which is equal (by \haddockid{==}) to the query element,
+ or \haddockid{Nothing} if there is no such element.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+elemIndices\ ::\ Eq\ a\ =>\ a\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}Int{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{elemIndices} function extends \haddockid{elemIndex}, by returning the
+ indices of all elements equal to the query element, in ascending order.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+findIndex\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ Maybe\ Int
+\end{tabular}]\haddockbegindoc
+The \haddockid{findIndex} function takes a predicate and a list and returns
+ the index of the first element in the list satisfying the predicate,
+ or \haddockid{Nothing} if there is no such element.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+findIndices\ ::\ (a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}Int{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{findIndices} function extends \haddockid{findIndex}, by returning the
+ indices of all elements satisfying the predicate, in ascending order.
+\par
+
+\end{haddockdesc}
+\section{Zipping and unzipping lists
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zip\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}(a,\ b){\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{zip} takes two lists and returns a list of corresponding pairs.
+ If one input list is short, excess elements of the longer list are
+ discarded.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zip3\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}(a,\ b,\ c){\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{zip3} takes three lists and returns a list of triples, analogous to
+ \haddockid{zip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zip4\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}\ ->\ {\char 91}(a,\ b,\ c,\ d){\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zip4} function takes four lists and returns a list of
+ quadruples, analogous to \haddockid{zip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zip5\ ::\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}\ ->\ {\char 91}e{\char 93}\ ->\ {\char 91}(a,\ b,\ c,\ d,\ e){\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zip5} function takes five lists and returns a list of
+ five-tuples, analogous to \haddockid{zip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zip6\ ::\ {\char 91}a{\char 93}\\\ \ \ \ \ \ \ \ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}\ ->\ {\char 91}e{\char 93}\ ->\ {\char 91}f{\char 93}\ ->\ {\char 91}(a,\ b,\ c,\ d,\ e,\ f){\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zip6} function takes six lists and returns a list of six-tuples,
+ analogous to \haddockid{zip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zip7\ ::\ {\char 91}a{\char 93}\\\ \ \ \ \ \ \ \ ->\ {\char 91}b{\char 93}\\\ \ \ \ \ \ \ \ \ \ \ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}\ ->\ {\char 91}e{\char 93}\ ->\ {\char 91}f{\char 93}\ ->\ {\char 91}g{\char 93}\ ->\ {\char 91}(a,\ b,\ c,\ d,\ e,\ f,\ g){\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zip7} function takes seven lists and returns a list of
+ seven-tuples, analogous to \haddockid{zip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zipWith\ ::\ (a\ ->\ b\ ->\ c)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{zipWith} generalises \haddockid{zip} by zipping with the function given
+ as the first argument, instead of a tupling function.
+ For example, \haddocktt{zipWith\ (+)} is applied to two lists to produce the
+ list of corresponding sums.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zipWith3\ ::\ (a\ ->\ b\ ->\ c\ ->\ d)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zipWith3} function takes a function which combines three
+ elements, as well as three lists and returns a list of their point-wise
+ combination, analogous to \haddockid{zipWith}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zipWith4\ ::\ (a\ ->\ b\ ->\ c\ ->\ d\ ->\ e)\\\ \ \ \ \ \ \ \ \ \ \ \ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}\ ->\ {\char 91}e{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zipWith4} function takes a function which combines four
+ elements, as well as four lists and returns a list of their point-wise
+ combination, analogous to \haddockid{zipWith}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zipWith5\ ::\ (a\ ->\ b\ ->\ c\ ->\ d\ ->\ e\ ->\ f)\\\ \ \ \ \ \ \ \ \ \ \ \ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}\ ->\ {\char 91}e{\char 93}\ ->\ {\char 91}f{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zipWith5} function takes a function which combines five
+ elements, as well as five lists and returns a list of their point-wise
+ combination, analogous to \haddockid{zipWith}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zipWith6\ ::\ (a\ ->\ b\ ->\ c\ ->\ d\ ->\ e\ ->\ f\ ->\ g)\\\ \ \ \ \ \ \ \ \ \ \ \ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}\ ->\ {\char 91}e{\char 93}\ ->\ {\char 91}f{\char 93}\ ->\ {\char 91}g{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zipWith6} function takes a function which combines six
+ elements, as well as six lists and returns a list of their point-wise
+ combination, analogous to \haddockid{zipWith}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+zipWith7\ ::\ (a\ ->\ b\ ->\ c\ ->\ d\ ->\ e\ ->\ f\ ->\ g\ ->\ h)\\\ \ \ \ \ \ \ \ \ \ \ \ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}\ ->\ {\char 91}c{\char 93}\ ->\ {\char 91}d{\char 93}\ ->\ {\char 91}e{\char 93}\ ->\ {\char 91}f{\char 93}\ ->\ {\char 91}g{\char 93}\ ->\ {\char 91}h{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{zipWith7} function takes a function which combines seven
+ elements, as well as seven lists and returns a list of their point-wise
+ combination, analogous to \haddockid{zipWith}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unzip\ ::\ {\char 91}(a,\ b){\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}b{\char 93})
+\end{tabular}]\haddockbegindoc
+\haddockid{unzip} transforms a list of pairs into a list of first components
+ and a list of second components.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unzip3\ ::\ {\char 91}(a,\ b,\ c){\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}b{\char 93},\ {\char 91}c{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{unzip3} function takes a list of triples and returns three
+ lists, analogous to \haddockid{unzip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unzip4\ ::\ {\char 91}(a,\ b,\ c,\ d){\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}b{\char 93},\ {\char 91}c{\char 93},\ {\char 91}d{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{unzip4} function takes a list of quadruples and returns four
+ lists, analogous to \haddockid{unzip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unzip5\ ::\ {\char 91}(a,\ b,\ c,\ d,\ e){\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}b{\char 93},\ {\char 91}c{\char 93},\ {\char 91}d{\char 93},\ {\char 91}e{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{unzip5} function takes a list of five-tuples and returns five
+ lists, analogous to \haddockid{unzip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unzip6\ ::\ {\char 91}(a,\ b,\ c,\ d,\ e,\ f){\char 93}\ ->\ ({\char 91}a{\char 93},\ {\char 91}b{\char 93},\ {\char 91}c{\char 93},\ {\char 91}d{\char 93},\ {\char 91}e{\char 93},\ {\char 91}f{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{unzip6} function takes a list of six-tuples and returns six
+ lists, analogous to \haddockid{unzip}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unzip7\ ::\ {\char 91}(a,\ b,\ c,\ d,\ e,\ f,\ g){\char 93}\\\ \ \ \ \ \ \ \ \ \ ->\ ({\char 91}a{\char 93},\ {\char 91}b{\char 93},\ {\char 91}c{\char 93},\ {\char 91}d{\char 93},\ {\char 91}e{\char 93},\ {\char 91}f{\char 93},\ {\char 91}g{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{unzip7} function takes a list of seven-tuples and returns
+ seven lists, analogous to \haddockid{unzip}.
+\par
+
+\end{haddockdesc}
+\section{Special lists
+}
+\subsection{Functions on strings
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+lines\ ::\ String\ ->\ {\char 91}String{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{lines} breaks a string up into a list of strings at newline
+ characters.  The resulting strings do not contain newlines.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+words\ ::\ String\ ->\ {\char 91}String{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{words} breaks a string up into a list of words, which were delimited
+ by white space.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unlines\ ::\ {\char 91}String{\char 93}\ ->\ String
+\end{tabular}]\haddockbegindoc
+\haddockid{unlines} is an inverse operation to \haddockid{lines}.
+ It joins lines, after appending a terminating newline to each.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unwords\ ::\ {\char 91}String{\char 93}\ ->\ String
+\end{tabular}]\haddockbegindoc
+\haddockid{unwords} is an inverse operation to \haddockid{words}.
+ It joins words with separating spaces.
+\par
+
+\end{haddockdesc}
+\subsection{"Set" operations
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+nub\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\emph{O(n{\char '136}2)}. The \haddockid{nub} function removes duplicate elements from a list.
+ In particular, it keeps only the first occurrence of each element.
+ (The name \haddockid{nub} means `essence'.)
+ It is a special case of \haddockid{nubBy}, which allows the programmer to supply
+ their own equality test.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+delete\ ::\ Eq\ a\ =>\ a\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+\haddockid{delete} \haddocktt{x} removes the first occurrence of \haddocktt{x} from its list argument.
+ For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ delete 'a' "banana" == "bnana"
+\end{verbatim}}
+\end{quote}
+It is a special case of \haddockid{deleteBy}, which allows the programmer to
+ supply their own equality test.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+({\char '134}{\char '134})\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{{\char '134}{\char '134}} function is list difference ((non-associative).
+ In the result of \haddocktt{xs} \haddockid{{\char '134}{\char '134}} \haddocktt{ys}, the first occurrence of each element of
+ \haddocktt{ys} in turn (if any) has been removed from \haddocktt{xs}.  Thus
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ (xs ++ ys) \\ xs == ys.
+\end{verbatim}}
+\end{quote}
+It is a special case of \haddockid{deleteFirstsBy}, which allows the programmer
+ to supply their own equality test.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+union\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{union} function returns the list union of the two lists.
+ For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ "dog" `union` "cow" == "dogcw"
+\end{verbatim}}
+\end{quote}
+Duplicates, and elements of the first list, are removed from the
+ the second list, but if the first list contains duplicates, so will
+ the result.
+ It is a special case of \haddockid{unionBy}, which allows the programmer to supply
+ their own equality test.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+intersect\ ::\ Eq\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{intersect} function takes the list intersection of two lists.
+ For example,
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ [1,2,3,4] `intersect` [2,4,6,8] == [2,4]
+\end{verbatim}}
+\end{quote}
+If the first list contains duplicates, so will the result.
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ [1,2,2,3,4] `intersect` [6,4,4,2] == [2,2,4]
+\end{verbatim}}
+\end{quote}
+It is a special case of \haddockid{intersectBy}, which allows the programmer to
+ supply their own equality test.
+\par
+
+\end{haddockdesc}
+\subsection{Ordered lists
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+sort\ ::\ Ord\ a\ =>\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{sort} function implements a stable sorting algorithm.
+ It is a special case of \haddockid{sortBy}, which allows the programmer to supply
+ their own comparison function.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+insert\ ::\ Ord\ a\ =>\ a\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{insert} function takes an element and a list and inserts the
+ element into the list at the last position where it is still less
+ than or equal to the next element.  In particular, if the list
+ is sorted before the call, the result will also be sorted.
+ It is a special case of \haddockid{insertBy}, which allows the programmer to
+ supply their own comparison function.
+\par
+
+\end{haddockdesc}
+\section{Generalized functions
+}
+\subsection{The "\haddocktt{By}" operations
+}
+By convention, overloaded functions have a non-overloaded
+ counterpart whose name is suffixed with `\haddocktt{By}'.
+\par
+
+\subsubsection{User-supplied equality (replacing an \haddocktt{Eq} context)
+}
+The predicate is assumed to define an equivalence.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+nubBy\ ::\ (a\ ->\ a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{nubBy} function behaves just like \haddockid{nub}, except it uses a
+ user-supplied equality predicate instead of the overloaded \haddockid{==}
+ function.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+deleteBy\ ::\ (a\ ->\ a\ ->\ Bool)\ ->\ a\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{deleteBy} function behaves like \haddockid{delete}, but takes a
+ user-supplied equality predicate.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+deleteFirstsBy\ ::\ (a\ ->\ a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{deleteFirstsBy} function takes a predicate and two lists and
+ returns the first list with the first occurrence of each element of
+ the second list removed.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unionBy\ ::\ (a\ ->\ a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{unionBy} function is the non-overloaded version of \haddockid{union}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+intersectBy\ ::\ (a\ ->\ a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{intersectBy} function is the non-overloaded version of \haddockid{intersect}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+groupBy\ ::\ (a\ ->\ a\ ->\ Bool)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}{\char 91}a{\char 93}{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{groupBy} function is the non-overloaded version of \haddockid{group}.
+\par
+
+\end{haddockdesc}
+\subsubsection{User-supplied comparison (replacing an \haddocktt{Ord} context)
+}
+The function is assumed to define a total ordering.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+sortBy\ ::\ (a\ ->\ a\ ->\ Ordering)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{sortBy} function is the non-overloaded version of \haddockid{sort}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+insertBy\ ::\ (a\ ->\ a\ ->\ Ordering)\ ->\ a\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The non-overloaded version of \haddockid{insert}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+maximumBy\ ::\ (a\ ->\ a\ ->\ Ordering)\ ->\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{maximumBy} function takes a comparison function and a list
+ and returns the greatest element of the list by the comparison function.
+ The list must be finite and non-empty.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+minimumBy\ ::\ (a\ ->\ a\ ->\ Ordering)\ ->\ {\char 91}a{\char 93}\ ->\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{minimumBy} function takes a comparison function and a list
+ and returns the least element of the list by the comparison function.
+ The list must be finite and non-empty.
+\par
+
+\end{haddockdesc}
+\subsection{The "\haddocktt{generic}" operations
+}
+The prefix `\haddocktt{generic}' indicates an overloaded function that
+ is a generalized version of a \haddocktt{Prelude} function.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+genericLength\ ::\ Num\ i\ =>\ {\char 91}b{\char 93}\ ->\ i
+\end{tabular}]\haddockbegindoc
+The \haddockid{genericLength} function is an overloaded version of \haddockid{length}.  In
+ particular, instead of returning an \haddockid{Int}, it returns any type which is
+ an instance of \haddockid{Num}.  It is, however, less efficient than \haddockid{length}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+genericTake\ ::\ Integral\ i\ =>\ i\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{genericTake} function is an overloaded version of \haddockid{take}, which
+ accepts any \haddockid{Integral} value as the number of elements to take.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+genericDrop\ ::\ Integral\ i\ =>\ i\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{genericDrop} function is an overloaded version of \haddockid{drop}, which
+ accepts any \haddockid{Integral} value as the number of elements to drop.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+genericSplitAt\ ::\ Integral\ i\ =>\ i\ ->\ {\char 91}b{\char 93}\ ->\ ({\char 91}b{\char 93},\ {\char 91}b{\char 93})
+\end{tabular}]\haddockbegindoc
+The \haddockid{genericSplitAt} function is an overloaded version of \haddockid{splitAt}, which
+ accepts any \haddockid{Integral} value as the position at which to split.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+genericIndex\ ::\ Integral\ a\ =>\ {\char 91}b{\char 93}\ ->\ a\ ->\ b
+\end{tabular}]\haddockbegindoc
+The \haddockid{genericIndex} function is an overloaded version of \haddockid{!!}, which
+ accepts any \haddockid{Integral} value as the index.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+genericReplicate\ ::\ Integral\ i\ =>\ i\ ->\ a\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{genericReplicate} function is an overloaded version of \haddockid{replicate},
+ which accepts any \haddockid{Integral} value as the number of repetitions to make.
+\par
+
+\end{haddockdesc}

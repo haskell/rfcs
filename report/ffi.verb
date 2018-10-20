@@ -1,0 +1,1220 @@
+% The Haskell 98 Foreign Function Interface
+% [An Addendum to the Definition of Haskell 98]
+%
+% Editor: Manuel M T Chakravarty
+%
+% Copyright [2002..2003] Manuel M T Chakravarty
+%
+% The authors intend this Report to belong to the entire Haskell community, and
+% so we grant permission to copy and distribute it for any purpose, provided
+% that it is reproduced in its entirety, including this Notice.  Modified
+% versions of this Report may also be copied and distributed for any purpose,
+% provided that the modified version is clearly presented as such, and that it
+% does not claim to be a definition of the Haskell 98 Foreign Function
+% Interface. 
+
+% Changes since RC15:
+% * 6.3: Footnote regarding __STDC_ISO_10646__ added to text introducing
+%        `CWString'.
+%
+% Changes since RC14:
+% * 6.2: CWChar -> CWchar
+% * 6.3: - CWChar -> CWchar
+%        - Stated explicitly that memory allocated by `newCString' and friends
+%          can be deallocated by `Foreign.Marshal.Alloc.free'
+%        - Improved documentation
+%
+% Changes since RC13:
+% * 5.3: Fixed typo
+% * 5.7: Fixed a mistake in the type of `peekByteOff' and `pokeByteOff' (the
+%        type variable constrained by `Storable' must be different from the
+%        parameter of the `Ptr')
+% * 6.3: Improved documentation
+%
+% Changes since RC12:
+% * Acks : Added John Meacham
+% * 4.1.5: Bug fix courtesy of Wolfgang Thaller
+% * 5.5  : Added `FinalizerEnvPtr', `newForeignPtrEnv', and
+%          `addForeignPtrFinalizerEnv'
+% * 6.3  : Added John Meacham proposal for `wchar_t' support as well localised
+%          string marshalling; in particular, this adds `CWString' and
+%          `CWStringLen' as well as the `CWString' and the `CAString' family
+%          of marshalling routines.  In addition, `charIsRepresentable' was
+%          added. 
+%
+% Changes since RC11:
+% * 5.5: Swapped argument order of `newForeignPtr' and `addForeignPtrFinalizer'
+%
+% Changes since RC10:
+% * 3.3  : Clarified use of foreign functions of pure type
+% * 4.1.1: Clarified the meaning of foreign imports without a "&" that have a
+%          non-functional type in Haskell
+% * 5.1  : Clarified the scope of safe use of unsafePerformIO
+% * 5.5  : "pre-emptive" dropped in footnote regarding finalizers; added
+%          `newForeignPointer_' and renamed `foreignPtrToPtr' to
+%          `unsafeForeignPtrToPtr'
+% * Typos throughout
+%
+% Changes since RC9:
+% * 1:     Mentioning interaction with foreign threads as an open problem.
+% * 2 & 3: Removed `threadsafe' again, as the proposal for thread support is
+%          still evolving and it is not yet clear whether a new safety level
+%          is required.
+% * 5.5:   Added the type synonym `FinalizerPtr' and rewrote the documentation
+%          of finalizers.
+% * 5.6:   Clarified the description of `StablePtr'
+% * 5.8:   Added `finalizerFree'
+% * 6.2:   All the types in CTypes must be newtypes that are exported
+%          abstractly. 
+%
+% Changes since RC8:
+% * 5.8: `MarshallAlloc.reallocBytes' is no longer permitted on memory
+%        allocated with `alloca' or `allocaBytes'. 
+% * 6.1: Deinitialisation of the RTS via `hs_exit()' followed by
+%        (re)initialisation with `hs_init()' must be supported.
+%
+% Changes since RC7:
+% * Clarified the lexis of C identifiers and C header file names
+% * In `ForeignPtr', added `mallocForeignPtrArray' and `mallocForeignPtrArray0'
+% * Clarified spec of allocations functions adding constraints taken from the
+%   corresponding C routines
+% * `mallocBytes' and `allocaBytes' must align memory sufficiently for any
+%   basic foreign type that fits into the allocated block
+% * Removed typos in the description of the module `ForeignPtr'
+% * Added Peter Gammie to the list of acknowledged people
+% * `addForeignPtrFinalizer' guarantees that finalizers for a single foreign
+%   pointer are executed in the opposite order as they were added.
+% * `Storable': Require that the size is divisible by the alignment
+% * Added Ross Paterson to the list of acknowledged people
+% * Added hs_free_fun_ptr() and hs_free_stable_ptr()
+% * Changed order of arguments of `mkIOError' and `annotateIOError' to match
+%   with the current implementation in GHC's FFI libraries.
+%
+% Changes since RC6:
+% * Fixed typos
+%
+% Changes since RC5:
+% * Author list: changed Alastair Reid's institution
+% * 1.4:   Clarified the wording
+% * 4.1:   Explicitly stated that access to pre-processor symbols is not
+%          provided by the FFI
+% * 4.1.1: Removed [lib] from impent syntax and discussion
+% * 4.1.3: Added parentheses round FunPtr ft to make it easier to 
+%          understand a tolerably complex type.
+% * 4.1.4: Removed all mention of library objects; clarified that header files
+%          do not impact the semantics of foreign calls, but may be required
+%          for correct code generation by some systems
+% * 5.2:   Clarified that all operations in Bits are member functions of the
+%          type class.  Reverse the meaning of the sign of the second argument
+%          for `rotate' and `shift' (this makes it the same as GHC used all
+%          the time).  `bitSize' on `Integer' etc is now undefined.
+% * 5.5:   Finalisers must be external functions to facilitate the
+%          implementation on Haskell systems that do not support pre-emptive
+%          concurrency.
+%          Added mallocForeignPtr and mallocForeignPtrBytes.
+% * 6:     Specified that HsBool==int in table2
+%          Relabelled column 1 in table 3 (C symbol -> CPP symbol)
+%          Replaced 0 and 1 with HS_BOOL_FALSE/TRUE
+% * 6.1:   Clarified that nullPtr (nullFunPtr) coincides with (HsPtr) NULL and
+%          (HsFunPtr) NULL, respectively.
+%          Allowing multiple calls to hs_init() and clarified the constraints
+%          on the relative timing between hs_set_argv() and
+%          getProgName/getArgs. 
+%          Added hs_perform_gc().
+%
+% Changes since RC4:
+% * 5.6: Clarified documentation of `StablePtr's (RC 5)
+%
+% Changes between RC2 and RC4:
+%
+% * 5.8: Clarified documentation for `MarshalAlloc.free'.
+% * 5.8: Added `MarshalAlloc.realloc'.
+% * 3: Added the new safety level `threadsafe' with an explanation at the end
+%   of 3.3.
+% * 3: Replaced the nontermional `entity' by `impent' and `expent' to
+%   distinguish between import and export entities (as they are defined
+%   differently in later sections).
+% * 3.2: Clarified the description of foreign types; so far, `IO ()' was
+%   strictly speaking not included as a valid return type.  Currently,
+%   functions of type `a -> ()' are included.  Do we want this?  Their use
+%   might not be portable if they include side effects.
+% * 4.1.5: New section discussing the traps & pitfalls of type promotion with
+%   C bindings.
+
+% TODO:
+% * Implement HTMLization.  (Malcolm suggests using
+%   <http://pauillac.inria.fr/~maranget/hevea/>)
+
+% TODO after Version 1.0:
+%
+% * Review suggestions by Antony Courtney <antony@@apocalypse.org> re FFI
+%   support for Java.
+
+\section{Foreign Function Interface}
+\label{ffi}
+
+% Old FFI addendum text:
+% The definition of Haskell 98~\cite{haskell98}, while being comprehensive with
+% respect to the functional core language, does lack a range of features of more
+% operational flavour, such as a foreign language interface, concurrency
+% support, and fully fledged exception handling.  As these features are of
+% central importance to many real world applications of the language, there is a
+% danger that different implementations become de facto incompatible for such
+% applications due to system-specific extensions of the core language.  The
+% present FFI specification is aimed at reducing this risk by defining a simple,
+% yet comprehensive extension to Haskell 98 for the purpose of interfacing to
+% program components implemented in a language other than Haskell.
+
+The Foreign Function Interface (FFI) has two purposes: it enables (1) to
+describe in Haskell the interface to foreign language functionality and
+(2) to use from foreign code Haskell routines.  More generally, its aim
+is to support the implementation of programs in a mixture of Haskell and
+other languages such that the source code is portable across different
+implementations of Haskell and non-Haskell systems as well as
+independent of the architecture and operating system.
+
+% Old FFI addendum text:
+% The design as presented in this report builds on experiences with a number of
+% foreign function interfaces that, over time, have been provided by the major
+% Haskell implementations.  Central in the final design was the goal to be
+% comprehensive while being simple and minimising changes with respect to
+% Haskell 98; the latter includes to avoid pollution of the name space with new
+% keywords.  Consequently, as much as possible of the FFI functionality is
+% realised in the form of libraries.  Simplicity generally overruled maximum
+% convenience for the programmer as a design goal.  Thus, support for more
+% convenient interface specifications is the domain of system-independent tools
+% that generate code following the present specification.
+
+\subsection{Foreign Languages}
+
+The Haskell FFI currently only specifies the interaction between Haskell
+code and foreign code that follows the C calling convention.  However,
+the design of the FFI is such that it enables the modular extension of
+the present definition to include the calling conventions of other
+programming languages, such as C++ and Java.  A precise definition of
+the support for those languages is expected to be included in later
+versions of the language.  The second major omission is the definition
+of the interaction with multithreading in the foreign language and, in
+particular, the treatment of thread-local state, and so these details
+are currently implementation-defined.
+
+The core of the present specification is independent of the foreign language
+that is used in conjunction with Haskell.  However, there are two areas where
+FFI specifications must become language specific: (1) the specification of
+external names and (2) the marshalling of the basic types of a foreign
+language.  As an example of the former, consider that in C~\cite{C} a simple
+identifier is sufficient to identify an object, while
+Java~\cite{gosling-etal:Java}, in general, requires a qualified name in
+conjunction with argument and result types to resolve possible overloading.
+Regarding the second point, consider that many languages do not specify the
+exact representation of some basic types.  For example the type @int@ in
+C may be 16, 32, or 64 bits wide.  Similarly, Haskell guarantees
+only that @Int@ covers at least the range \([-2^{29}, 2^{29} - 1]\) (Section~\ref{numbers}).  As
+a consequence, to reliably represent values of C's @int@ in Haskell, we
+have to introduce a new type @CInt@, which is guaranteed to match the
+representation of @int@.
+
+The specification of external names, dependent on a calling convention, is
+described in Section~\ref{sec:extent}, whereas the marshalling of the basic
+types in dependence on a foreign language is described in
+Section~\ref{sec:marshalling}.
+
+\subsection{Contexts}
+
+For a given Haskell system, we define the \emph{Haskell context} to be the
+execution context of the abstract machine on which the Haskell system is
+based.  This includes the heap, stacks, and the registers of the abstract
+machine and their mapping onto a concrete architecture.  We call any other
+execution context an \emph{external context.}  Generally, we cannot assume any
+compatibility between the data formats and calling conventions between the
+Haskell context and a given external context, except where Haskell explicitly prescribes a specific data format.
+
+The principal goal of a foreign function interface is to provide a
+programmable interface between the Haskell context and external
+contexts.  As a result Haskell threads can access data in external
+contexts and invoke functions that are executed in an external context
+as well as vice versa.  In the rest of this definition, external
+contexts are usually identified by a calling convention.
+
+\subsubsection{Cross Language Type Consistency}
+
+Given that many external languages support static types, the question arises
+whether the consistency of Haskell types with the types of the external
+language can be enforced for foreign functions.  Unfortunately, this is, in
+general, not possible without a significant investment on the part of the
+implementor of the Haskell system (i.e., without implementing a dedicated type
+checker).  For example, in the case of the C calling convention, the only
+other approach would be to generate a C prototype from the Haskell type and
+leave it to the C compiler to match this prototype with the prototype that is
+specified in a C header file for the imported function.  However, the Haskell
+type is lacking some information that would be required to pursue this route.
+In particular, the Haskell type does not contain any information as to when
+@const@ modifiers have to be emitted.  
+
+As a consequence, this definition does not require the Haskell system to check
+consistency with foreign types.  Nevertheless, Haskell systems are encouraged
+to provide any cross language consistency checks that can be implemented with
+reasonable effort.
+
+\subsection{Lexical Structure}
+
+The FFI reserves a single keyword @foreign@, and a set of special
+identifiers.  The latter have a special meaning only within foreign
+declarations, but may be used as ordinary identifiers elsewhere.
+
+The special identifiers @ccall@, @cplusplus@, @dotnet@,
+@jvm@, and @stdcall@ are defined to denote calling conventions.
+However, a concrete implementation of the FFI is free to support additional,
+system-specific calling conventions whose name is not explicitly listed here.
+
+To refer to objects of an external C context, we introduce the following
+phrases:
+%
+@@@
+chname -> \{chchar\} @.@ @h@               & (\tr{C header filename})
+cid    -> letter \{letter | ascDigit\}     & (\tr{C identifier})
+chchar -> letter | ascSymbol_{\langle{}@&@\rangle{}}
+letter -> ascSmall | ascLarge | @_@
+@@@
+%
+The range of lexemes that are admissible for "chname" is a subset of
+those permitted as arguments to the @#include@ directive in C.  In
+particular, a file name "chname" must end in the suffix @.h@.  The
+lexemes produced by "cid" coincide with those allowed as C identifiers,
+as specified in~\cite{C}.
+
+\subsection{Foreign Declarations}
+
+The syntax of foreign declarations is as follows:
+%
+@@@
+topdecl  -> @foreign@ fdecl
+fdecl    -> @import@ callconv [safety] impent var @::@ ftype & (\tr{define variable})
+         |  @export@ callconv expent var @::@ ftype & (\tr{expose variable})
+callconv -> @ccall@ | @stdcall@ | @cplusplus@  & (\tr{calling convention})
+         | @jvm@ | @dotnet@
+         |  \mbox{\bf system-specific calling conventions}
+impent   -> [string]
+expent   -> [string]
+safety   -> @unsafe@ | @safe@
+@@@
+%
+There are two flavours of foreign declarations: import and export
+declarations.  An import declaration makes an \emph{external entity,} i.e., a
+function or memory location defined in an external context, available in the
+Haskell context.  Conversely, an export declaration defines a function of the
+Haskell context as an external entity in an external context.  Consequently,
+the two types of declarations differ in that an import declaration defines a
+new variable, whereas an export declaration uses a variable that is already
+defined in the Haskell module.
+
+The external context that contains the external entity is determined by the
+calling convention given in the foreign declaration.  Consequently, the exact
+form of the specification of the external entity is dependent on both the
+calling convention and on whether it appears in an import declaration (as
+"impent") or in an export declaration (as "expent").  To provide
+syntactic uniformity in the presence of different calling conventions, it is
+guaranteed that the description of an external entity lexically appears as a
+Haskell string lexeme.  The only exception is where this string would be the
+empty string (i.e., be of the form @""@); in this case, the string may be
+omitted in its entirety.
+
+\subsubsection{Calling Conventions}
+\label{sec:call-conv}
+
+The binary interface to an external entity on a given architecture is
+determined by a calling convention.  It often depends on the programming
+language in which the external entity is implemented, but usually is more
+dependent on the system for which the external entity has been compiled.
+
+As an example of how the calling convention is dominated by the system rather
+than the programming language, consider that an entity compiled to byte code
+for the Java Virtual Machine (JVM)~\cite{lindholm-etal:JVM} needs to be
+invoked by the rules of the JVM rather than that of the source language in
+which it is implemented (the entity might be implemented in Oberon, for
+example).
+
+Any implementation of the Haskell FFI must at least implement the C calling
+convention denoted by @ccall@.  All other calling conventions are
+optional.  Generally, the set of calling conventions is open, i.e., individual
+implementations may elect to support additional calling conventions.  In
+addition to @ccall@, Table~\ref{tab:callconv} specifies a range of
+identifiers for common calling conventions.
+%
+\begin{table}[tbp]
+  \begin{center}
+    \begin{tabular}{|l|l|}
+      \hline
+      Identifier & Represented calling convention\\
+      \hline\hline
+      @ccall@ 
+      & Calling convention of the standard C compiler on a system\\
+      @cplusplus@
+      & Calling convention of the standard C{+}{+} compiler on a system\\
+      @dotnet@
+      & Calling convention of the \textsc{.net} platform\\
+      @jvm@ 
+      & Calling convention of the Java Virtual Machine\\
+      @stdcall@
+      & Calling convention of the Win32 API (matches Pascal conventions)\\
+      \hline
+    \end{tabular}
+    \caption{Calling conventions}
+    \label{tab:callconv}
+  \end{center}
+\end{table}
+%
+Implementations need not implement all of these conventions, but if any is
+implemented, it must use the listed name.  For any other calling convention,
+implementations are free to choose a suitable name.
+
+Only the semantics of the calling conventions @ccall@ and @stdcall@ are
+defined herein; more calling conventions may be added in future versions
+of Haskell.
+
+It should be noted that the code generated by a Haskell system to implement a
+particular calling convention may vary widely with the target code of that
+system.  For example, the calling convention @jvm@ will be trivial to
+implement for a Haskell compiler generating Java code, whereas for a Haskell
+compiler generating C code, the Java Native Interface (JNI)~\cite{liang:JNI}
+has to be targeted.
+
+\subsubsection{Foreign Types}
+\label{sec:foreign-types}
+
+The following types constitute the set of \emph{basic foreign types}:
+%
+\begin{itemize}
+\item @Char@, @Int@, @Double@, @Float@, and @Bool@ as
+  exported by the Haskell @Prelude@ as well as
+\item @Int8@, @Int16@, @Int32@, @Int64@, @Word8@,
+  @Word16@, @Word32@, @Word64@, @Ptr a@, @FunPtr a@,
+  and @StablePtr a@, for any type @a@, as exported by @Foreign@
+  (Section~\ref{module:Foreign}).
+\end{itemize}
+%
+A Haskell system that implements the FFI needs to be able to pass these types
+between the Haskell and the external context as function arguments and
+results.
+
+Foreign types are produced according to the following grammar:
+%
+@@@
+ftype -> frtype
+      |  fatype @->@ ftype
+frtype -> fatype
+       | @()@
+fatype -> qtycon atype_1 \ldots atype_k & (k \geq 0)
+@@@
+%
+A foreign type is the Haskell type of an external entity.  Only a subset of
+Haskell's types are permissible as foreign types, as only a restricted set of
+types can be canonically transferred between the Haskell context and an
+external context.  A foreign type has the form
+\[
+\textit{at}_1@ -> @\cdots@ -> @\textit{at}_n@ -> @\textit{rt}
+\]
+where \(n\geq0\).  It implies that the arity of the external entity is $n$.
+
+External functions are strict in all arguments.
+
+\paragraph{Marshallable foreign types.}
+
+The argument types \(\textit{at}_i\) produced by "fatype" must be
+\emph{marshallable foreign types;} that is, either
+
+\begin{itemize}
+\item a basic foreign type,
+
+\item a type synonym that expands to a marshallable foreign type,
+
+\item a type "T t'_1 ... t'_n" where "T" is defined by a @newtype@ declaration
+
+\begin{quote}
+@newtype @"T a_1 ... a_n"@ = @"N t"
+\end{quote}
+
+and
+
+\begin{itemize}
+\item the constructor "N" is visible where "T" is used,
+
+\item "t[t'_1/a_1..t'_n/a_n]" is a marshallable foreign type
+\end{itemize}
+\end{itemize}
+
+Consequently, in order for a type defined by @newtype@ to be used in a
+@foreign@ declaration outside of the module that defines it, the type
+must not be exported abstractly.  The module @Foreign.C.Types@ that
+defines the Haskell equivalents for C types follows this convention;
+see Chapter~\ref{module:Foreign.C.Types}.
+
+\paragraph{Marshallable foreign result types.}
+
+The result type \textit{rt} produced by "frtype" must be a
+\emph{marshallable foreign result type;} that is, either
+
+\begin{itemize}
+\item the type @()@,
+\item a type matching @Prelude.IO @$t$, where $t$ is a marshallable foreign type or @()@,
+\item a basic foreign type,
+\item a type synonym that expands to marshallable foreign result type,
+\item a type "T t'_1 ... t'_n" where "T" is defined by a @newtype@ declaration
+
+\begin{quote}
+@newtype @"T a_1 ... a_n"@ = @"N t"
+\end{quote}
+
+and
+
+\begin{itemize}
+\item the constructor "N" is visible where "T" is used,
+
+\item "t[t'_1/a_1..t'_n/a_n]" is a marshallable foreign result type
+\end{itemize}
+\end{itemize}
+
+\subsubsection{Import Declarations}
+\label{sec:import}
+
+Generally, an import declaration has the form
+%
+\[
+@foreign@~@import@~c~e~v~@::@~t
+\]
+%
+which declares the variable $v$ of type $t$ to be defined externally.
+Moreover, it specifies that $v$ is evaluated by executing the external entity
+identified by the string $e$ using calling convention $c$.  The precise form
+of $e$ depends on the calling convention and is detailed in
+Section~\ref{sec:extent}.  If a variable $v$ is defined by an import
+declaration, no other top-level declaration for $v$ is allowed in the same
+module.  For example, the declaration
+\bprog
+@
+foreign import ccall "string.h strlen"
+   cstrlen :: Ptr CChar -> IO CSize
+@
+\eprog
+introduces the function @cstrlen@, which invokes the external function
+@strlen@ using the standard C calling convention.  Some external entities
+can be imported as pure functions; for example,
+\bprog
+@
+foreign import ccall "math.h sin"
+   sin :: CDouble -> CDouble.
+@
+\eprog
+%
+Such a declaration asserts that the external entity is a true function; i.e.,
+when applied to the same argument values, it always produces the same result.
+
+Whether a particular form of external entity places a constraint on the
+Haskell type with which it can be imported is defined in
+Section~\ref{sec:extent}.  Although, some forms of external entities restrict
+the set of Haskell types that are permissible, the system can generally not
+guarantee the consistency between the Haskell type given in an import
+declaration and the argument and result types of the external entity.  It is
+the responsibility of the programmer to ensure this consistency.
+
+Optionally, an import declaration can specify, after the calling convention,
+the safety level that should be used when invoking an external entity.  A
+@safe@ call is less efficient, but guarantees to leave the Haskell system
+in a state that allows callbacks from the external code.  In contrast, an
+@unsafe@ call, while carrying less overhead, must not trigger a callback
+into the Haskell system.  If it does, the system behaviour is undefined.  The
+default for an invocation is to be @safe@.  Note that a callback into
+the Haskell system implies that a garbage collection might be triggered after
+an external entity was called, but before this call returns.  Consequently,
+objects other than stable pointers (cf.\ Section~\ref{module:Foreign.StablePtr}) may be
+moved or garbage collected by the storage manager.
+
+\subsubsection{Export Declarations}
+
+The general form of export declarations is
+%
+\[
+@foreign@~@export@~c~e~v~@::@~t
+\]
+%
+Such a declaration enables external access to $v$, which may be a value, field
+name, or class method that is declared on the top-level of the same module or
+imported.  Moreover, the Haskell system defines the external entity described
+by the string $e$, which may be used by external code using the calling
+convention $c$; an external invocation of the external entity $e$ is
+translated into evaluation of $v$.  The type $t$ must be an instance of the
+type of $v$.  For example, we may have
+\bprog
+@
+foreign export ccall "addInt"   (+) :: Int   -> Int   -> Int
+foreign export ccall "addFloat" (+) :: Float -> Float -> Float
+@
+\eprog
+If an evaluation triggered by an external invocation of an exported Haskell
+value returns with an exception, the system behaviour is undefined.  Thus,
+Haskell exceptions have to be caught within Haskell and explicitly marshalled
+to the foreign code.
+
+
+\subsection{Specification of External Entities}
+\label{sec:extent}
+
+Each foreign declaration has to specify the external entity that is accessed
+or provided by that declaration.  The syntax and semantics of the notation
+that is required to uniquely determine an external entity depends heavily on
+the calling convention by which this entity is accessed.  For example, for the
+calling convention @ccall@, a global label is sufficient.  However, to
+uniquely identify a method in the calling convention @jvm@, type
+information has to be provided.  For the latter, there is a choice between the
+Java source-level syntax of types and the syntax expected by JNI---but,
+clearly, the syntax of the specification of an external entity depends on the
+calling convention and may be non-trivial.
+
+Consequently, the FFI does not fix a general syntax for denoting external
+entities, but requires both "impent" and "expent" to take the
+form of a Haskell "string" literal.  The formation rules for the values
+of these strings depend on the calling convention and a Haskell system
+implementing a particular calling convention will have to parse these strings
+in accordance with the calling convention.
+
+Defining "impent" and "expent" to take the form of a
+"string" implies that all information that is needed to statically
+analyse the Haskell program is separated from the information needed to
+generate the code interacting with the foreign language.  This is, in
+particular, helpful for tools processing Haskell source code.  When ignoring
+the entity information provided by "impent" or "expent", foreign
+import and export declarations are still sufficient to infer identifier
+definition and use information as well as type information.
+
+For more complex calling conventions, there is a choice between the user-level
+syntax for identifying entities (e.g., Java or C{+}{+}) and the system-level
+syntax (e.g., the type syntax of JNI or mangled C{+}{+}, respectively).  If
+such a choice exists, the user-level syntax is preferred.  Not only because it
+is more user friendly, but also because the system-level syntax may not be
+entirely independent of the particular implementation of the foreign language.
+
+The following defines the syntax for specifying external entities and their
+semantics for the calling conventions @ccall@ and @stdcall@.  Other
+calling conventions from Table~\ref{tab:callconv} are expected to be defined
+in future versions of Haskell.
+
+
+\subsubsection{Standard C Calls}
+\label{sec:ccall}
+
+The following defines the structure of external entities for foreign
+declarations under the @ccall@ calling convention for both import and
+export declarations separately.  Afterwards additional constraints on the type
+of foreign functions are defined.
+
+The FFI covers only access to C functions and global variables.  There are no
+mechanisms to access other entities of C programs.  In particular, there is no
+support for accessing pre-processor symbols from Haskell, which includes
+@#define@d constants.  Access from Haskell to such entities is the
+domain of language-specific tools, which provide added convenience over the
+plain FFI as defined here.
+
+\paragraph{Import Declarations}
+
+For import declarations, the syntax for the specification of external entities
+under the @ccall@ calling convention is as follows:
+@@@
+impent -> @"@ [@static@] [chname] [@&@] [cid] @"@ & (\tr{static function or address})
+       | @"@ dynamic @"@ & (\tr{stub factory importing addresses})
+       | @"@ wrapper @"@ & (\tr{stub factory exporting thunks})
+@@@
+The first alternative either imports a static function "cid" or, if
+@&@ precedes the identifier, a static address.  If "cid" is
+omitted, it defaults to the name of the imported Haskell variable.  The
+optional filename "chname" specifies a C header file, where the
+intended meaning is that the header file declares the C entity identified by
+"cid".  In particular, when the Haskell system compiles Haskell to C
+code, the directive
+%
+\begin{quote}
+  @#include "@"chname"@"@
+\end{quote}
+%
+needs to be placed into any generated C file that refers to the foreign entity
+before the first occurrence of that entity in the generated C file.
+
+The second and third alternative, identified by the keywords @dynamic@
+and @wrapper@, respectively, import stub functions that have to be
+generated by the Haskell system.  In the case of @dynamic@, the stub
+converts C function pointers into Haskell functions; and conversely, in the
+case of @wrapper@, the stub converts Haskell thunks to C function
+pointers.  If neither of the specifiers @static@, @dynamic@, or
+@wrapper@ is given, @static@ is assumed.  The specifier
+@static@ is nevertheless needed to import C routines that are named
+@dynamic@ or @wrapper@.
+
+It should be noted that a static foreign declaration that does not import an
+address (i.e., where @&@ is not used in the specification of the external
+entity) always refers to a C function, even if the Haskell type is
+non-functional.  For example, 
+\bprog
+@
+foreign import ccall foo :: CInt
+@
+\eprog
+refers to a pure C function @foo@ with no arguments that returns an
+integer value.  Similarly, if the type is @IO CInt@, the declaration
+refers to an impure nullary function.  If a Haskell program needs to access a
+C variable @bar@ of integer type,
+\bprog
+@
+foreign import ccall "&" bar :: Ptr CInt
+@
+\eprog
+must be used to obtain a pointer referring to the variable.  The variable can
+be read and updated using the routines provided by the module @Foreign.Storable@
+(cf.\ Section~\ref{module:Foreign.Storable}).
+
+\paragraph{Export Declarations}
+
+External entities in "ccall" export declarations are of the form
+%
+@@@
+expent -> @"@ [cid] @"@
+@@@
+%
+The optional C identifier "cid" defines the external name by which the
+exported Haskell variable is accessible in C.  If it is omitted, the external
+name defaults to the name of the exported Haskell variable.
+
+\paragraph{Constraints on Foreign Function Types}
+
+In the case of import declaration, there are, depending on the kind of import
+declaration, constraints regarding the admissible Haskell type that the
+variable defined in the import may have.  These constraints are specified in
+the following.
+%
+\begin{description}
+\item[Static Functions.]  A static function can be of any foreign type; in
+  particular, the result type may or may not be in the IO monad.  If a
+  function that is not pure is not imported in the IO monad, the system
+  behaviour is undefined.  Generally, no check for consistency with the C type
+  of the imported label is performed.
+
+  As an example, consider
+  %
+\bprog
+@
+foreign import ccall "static stdlib.h"
+   system :: Ptr CChar -> IO CInt
+@
+\eprog
+  %
+  This declaration imports the @system()@ function whose prototype is
+  available from @stdlib.h@.
+
+\item[Static addresses.]  The type of an imported address is constrained to be
+  of the form @Ptr @\textit{a} or @FunPtr @\textit{a}, where
+  \textit{a} can be any type.
+
+  As an example, consider
+  %
+\bprog
+@
+foreign import ccall "errno.h &errno" errno :: Ptr CInt
+@
+\eprog
+  %
+  It imports the address of the variable @errno@, which is of the C type
+  @int@.
+
+\item[Dynamic import.]  The type of a "dynamic" stub has to be of the
+  form @(FunPtr @\textit{ft}@) -> @\textit{ft}, where \textit{ft} may
+  be any foreign type.
+
+  As an example, consider
+  %
+\bprog
+@
+foreign import ccall "dynamic" 
+  mkFun :: FunPtr (CInt -> IO ()) -> (CInt -> IO ())
+@
+\eprog
+  %
+  The stub factory @mkFun@ converts any pointer to a C function that gets
+  an integer value as its only argument and does not have a return value into
+  a corresponding Haskell function.
+
+\item[Dynamic wrapper.]  The type of a "wrapper" stub has to be of the
+  form \textit{ft}@ -> IO (FunPtr @\textit{ft}), where
+  \textit{ft} may be any foreign type.
+
+  As an example, consider
+  %
+\bprog
+@
+foreign import ccall "wrapper" 
+  mkCallback :: IO () -> IO (FunPtr (IO ()))
+@
+\eprog
+  %
+  The stub factory @mkCallback@ turns any Haskell computation of type
+  @IO ()@ into a C function pointer that can be passed to C routines,
+  which can call back into the Haskell context by invoking the referenced
+  function.
+
+\end{description}
+
+\paragraph{Specification of Header Files}
+
+A C header specified in an import declaration is always included by
+@#include "@"chname"@"@.  There is no explicit support for
+@#include <@"chname"@>@ style inclusion.  The ISO C99~\cite{C99}
+standard guarantees that any search path that would be used for a
+@#include <@"chname"@>@ is also used for @#include "@"chname"@"@ and it is guaranteed that these paths are searched after
+all paths that are unique to @#include "@"chname"@"@.  Furthermore,
+we require that "chname" ends in @.h@ to make parsing of the
+specification of external entities unambiguous.
+  
+The specification of include files has been kept to a minimum on purpose.
+Libraries often require a multitude of include directives, some of which may
+be system-dependent.  Any design that attempts to cover all possible
+configurations would introduce significant complexity.  Moreover, in the
+current design, a custom include file can be specified that uses the standard
+C preprocessor features to include all relevant headers.
+
+Header files have no impact on the semantics of a foreign call, and whether an
+implementation uses the header file or not is implementation-defined.
+However, as some implementations may require a header file that supplies a
+correct prototype for external functions in order to generate correct code,
+portable FFI code must include suitable header files.
+
+\paragraph{C Argument Promotion}
+
+The argument passing conventions of C are dependent on whether a function
+prototype for the called functions is in scope at a call site.  In particular,
+if no function prototype is in scope, \emph{default argument promotion} is
+applied to integral and floating types.  In general, it cannot be expected
+from a Haskell system that it is aware of whether a given C function was
+compiled with or without a function prototype being in scope.  For the sake of
+portability, we thus require that a Haskell system generally implements calls
+to C functions as well as C stubs for Haskell functions as if a function
+prototype for the called function is in scope.
+
+This convention implies that the onus for ensuring the match between C and
+Haskell code is placed on the FFI user.  In particular, when a C function that
+was compiled without a prototype is called from Haskell, the Haskell signature
+at the corresponding @foreign import@ declaration must use the types
+\emph{after} argument promotion.  For example, consider the following C
+function definition, which lacks a prototype:
+%
+\bprog
+@
+void foo (a)
+float a;
+{
+  ...
+}
+@
+\eprog
+%
+The lack of a prototype implies that a C compiler will apply default argument
+promotion to the parameter @a@, and thus, @foo@ will expect to
+receive a value of type @double@, \emph{not} @float@.  Hence, the
+correct @foreign import@ declaration is
+%
+\bprog
+@
+foreign import ccall foo :: Double -> IO ()
+@
+\eprog
+
+In contrast, a C function compiled with the prototype
+%
+\bprog
+@
+void foo (float a);
+@
+\eprog
+%
+requires
+%
+\bprog
+@
+foreign import ccall foo :: Float -> IO ()
+@
+\eprog
+
+A similar situation arises in the case of @foreign export@ declarations
+that use types that would be altered under the C default argument promotion
+rules.  When calling such Haskell functions from C, a function prototype
+matching the signature provided in the @foreign export@ declaration must
+be in scope; otherwise, the C compiler will erroneously apply the promotion
+rules to all function arguments.
+
+Note that for a C function defined to accept a variable number of arguments,
+all arguments beyond the explicitly typed arguments suffer argument promotion.
+However, because C permits the calling convention to be different for such
+functions, a Haskell system will, in general, not be able to make use of
+variable argument functions.  Hence, their use is deprecated in portable code.
+
+
+\subsubsection{Win32 API Calls}
+
+The specification of external entities under the @stdcall@ calling
+convention is identical to that for standard C calls.  The two calling
+conventions only differ in the generated code.
+
+
+% \begin{FUTURE} % ===== Material for future extension =======================
+% 
+% \subsubsection{C{+}{+} Calls}
+% 
+% The syntax for the specification of external entities under the
+% @cplusplus@ calling convention is
+% 
+% \subsubsection{JVM Calls}
+% 
+% The syntax for the specification of external entities under the @jvm@
+% calling convention is 
+% %
+% 
+%   \grule{impent}{%
+%     ""jtype" "jqid"("jtypes")"}
+%   \gor[constructor call]{%
+%     "new "jqid"("jtypes")"}
+%   \grule[$n\geq0$]{jtypes}{%
+%     \gnterm[1]{jtype},\gellipse,\gnterm[n]{jtype}}
+% 
+% %
+% where "jqid" is a qualified Java identifier and "jtype" a Java
+% types as defined in~\cite{gosling-etal:Java}.
+% 
+% \begin{verbatim}
+% FIXME: 
+% - force the inclusion of the return type in case of "new"?
+% \end{verbatim}
+% 
+% \subsubsection{.NET Calls}
+% 
+% The syntax for the specification of external entities under the @dotnet@
+% calling convention is
+% 
+% \end{FUTURE}% =============================================================
+
+
+\subsection{Marshalling}
+\label{sec:marshalling}
+
+In addition to the language extension discussed in previous sections, the FFI
+includes a set of standard libraries, which ease portable use of foreign
+functions as well as marshalling of compound structures.  Generally, the
+marshalling of Haskell structures into a foreign representation and vice versa
+can be implemented in either Haskell or the foreign language.  At least where
+the foreign language is at a significantly lower level, e.g.\ C, there are
+good reasons for doing the marshalling in Haskell:
+%
+\begin{itemize}
+\item Haskell's lazy evaluation strategy would require any foreign code that
+  attempts to access Haskell structures to force the evaluation of these
+  structures before accessing them. This would lead to complicated code in the
+  foreign language, but does not need any extra consideration when coding the
+  marshalling in Haskell.
+\item Despite the fact that marshalling code in Haskell tends to look like C
+  in Haskell syntax, the strong type system still catches many errors that
+  would otherwise lead to difficult-to-debug runtime faults.
+\item Direct access to Haskell heap structures from a language like
+  C---especially, when marshalling from C to Haskell, i.e., when Haskell
+  structures are created---carries the risk of corrupting the heap, which
+  usually leads to faults that are very hard to debug.
+\end{itemize}
+%
+Consequently, the Haskell FFI emphasises Haskell-side marshalling.
+
+The interface to the marshalling libraries is provided by the module
+@Foreign@ (Chapter~\ref{module:Foreign}) plus a language-dependent module per supported language.  In
+particular, the standard requires the availability of the module
+@Foreign.C@ (Chapter~\ref{module:Foreign.C}), which simplifies portable interfacing with external C code.
+Language-dependent modules, such as @Foreign.C@, generally provide Haskell
+types representing the basic types of the foreign language using a
+representation that is compatible with the foreign types as implemented by the
+default implementation of the foreign language on the present architecture.
+This is especially important for languages where the standard leaves some
+aspects of the implementation of basic types open.  For example, in C, the
+size of the various integral types is not fixed.  Thus, to represent C
+interfaces faithfully in Haskell, for each integral type in C, we need to have
+an integral type in Haskell that is guaranteed to have the same size as the
+corresponding C type.
+
+\subsection{The External C Interface}
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}{|l|l|l|}
+      \hline
+      C symbol          & Haskell symbol & Constraint on concrete C type\\
+      \hline\hline
+      @HsChar@     & @Char@    
+      & integral type\\
+      \hline
+      @HsInt@      & @Int@
+      & signed integral type, $\geq30$ bit\\
+      \hline
+      @HsInt8@     & @Int8@
+      & signed integral type, 8 bit; @int8_t@ if available\\
+      \hline
+      @HsInt16@    & @Int16@
+      & signed integral type, 16 bit; @int16_t@ if available\\
+      \hline
+      @HsInt32@    & @Int32@
+      & signed integral type, 32 bit; @int32_t@ if available\\
+      \hline
+      @HsInt64@    & @Int64@
+      & signed integral type, 64 bit; @int64_t@ if available\\ 
+      \hline
+      @HsWord8@    & @Word8@
+      & unsigned integral type, 8 bit; @uint8_t@ if available\\
+      \hline
+      @HsWord16@   & @Word16@
+      & unsigned integral type, 16 bit; @uint16_t@ if available\\
+      \hline
+      @HsWord32@   & @Word32@
+      & unsigned integral type, 32 bit; @uint32_t@ if available\\
+      \hline
+      @HsWord64@   & @Word64@
+      & unsigned integral type, 64 bit; @uint64_t@ if available\\
+      \hline
+      @HsFloat@    & @Float@
+      & floating point type\\
+     \hline
+      @HsDouble@   & @Double@
+      & floating point type\\
+     \hline
+      @HsBool@     & @Bool@
+      & @int@\\
+     \hline
+      @HsPtr@      & @Ptr a@
+      & @(void *)@\\
+     \hline
+      @HsFunPtr@   & @FunPtr a@
+      & @(void (*)(void))@\\
+     \hline
+      @HsStablePtr@& @StablePtr a@
+      & @(void *)@\\
+     \hline
+    \end{tabular}
+    \caption{C Interface to Basic Haskell Types}
+    \label{tab:c-haskell-types}
+  \end{center}
+\end{table}
+%
+\begin{table}
+  \begin{center}
+%    \begin{tabular}{|l|l|l|}
+    \begin{tabular}{|l|l|p{30ex}|}
+      \hline
+      CPP symbol           & Haskell value & Description\\
+      \hline\hline
+      @HS_CHAR_MIN@ & @minBound :: Char@
+      & \\
+      \hline
+      @HS_CHAR_MAX@ & @maxBound :: Char@
+      & \\
+      \hline
+      @HS_INT_MIN@ & @minBound :: Int@
+      & \\
+      \hline
+      @HS_INT_MAX@ & @maxBound :: Int@
+      & \\
+      \hline
+      @HS_INT8_MIN@ & @minBound :: Int8@
+      & \\
+      \hline
+      @HS_INT8_MAX@ & @maxBound :: Int8@
+      & \\
+      \hline
+      @HS_INT16_MIN@ & @minBound :: Int16@
+      & \\
+      \hline
+      @HS_INT16_MAX@ & @maxBound :: Int16@
+      & \\
+      \hline
+      @HS_INT32_MIN@ & @minBound :: Int32@
+      & \\
+      \hline
+      @HS_INT32_MAX@ & @maxBound :: Int32@
+      & \\
+      \hline
+      @HS_INT64_MIN@ & @minBound :: Int64@
+      & \\
+      \hline
+      @HS_INT64_MAX@ & @maxBound :: Int64@
+      & \\
+      \hline
+      @HS_WORD8_MAX@ & @maxBound :: Word8@
+      & \\
+      \hline
+      @HS_WORD16_MAX@ & @maxBound :: Word16@
+      & \\
+      \hline
+      @HS_WORD32_MAX@ & @maxBound :: Word32@
+      & \\
+      \hline
+      @HS_WORD64_MAX@ & @maxBound :: Word64@
+      & \\
+      \hline
+      @HS_FLOAT_RADIX@ & @floatRadix :: Float@
+      & \\
+      \hline
+      @HS_FLOAT_ROUND@ & n/a
+      & rounding style as per~\cite{C99}\\
+      \hline
+      @HS_FLOAT_EPSILON@ & n/a
+      & difference between 1 and the least value greater
+      than 1 as per~\cite{C99}\\
+      \hline
+      @HS_DOUBLE_EPSILON@ & n/a
+      & (as above)\\
+      \hline
+      @HS_FLOAT_DIG@ & n/a
+      & number of decimal digits as per~\cite{C99}\\
+      \hline
+      @HS_DOUBLE_DIG@ & n/a
+      & (as above)\\
+      \hline
+      @HS_FLOAT_MANT_DIG@ & @floatDigits :: Float@
+      & \\
+      \hline
+      @HS_DOUBLE_MANT_DIG@ & @floatDigits :: Double@
+      & \\
+      \hline
+      @HS_FLOAT_MIN@ & n/a
+      & minimum floating point number as per~\cite{C99}\\
+      \hline
+      @HS_DOUBLE_MIN@ & n/a
+      & (as above)\\
+      \hline
+      @HS_FLOAT_MIN_EXP@ & @fst . floatRange :: Float@
+      & \\
+      \hline
+      @HS_DOUBLE_MIN_EXP@ & @fst . floatRange :: Double@
+      & \\
+      \hline
+      @HS_FLOAT_MIN_10_EXP@ & n/a
+      & minimum decimal exponent as per~\cite{C99}\\
+      \hline
+      @HS_DOUBLE_MIN_10_EXP@ & n/a
+      & (as above)\\
+      \hline
+      @HS_FLOAT_MAX@ & n/a
+      & maximum floating point number as per~\cite{C99}\\
+      \hline
+      @HS_DOUBLE_MAX@ & n/a
+      & (as above)\\
+      \hline
+      @HS_FLOAT_MAX_EXP@ & @snd . floatRange :: Float@
+      & \\
+      \hline
+      @HS_DOUBLE_MAX_EXP@ & @snd . floatRange :: Double@
+      & \\
+      \hline
+      @HS_FLOAT_MAX_10_EXP@ & n/a
+      & maximum decimal exponent as per~\cite{C99}\\
+      \hline
+      @HS_DOUBLE_MAX_10_EXP@ & n/a
+      & (as above)\\
+      \hline
+      @HS_BOOL_FALSE@ & False
+      & \\
+      \hline
+      @HS_BOOL_TRUE@ & True
+      & \\
+      \hline
+    \end{tabular}
+    \caption{C Interface to Range and Precision of Basic Types}
+    \label{tab:c-haskell-values}
+  \end{center}
+\end{table}
+%
+Every Haskell system that implements the FFI needs to provide a C header file
+named @HsFFI.h@ that defines the C symbols listed in
+Tables~\ref{tab:c-haskell-types} and~\ref{tab:c-haskell-values}.
+Table~\ref{tab:c-haskell-types} table lists symbols that represent types
+together with the Haskell type that they represent and any constraints that
+are placed on the concrete C types that implement these symbols.  When a C
+type @HsT@ represents a Haskell type @T@, the occurrence of @T@
+in a foreign function declaration should be matched by @HsT@ in the
+corresponding C function prototype.  Indeed, where the Haskell system
+translates Haskell to C code that invokes @foreign@ @import@ed C
+routines, such prototypes need to be provided and included via the header that
+can be specified in external entity strings for foreign C functions (cf.\ 
+Section~\ref{sec:ccall}); otherwise, the system behaviour is undefined.  It is
+guaranteed that the Haskell value @nullPtr@ is mapped to @(HsPtr) NULL@ in C and @nullFunPtr@ is mapped to @(HsFunPtr) NULL@ and
+vice versa.
+
+Table~\ref{tab:c-haskell-values} contains symbols characterising the range and
+precision of the types from Table~\ref{tab:c-haskell-types}.  Where available,
+the table states the corresponding Haskell values.  All C symbols, with the
+exception of @HS_FLOAT_ROUND@ are constants that are suitable for use in
+@#if@ preprocessing directives.  Note that there is only one rounding
+style (@HS_FLOAT_ROUND@) and one radix (@HS_FLOAT_RADIX@), as
+this is all that is supported by ISO C~\cite{C99}.
+
+Moreover, an implementation that does not support 64 bit integral types on the
+C side should implement @HsInt64@ and @HsWord64@ as a structure.  In
+this case, the bounds @HS_INT64_MIN@, @HS_INT64_MAX@, and
+@HS_WORD64_MAX@ are undefined.
+
+In addition, to the symbols from Table~\ref{tab:c-haskell-types}
+and~\ref{tab:c-haskell-values}, the header @HsFFI.h@ must also contain
+the following prototypes:
+%
+\begin{quote}
+\begin{verbatim}
+void hs_init     (int *argc, char **argv[]);
+void hs_exit     (void);
+void hs_set_argv (int argc, char *argv[]);
+
+void hs_perform_gc (void);
+
+void hs_free_stable_ptr (HsStablePtr sp);
+void hs_free_fun_ptr    (HsFunPtr fp);
+\end{verbatim}
+\end{quote}
+%
+These routines are useful for mixed language programs, where the main
+application is implemented in a foreign language that accesses routines
+implemented in Haskell.  The function @hs_init()@ initialises the
+Haskell system and provides it with the available command line arguments.
+Upon return, the arguments solely intended for the Haskell runtime system are
+removed (i.e., the values that @argc@ and @argv@ point to may have
+changed).  This function must be called during program startup before any
+Haskell function is invoked; otherwise, the system behaviour is undefined.
+Conversely, the Haskell system is deinitialised by a call to
+@hs_exit()@.  Multiple invocations of @hs_init()@ are permitted,
+provided that they are followed by an equal number of calls to
+@hs_exit()@ and that the first call to @hs_exit()@ is after the
+last call to @hs_init()@.  In addition to nested calls to
+@hs_init()@, the Haskell system may be de-initialised with
+@hs_exit()@ and be re-initialised with @hs_init()@ at a later
+point in time.  This ensures that repeated initialisation due to multiple
+libraries being implemented in Haskell is covered.
+
+The Haskell system will ignore the command line arguments passed to the second
+and any following calls to @hs_init()@.  Moreover, @hs_init()@ may
+be called with @NULL@ for both @argc@ and @argv@, signalling
+the absence of command line arguments.
+
+The function @hs_set_argv()@ sets the values returned by the functions
+@getProgName@ and @getArgs@ of the module @System.Environment@ (Section~\ref{module:System.Environment}).  This function may only be invoked after
+@hs_init()@.  Moreover, if @hs_set_argv()@ is called at all, this
+call must precede the first invocation of @getProgName@ and
+@getArgs@.  Note that the separation of @hs_init()@ and
+@hs_set_argv()@ is essential in cases where in addition to the Haskell
+system other libraries that process command line arguments during
+initialisation are used.
+
+The function @hs_perform_gc()@ advises the Haskell storage manager to
+perform a garbage collection, where the storage manager makes an effort to
+releases all unreachable objects.  This function must not be invoked from C
+functions that are imported @unsafe@ into Haskell code nor may it be used
+from a finalizer.
+
+Finally, @hs_free_stable_ptr()@ and @hs_free_fun_ptr()@ are
+the C counterparts of the Haskell functions @freeStablePtr@ and
+@freeHaskellFunPtr@.

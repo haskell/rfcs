@@ -1,0 +1,326 @@
+\haddockmoduleheading{Data.Array}
+\label{module:Data.Array}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Data.Array (
+    module Data.Ix,  Array,  array,  listArray,  accumArray,  (!),  bounds, 
+    indices,  elems,  assocs,  (//),  accum,  ixmap
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{Immutable non-strict arrays
+}
+Haskell provides indexable \emph{arrays}, which may be thought of as functions
+whose domains are isomorphic to contiguous subsets of the integers.
+Functions restricted in this way can be implemented efficiently;
+in particular, a programmer may reasonably expect rapid access to
+the components.  To ensure the possibility of such an implementation,
+arrays are treated as data, not as general functions.
+\par
+Since most array functions involve the class \haddockid{Ix}, the contents of the
+module \haddocktt{Data.Ix} are re-exported from \haddocktt{Data.Array} for convenience:
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+module\ Data.Ix
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Ix\ i\ =>\ Array\ i\ e
+\end{tabular}]\haddockbegindoc
+The type of immutable non-strict (boxed) arrays
+ with indices in \haddocktt{i} and elements in \haddocktt{e}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Ix\ i\ =>\ Functor\ (Array\ i)\\instance\ (Ix\ i,\ Eq\ e)\ =>\ Eq\ (Array\ i\ e)\\instance\ (Ix\ i,\ Ord\ e)\ =>\ Ord\ (Array\ i\ e)\\instance\ (Ix\ a,\ Read\ a,\ Read\ b)\ =>\ Read\ (Array\ a\ b)\\instance\ (Ix\ a,\ Show\ a,\ Show\ b)\ =>\ Show\ (Array\ a\ b)
+\end{tabular}]
+\end{haddockdesc}
+\section{Array construction
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+array
+\end{tabular}]\haddockbegindoc
+\haddockbeginargs
+\haddockdecltt{::} & \haddockdecltt{Ix i} \\
+                     \haddockdecltt{=>} & \haddockdecltt{(i, i)} & a pair of \emph{bounds}, each of the index type
+ of the array.  These bounds are the lowest and
+ highest indices in the array, in that order.
+ For example, a one-origin vector of length
+ '10' has bounds '(1,10)', and a one-origin '10'
+ by '10' matrix has bounds '((1,1),(10,10))'.
+ \\
+                                                                   \haddockdecltt{->} & \haddockdecltt{[(i, e)]} & a list of \emph{associations} of the form
+ (\emph{index}, \emph{value}).  Typically, this list will
+ be expressed as a comprehension.  An
+ association '(i, x)' defines the value of
+ the array at index \haddocktt{i} to be \haddocktt{x}.
+ \\
+                                                                                                                   \haddockdecltt{->} & \haddockdecltt{Array i e} & \\
+\end{tabulary}\par
+Construct an array with the specified bounds and containing values
+ for given indices within these bounds.
+\par
+The array is undefined (i.e. bottom) if any index in the list is
+ out of bounds.  If any
+ two associations in the list have the same index, the value at that
+ index is undefined (i.e. bottom).
+\par
+Because the indices must be checked for these errors, \haddockid{array} is
+ strict in the bounds argument and in the indices of the association
+ list, but non-strict in the values.  Thus, recurrences such as the
+ following are possible:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ a = array (1,100) ((1,1) : [(i, i * a!(i-1)) | i <- [2..100]])
+\end{verbatim}}
+\end{quote}
+Not every index within the bounds of the array need appear in the
+ association list, but the values associated with indices that do not
+ appear will be undefined (i.e. bottom).
+\par
+If, in any dimension, the lower bound is greater than the upper bound,
+ then the array is legal, but empty.  Indexing an empty array always
+ gives an array-bounds error, but \haddockid{bounds} still yields the bounds
+ with which the array was constructed.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+listArray\ ::\ Ix\ i\ =>\ (i,\ i)\ ->\ {\char 91}e{\char 93}\ ->\ Array\ i\ e
+\end{tabular}]\haddockbegindoc
+Construct an array from a pair of bounds and a list of values in
+ index order.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+accumArray
+\end{tabular}]\haddockbegindoc
+\haddockbeginargs
+\haddockdecltt{::} & \haddockdecltt{Ix i} \\
+                     \haddockdecltt{=>} & \haddockdecltt{(e
+                                                          -> a
+                                                             -> e)} & accumulating function
+ \\
+                                                                      \haddockdecltt{->} & \haddockdecltt{e} & initial value
+ \\
+                                                                                                               \haddockdecltt{->} & \haddockdecltt{(i, i)} & bounds of the array
+ \\
+                                                                                                                                                             \haddockdecltt{->} & \haddockdecltt{[(i, a)]} & association list
+ \\
+                                                                                                                                                                                                             \haddockdecltt{->} & \haddockdecltt{Array i e} & \\
+\end{tabulary}\par
+The \haddockid{accumArray} function deals with repeated indices in the association
+ list using an \emph{accumulating function} which combines the values of
+ associations with the same index.
+ For example, given a list of values of some index type, \haddocktt{hist}
+ produces a histogram of the number of occurrences of each index within
+ a specified range:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ hist :: (Ix a, Num b) => (a,a) -> [a] -> Array a b
+ hist bnds is = accumArray (+) 0 bnds [(i, 1) | i<-is, inRange bnds i]
+\end{verbatim}}
+\end{quote}
+If the accumulating function is strict, then \haddockid{accumArray} is strict in
+ the values, as well as the indices, in the association list.  Thus,
+ unlike ordinary arrays built with \haddockid{array}, accumulated arrays should
+ not in general be recursive.
+\par
+
+\end{haddockdesc}
+\section{Accessing arrays
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(!)\ ::\ Ix\ i\ =>\ Array\ i\ e\ ->\ i\ ->\ e
+\end{tabular}]\haddockbegindoc
+The value at the given index in an array.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+bounds\ ::\ Ix\ i\ =>\ Array\ i\ e\ ->\ (i,\ i)
+\end{tabular}]\haddockbegindoc
+The bounds with which an array was constructed.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+indices\ ::\ Ix\ i\ =>\ Array\ i\ e\ ->\ {\char 91}i{\char 93}
+\end{tabular}]\haddockbegindoc
+The list of indices of an array in ascending order.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+elems\ ::\ Ix\ i\ =>\ Array\ i\ e\ ->\ {\char 91}e{\char 93}
+\end{tabular}]\haddockbegindoc
+The list of elements of an array in index order.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+assocs\ ::\ Ix\ i\ =>\ Array\ i\ e\ ->\ {\char 91}(i,\ e){\char 93}
+\end{tabular}]\haddockbegindoc
+The list of associations of an array in index order.
+\par
+
+\end{haddockdesc}
+\section{Incremental array updates
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(//)\ ::\ Ix\ i\ =>\ Array\ i\ e\ ->\ {\char 91}(i,\ e){\char 93}\ ->\ Array\ i\ e
+\end{tabular}]\haddockbegindoc
+Constructs an array identical to the first argument except that it has
+ been updated by the associations in the right argument.
+ For example, if \haddocktt{m} is a 1-origin, \haddocktt{n} by \haddocktt{n} matrix, then
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ m//[((i,i), 0) | i <- [1..n]]
+\end{verbatim}}
+\end{quote}
+is the same matrix, except with the diagonal zeroed.
+\par
+Repeated indices in the association list are handled as for \haddockid{array}:
+ the resulting array is undefined (i.e. bottom),
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+accum\ ::\ Ix\ i\ =>\ (e\ ->\ a\ ->\ e)\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ Array\ i\ e\ ->\ {\char 91}(i,\ a){\char 93}\ ->\ Array\ i\ e
+\end{tabular}]\haddockbegindoc
+\haddocktt{accum\ f} takes an array and an association list and accumulates
+ pairs from the list into the array with the accumulating function \haddocktt{f}.
+ Thus \haddockid{accumArray} can be defined using \haddockid{accum}:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ accumArray f z b = accum f (array b [(i, z) | i <- range b])
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\section{Derived arrays
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+ixmap\ ::\ (Ix\ i,\ Ix\ j)\ =>\ (i,\ i)\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ (i\ ->\ j)\ ->\ Array\ j\ e\ ->\ Array\ i\ e
+\end{tabular}]\haddockbegindoc
+\haddockid{ixmap} allows for transformations on array indices.
+ It may be thought of as providing function composition on the right
+ with the mapping that the original array embodies.
+\par
+A similar transformation of array values may be achieved using \haddockid{fmap}
+ from the \haddockid{Array} instance of the \haddockid{Functor} class.
+\par
+
+\end{haddockdesc}
+\section{Specification
+}
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ module  Array ( 
+     module Data.Ix,  -- export all of Data.Ix
+     Array, array, listArray, (!), bounds, indices, elems, assocs, 
+     accumArray, (//), accum, ixmap ) where
+ 
+ import Data.Ix
+ import Data.List( (\\) )
+ 
+ infixl 9  !, //
+ 
+ data (Ix a) => Array a b = MkArray (a,a) (a -> b) deriving ()
+ 
+ array       :: (Ix a) => (a,a) -> [(a,b)] -> Array a b
+ array b ivs
+   | any (not . inRange b. fst) ivs
+      = error "Data.Array.array: out-of-range array association"
+   | otherwise
+      = MkArray b arr
+   where
+     arr j = case [ v | (i,v) <- ivs, i == j ] of
+               [v]   -> v
+               []    -> error "Data.Array.!: undefined array element"
+               _     -> error "Data.Array.!: multiply defined array element"
+ 
+ listArray             :: (Ix a) => (a,a) -> [b] -> Array a b
+ listArray b vs        =  array b (zipWith (\ a b -> (a,b)) (range b) vs)
+ 
+ (!)                   :: (Ix a) => Array a b -> a -> b
+ (!) (MkArray _ f)     =  f
+ 
+ bounds                :: (Ix a) => Array a b -> (a,a)
+ bounds (MkArray b _)  =  b
+ 
+ indices               :: (Ix a) => Array a b -> [a]
+ indices               =  range . bounds
+ 
+ elems                 :: (Ix a) => Array a b -> [b]
+ elems a               =  [a!i | i <- indices a]
+ 
+ assocs                :: (Ix a) => Array a b -> [(a,b)]
+ assocs a              =  [(i, a!i) | i <- indices a]
+ 
+ (//)                  :: (Ix a) => Array a b -> [(a,b)] -> Array a b
+ a // new_ivs          = array (bounds a) (old_ivs ++ new_ivs)
+                       where
+                         old_ivs = [(i,a!i) | i <- indices a,
+                                              i `notElem` new_is]
+                         new_is  = [i | (i,_) <- new_ivs]
+ 
+ accum                 :: (Ix a) => (b -> c -> b) -> Array a b -> [(a,c)]
+                                    -> Array a b
+ accum f               =  foldl (\a (i,v) -> a // [(i,f (a!i) v)])
+ 
+ accumArray            :: (Ix a) => (b -> c -> b) -> b -> (a,a) -> [(a,c)]
+                                    -> Array a b
+ accumArray f z b      =  accum f (array b [(i,z) | i <- range b])
+ 
+ ixmap                 :: (Ix a, Ix b) => (a,a) -> (a -> b) -> Array b c
+                                          -> Array a c
+ ixmap b f a           = array b [(i, a ! f i) | i <- range b]
+ 
+ instance  (Ix a)          => Functor (Array a) where
+     fmap fn (MkArray b f) =  MkArray b (fn . f) 
+ 
+ instance  (Ix a, Eq b)  => Eq (Array a b)  where
+     a == a' =  assocs a == assocs a'
+ 
+ instance  (Ix a, Ord b) => Ord (Array a b)  where
+     a <= a' =  assocs a <= assocs a'
+ 
+ instance  (Ix a, Show a, Show b) => Show (Array a b)  where
+     showsPrec p a = showParen (p > arrPrec) (
+                     showString "array " .
+                     showsPrec (arrPrec+1) (bounds a) . showChar ' ' .
+                     showsPrec (arrPrec+1) (assocs a)                  )
+ 
+ instance  (Ix a, Read a, Read b) => Read (Array a b)  where
+     readsPrec p = readParen (p > arrPrec)
+            (\r -> [ (array b as, u) 
+                   | ("array",s) <- lex r,
+                     (b,t)       <- readsPrec (arrPrec+1) s,
+                     (as,u)      <- readsPrec (arrPrec+1) t ])
+ 
+ -- Precedence of the 'array' function is that of application itself
+ arrPrec = 10
+\end{verbatim}}
+\end{quote}

@@ -1,0 +1,117 @@
+\newcommand{\Thorn}{Thorn}
+\newcommand{\thorn}{thorn}
+\newcommand{\Eth}{D\hspace{-7pt}@-@\hspace{2pt}}
+\newcommand{\eth}{{\tt d\hspace{-2pt}}\bar{ }\hspace{2pt}}
+\newcommand{\macron}{\bar{ }}
+\newcommand{\currency}{currency}
+\newcommand{\registered}{{\tiny R}\hspace{-8pt}{$\bigcirc$}\hspace{2pt}}
+\newcommand{\cents}{@c@\hspace{-5pt}{@|@}\hspace{2pt}}
+\newcommand{\degree}{^{\circ}}
+\newcommand{\pilcrow}{pilcrow}
+\newcommand{\yen}{Y\hspace{-5pt}$_{^{=}}$\hspace{2pt}}
+\newcommand{\male}{^a}
+\newcommand{\female}{^o}
+\newcommand{\brokenline}{\stackrel{_{\mid}}{_{_{\mid}}}}
+\newcommand{\isoacute}{\tt \acute{ }}
+\newcounter{four}
+\setcounter{four}{4}
+\newcommand{\isosectionmark}{\fnsymbol{four}}
+\newcounter{five}
+\setcounter{five}{5}
+\newcommand{\isoparamark}{\fnsymbol{five}}
+
+\newcommand{\ISOiexcl}{\mbox{\tt !`}}
+\newcommand{\ISOcent}{\mbox{$\tt \cents$}}
+\newcommand{\ISOcurren}{\mbox{$\currency$}}
+\newcommand{\ISOpound}{\mbox{\pounds{}}}
+\newcommand{\ISOyen}{\mbox{\tt \yen}}
+\newcommand{\ISObrkbar}{\mbox{{$\tt \brokenline$}}}
+\newcommand{\ISOsect}{\mbox{$\isosectionmark$}}
+\newcommand{\ISOuml}{\mbox{${\tt \ddot{ }}$}}
+\newcommand{\ISOcopy}{\mbox{${\tt \copyright}$}}
+\newcommand{\ISOordf}{\mbox{$\male$}}
+\newcommand{\ISOlaquo}{\mbox{$\ll$}}
+\newcommand{\ISOnot}{\mbox{$\neg$}}
+\newcommand{\ISOshy}{\mbox{${\tt -}$}}
+\newcommand{\ISOreg}{\mbox{$${\tt \registered}$$}}
+\newcommand{\ISOhibar}{\mbox{${\tt \macron}$}}
+\newcommand{\ISOdeg}{\mbox{${\tt \degree}$}}
+\newcommand{\ISOplusmn}{\mbox{$\pm$}}
+\newcommand{\ISOsuptwo}{\mbox{$^2$}}
+\newcommand{\ISOsupthree}{\mbox{$^3$}}
+\newcommand{\ISOacute}{\mbox{$\isoacute$}}
+\newcommand{\ISOmicro}{\mbox{$\mu$}}
+\newcommand{\ISOpara}{\mbox{$\isoparamark$}}
+\newcommand{\ISOmiddot}{\mbox{$\cdot$}}
+\newcommand{\ISOcedil}{\mbox{$${\tt \c{ }}$$}}
+\newcommand{\ISOsupone}{\mbox{$^1$}}
+\newcommand{\ISOordm}{\mbox{$\female$}}
+\newcommand{\ISOraquo}{\mbox{$\gg$}}
+\newcommand{\ISOfracfourth}{\mbox{$\frac{1}{4}$}}
+\newcommand{\ISOfrachalf}{\mbox{$\frac{1}{2}$}}
+\newcommand{\ISOfracthreeforths}{\mbox{$\frac{3}{4}$}}
+\newcommand{\ISOiquest}{\mbox{$${\tt ?`}$$}}
+\newcommand{\ISOtimes}{\mbox{$\times$}}
+\newcommand{\ISOdivide}{\mbox{$\div$}}
+\newcommand{\ISOagrave}{\mbox{${\tt \grave{a}}$}}
+\newcommand{\ISOaacute}{\mbox{${\tt \acute{a}}$}}
+\newcommand{\ISOacirc}{\mbox{${\tt \hat{a}}$}}
+\newcommand{\ISOatilde}{\mbox{${\tt \tilde{a}}$}}
+\newcommand{\ISOauml}{\mbox{${\tt \ddot{a}}$}}
+\newcommand{\ISOaring}{\mbox{$${\tt \aa}$$}}
+\newcommand{\ISOaelig}{\mbox{$${\tt \ae}$$}}
+\newcommand{\ISOccedil}{\mbox{$${\tt \c{c}}$$}}
+\newcommand{\ISOegrave}{\mbox{${\tt \grave{e}}$}}
+\newcommand{\ISOeacute}{\mbox{${\tt \acute{e}}$}}
+\newcommand{\ISOecirc}{\mbox{${\tt \hat{e}}$}}
+\newcommand{\ISOeuml}{\mbox{${\tt \ddot{e}}$}}
+\newcommand{\ISOigrave}{\mbox{${\tt \grave{\i}}$}}
+\newcommand{\ISOiacute}{\mbox{${\tt \acute{\i}}$}}
+\newcommand{\ISOicirc}{\mbox{${\tt \hat{\i}}$}}
+\newcommand{\ISOiuml}{\mbox{${\tt \ddot{\i}}$}}
+\newcommand{\ISOeth}{\mbox{$\eth$}}
+\newcommand{\ISOntilde}{\mbox{${\tt \tilde{n}}$}}
+\newcommand{\ISOograve}{\mbox{${\tt \grave{o}}$}}
+\newcommand{\ISOoacute}{\mbox{${\tt \acute{o}}$}}
+\newcommand{\ISOocirc}{\mbox{${\tt \hat{o}}$}}
+\newcommand{\ISOotilde}{\mbox{${\tt \tilde{o}}$}}
+\newcommand{\ISOouml}{\mbox{${\tt \ddot{o}}$}}
+\newcommand{\ISOoslash}{\mbox{${\tt \o}$}}
+\newcommand{\ISOugrave}{\mbox{${\tt \grave{u}}$}}
+\newcommand{\ISOuacute}{\mbox{${\tt \acute{u}}$}}
+\newcommand{\ISOucirc}{\mbox{${\tt \hat{u}}$}}
+\newcommand{\ISOuuml}{\mbox{${\tt \ddot{u}}$}}
+\newcommand{\ISOyacute}{\mbox{${\tt \acute{y}}$}}
+\newcommand{\ISOthorn}{\mbox{$\thorn$}}
+\newcommand{\ISOyuml}{\mbox{${\tt \ddot{y}}$}}
+\newcommand{\ISOAgrave}{\mbox{${\tt \grave{A}}$}}
+\newcommand{\ISOAacute}{\mbox{${\tt \acute{A}}$}}
+\newcommand{\ISOAcirc}{\mbox{${\tt \hat{A}}$}}
+\newcommand{\ISOAtilde}{\mbox{${\tt \tilde{A}}$}}
+\newcommand{\ISOAuml}{\mbox{${\tt \ddot{A}}$}}
+\newcommand{\ISOAring}{\mbox{$${\tt \AA}$$}}
+\newcommand{\ISOAElig}{\mbox{$${\tt \AE}$$}}
+\newcommand{\ISOCcedil}{\mbox{$${\tt \c{C}}$$}}
+\newcommand{\ISOEgrave}{\mbox{${\tt \grave{E}}$}}
+\newcommand{\ISOEacute}{\mbox{${\tt \acute{E}}$}}
+\newcommand{\ISOEcirc}{\mbox{${\tt \hat{E}}$}}
+\newcommand{\ISOEuml}{\mbox{${\tt \ddot{E}}$}}
+\newcommand{\ISOIgrave}{\mbox{${\tt \grave{I}}$}}
+\newcommand{\ISOIacute}{\mbox{${\tt \acute{I}}$}}
+\newcommand{\ISOIcirc}{\mbox{${\tt \hat{I}}$}}
+\newcommand{\ISOIuml}{\mbox{${\tt \ddot{I}}$}}
+\newcommand{\ISOETH}{\mbox{${\tt \Eth}$}}
+\newcommand{\ISONtilde}{\mbox{${\tt \tilde{N}}$}}
+\newcommand{\ISOOgrave}{\mbox{${\tt \grave{O}}$}}
+\newcommand{\ISOOacute}{\mbox{${\tt \acute{O}}$}}
+\newcommand{\ISOOcirc}{\mbox{${\tt \hat{O}}$}}
+\newcommand{\ISOOtilde}{\mbox{${\tt \tilde{O}}$}}
+\newcommand{\ISOOuml}{\mbox{${\tt \ddot{O}}$}}
+\newcommand{\ISOOslash}{\mbox{${\tt \O}$}}
+\newcommand{\ISOUgrave}{\mbox{${\tt \grave{U}}$}}
+\newcommand{\ISOUacute}{\mbox{${\tt \acute{U}}$}}
+\newcommand{\ISOUcirc}{\mbox{${\tt \hat{U}}$}}
+\newcommand{\ISOUuml}{\mbox{${\tt \ddot{U}}$}}
+\newcommand{\ISOYacute}{\mbox{${\tt \acute{Y}}$}}
+\newcommand{\ISOTHORN}{\mbox{$\Thorn$}}
+\newcommand{\ISOszlig}{\mbox{$${\tt \ss}$$}}
