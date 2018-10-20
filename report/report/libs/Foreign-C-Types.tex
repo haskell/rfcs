@@ -1,0 +1,413 @@
+\haddockmoduleheading{Foreign.C.Types}
+\label{module:Foreign.C.Types}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.C.Types (
+    CChar,  CSChar,  CUChar,  CShort,  CUShort,  CInt,  CUInt,  CLong,  CULong, 
+    CPtrdiff,  CSize,  CWchar,  CSigAtomic,  CLLong,  CULLong,  CIntPtr, 
+    CUIntPtr,  CIntMax,  CUIntMax,  CClock,  CTime,  CFloat,  CDouble,  CFile, 
+    CFpos,  CJmpBuf
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{Representations of C types
+}
+These types are needed to accurately represent C function prototypes,
+in order to access C library interfaces in Haskell.  The Haskell system
+is not required to represent those types exactly as C does, but the
+following guarantees are provided concerning a Haskell type \haddocktt{CT}
+representing a C type \haddocktt{t}:
+\par
+\begin{itemize}
+\item
+ If a C function prototype has \haddocktt{t} as an argument or result type, the
+  use of \haddocktt{CT} in the corresponding position in a foreign declaration
+  permits the Haskell program to access the full range of values encoded
+  by the C type; and conversely, any Haskell value for \haddocktt{CT} has a valid
+  representation in C.
+\par
+
+\item
+ \haddocktt{\haddocktt{sizeOf}\ (undefined\ ::\ CT)} will yield the same value as
+  \haddocktt{sizeof\ (t)} in C.
+\par
+
+\item
+ \haddocktt{\haddocktt{alignment}\ (undefined\ ::\ CT)} matches the alignment
+  constraint enforced by the C implementation for \haddocktt{t}.
+\par
+
+\item
+ The members \haddocktt{peek} and \haddocktt{poke} of the \haddocktt{Storable} class map all values
+  of \haddocktt{CT} to the corresponding value of \haddocktt{t} and vice versa.
+\par
+
+\item
+ When an instance of \haddockid{Bounded} is defined for \haddocktt{CT}, the values
+  of \haddockid{minBound} and \haddockid{maxBound} coincide with \haddocktt{t{\char '137}MIN}
+  and \haddocktt{t{\char '137}MAX} in C.
+\par
+
+\item
+ When an instance of \haddockid{Eq} or \haddockid{Ord} is defined for \haddocktt{CT},
+  the predicates defined by the type class implement the same relation
+  as the corresponding predicate in C on \haddocktt{t}.
+\par
+
+\item
+ When an instance of \haddockid{Num}, \haddockid{Read}, \haddockid{Integral},
+  \haddockid{Fractional}, \haddockid{Floating}, \haddockid{RealFrac}, or
+  \haddockid{RealFloat} is defined for \haddocktt{CT}, the arithmetic operations
+  defined by the type class implement the same function as the
+  corresponding arithmetic operations (if available) in C on \haddocktt{t}.
+\par
+
+\item
+ When an instance of \haddocktt{Bits} is defined for \haddocktt{CT}, the bitwise operation
+  defined by the type class implement the same function as the
+  corresponding bitwise operation in C on \haddocktt{t}.
+\par
+
+\end{itemize}
+
+\subsection{Integral types
+}
+These types are are represented as \haddocktt{newtype}s of
+ types in \haddocktt{Data.Int} and \haddocktt{Data.Word}, and are instances of
+ \haddockid{Eq}, \haddockid{Ord}, \haddockid{Num}, \haddockid{Read},
+ \haddockid{Show}, \haddockid{Enum}, \haddocktt{Storable},
+ \haddockid{Bounded}, \haddockid{Real}, \haddockid{Integral} and
+ \haddocktt{Bits}.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CChar
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{char} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CChar\\instance\ Enum\ CChar\\instance\ Eq\ CChar\\instance\ Integral\ CChar\\instance\ Num\ CChar\\instance\ Ord\ CChar\\instance\ Read\ CChar\\instance\ Real\ CChar\\instance\ Show\ CChar\\instance\ Storable\ CChar\\instance\ Bits\ CChar
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CSChar
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{signed\ char} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CSChar\\instance\ Enum\ CSChar\\instance\ Eq\ CSChar\\instance\ Integral\ CSChar\\instance\ Num\ CSChar\\instance\ Ord\ CSChar\\instance\ Read\ CSChar\\instance\ Real\ CSChar\\instance\ Show\ CSChar\\instance\ Storable\ CSChar\\instance\ Bits\ CSChar
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CUChar
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{unsigned\ char} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CUChar\\instance\ Enum\ CUChar\\instance\ Eq\ CUChar\\instance\ Integral\ CUChar\\instance\ Num\ CUChar\\instance\ Ord\ CUChar\\instance\ Read\ CUChar\\instance\ Real\ CUChar\\instance\ Show\ CUChar\\instance\ Storable\ CUChar\\instance\ Bits\ CUChar
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CShort
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{short} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CShort\\instance\ Enum\ CShort\\instance\ Eq\ CShort\\instance\ Integral\ CShort\\instance\ Num\ CShort\\instance\ Ord\ CShort\\instance\ Read\ CShort\\instance\ Real\ CShort\\instance\ Show\ CShort\\instance\ Storable\ CShort\\instance\ Bits\ CShort
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CUShort
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{unsigned\ short} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CUShort\\instance\ Enum\ CUShort\\instance\ Eq\ CUShort\\instance\ Integral\ CUShort\\instance\ Num\ CUShort\\instance\ Ord\ CUShort\\instance\ Read\ CUShort\\instance\ Real\ CUShort\\instance\ Show\ CUShort\\instance\ Storable\ CUShort\\instance\ Bits\ CUShort
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CInt
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{int} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CInt\\instance\ Enum\ CInt\\instance\ Eq\ CInt\\instance\ Integral\ CInt\\instance\ Num\ CInt\\instance\ Ord\ CInt\\instance\ Read\ CInt\\instance\ Real\ CInt\\instance\ Show\ CInt\\instance\ Storable\ CInt\\instance\ Bits\ CInt
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CUInt
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{unsigned\ int} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CUInt\\instance\ Enum\ CUInt\\instance\ Eq\ CUInt\\instance\ Integral\ CUInt\\instance\ Num\ CUInt\\instance\ Ord\ CUInt\\instance\ Read\ CUInt\\instance\ Real\ CUInt\\instance\ Show\ CUInt\\instance\ Storable\ CUInt\\instance\ Bits\ CUInt
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CLong
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{long} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CLong\\instance\ Enum\ CLong\\instance\ Eq\ CLong\\instance\ Integral\ CLong\\instance\ Num\ CLong\\instance\ Ord\ CLong\\instance\ Read\ CLong\\instance\ Real\ CLong\\instance\ Show\ CLong\\instance\ Storable\ CLong\\instance\ Bits\ CLong
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CULong
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{unsigned\ long} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CULong\\instance\ Enum\ CULong\\instance\ Eq\ CULong\\instance\ Integral\ CULong\\instance\ Num\ CULong\\instance\ Ord\ CULong\\instance\ Read\ CULong\\instance\ Real\ CULong\\instance\ Show\ CULong\\instance\ Storable\ CULong\\instance\ Bits\ CULong
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CPtrdiff
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{ptrdiff{\char '137}t} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CPtrdiff\\instance\ Enum\ CPtrdiff\\instance\ Eq\ CPtrdiff\\instance\ Integral\ CPtrdiff\\instance\ Num\ CPtrdiff\\instance\ Ord\ CPtrdiff\\instance\ Read\ CPtrdiff\\instance\ Real\ CPtrdiff\\instance\ Show\ CPtrdiff\\instance\ Storable\ CPtrdiff\\instance\ Bits\ CPtrdiff
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CSize
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{size{\char '137}t} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CSize\\instance\ Enum\ CSize\\instance\ Eq\ CSize\\instance\ Integral\ CSize\\instance\ Num\ CSize\\instance\ Ord\ CSize\\instance\ Read\ CSize\\instance\ Real\ CSize\\instance\ Show\ CSize\\instance\ Storable\ CSize\\instance\ Bits\ CSize
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CWchar
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{wchar{\char '137}t} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CWchar\\instance\ Enum\ CWchar\\instance\ Eq\ CWchar\\instance\ Integral\ CWchar\\instance\ Num\ CWchar\\instance\ Ord\ CWchar\\instance\ Read\ CWchar\\instance\ Real\ CWchar\\instance\ Show\ CWchar\\instance\ Storable\ CWchar\\instance\ Bits\ CWchar
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CSigAtomic
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{sig{\char '137}atomic{\char '137}t} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CSigAtomic\\instance\ Enum\ CSigAtomic\\instance\ Eq\ CSigAtomic\\instance\ Integral\ CSigAtomic\\instance\ Num\ CSigAtomic\\instance\ Ord\ CSigAtomic\\instance\ Read\ CSigAtomic\\instance\ Real\ CSigAtomic\\instance\ Show\ CSigAtomic\\instance\ Storable\ CSigAtomic\\instance\ Bits\ CSigAtomic
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CLLong
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{long\ long} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CLLong\\instance\ Enum\ CLLong\\instance\ Eq\ CLLong\\instance\ Integral\ CLLong\\instance\ Num\ CLLong\\instance\ Ord\ CLLong\\instance\ Read\ CLLong\\instance\ Real\ CLLong\\instance\ Show\ CLLong\\instance\ Storable\ CLLong\\instance\ Bits\ CLLong
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CULLong
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{unsigned\ long\ long} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CULLong\\instance\ Enum\ CULLong\\instance\ Eq\ CULLong\\instance\ Integral\ CULLong\\instance\ Num\ CULLong\\instance\ Ord\ CULLong\\instance\ Read\ CULLong\\instance\ Real\ CULLong\\instance\ Show\ CULLong\\instance\ Storable\ CULLong\\instance\ Bits\ CULLong
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CIntPtr
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CIntPtr\\instance\ Enum\ CIntPtr\\instance\ Eq\ CIntPtr\\instance\ Integral\ CIntPtr\\instance\ Num\ CIntPtr\\instance\ Ord\ CIntPtr\\instance\ Read\ CIntPtr\\instance\ Real\ CIntPtr\\instance\ Show\ CIntPtr\\instance\ Storable\ CIntPtr\\instance\ Bits\ CIntPtr
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CUIntPtr
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CUIntPtr\\instance\ Enum\ CUIntPtr\\instance\ Eq\ CUIntPtr\\instance\ Integral\ CUIntPtr\\instance\ Num\ CUIntPtr\\instance\ Ord\ CUIntPtr\\instance\ Read\ CUIntPtr\\instance\ Real\ CUIntPtr\\instance\ Show\ CUIntPtr\\instance\ Storable\ CUIntPtr\\instance\ Bits\ CUIntPtr
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CIntMax
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CIntMax\\instance\ Enum\ CIntMax\\instance\ Eq\ CIntMax\\instance\ Integral\ CIntMax\\instance\ Num\ CIntMax\\instance\ Ord\ CIntMax\\instance\ Read\ CIntMax\\instance\ Real\ CIntMax\\instance\ Show\ CIntMax\\instance\ Storable\ CIntMax\\instance\ Bits\ CIntMax
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CUIntMax
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ CUIntMax\\instance\ Enum\ CUIntMax\\instance\ Eq\ CUIntMax\\instance\ Integral\ CUIntMax\\instance\ Num\ CUIntMax\\instance\ Ord\ CUIntMax\\instance\ Read\ CUIntMax\\instance\ Real\ CUIntMax\\instance\ Show\ CUIntMax\\instance\ Storable\ CUIntMax\\instance\ Bits\ CUIntMax
+\end{tabular}]
+\end{haddockdesc}
+\subsection{Numeric types
+}
+These types are are represented as \haddocktt{newtype}s of basic
+ foreign types, and are instances of
+ \haddockid{Eq}, \haddockid{Ord}, \haddockid{Num}, \haddockid{Read},
+ \haddockid{Show}, \haddockid{Enum} and \haddocktt{Storable}.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CClock
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{clock{\char '137}t} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Enum\ CClock\\instance\ Eq\ CClock\\instance\ Num\ CClock\\instance\ Ord\ CClock\\instance\ Read\ CClock\\instance\ Real\ CClock\\instance\ Show\ CClock\\instance\ Storable\ CClock
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CTime
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{time{\char '137}t} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Enum\ CTime\\instance\ Eq\ CTime\\instance\ Num\ CTime\\instance\ Ord\ CTime\\instance\ Read\ CTime\\instance\ Real\ CTime\\instance\ Show\ CTime\\instance\ Storable\ CTime
+\end{tabular}]
+\end{haddockdesc}
+\subsection{Floating types
+}
+These types are are represented as \haddocktt{newtype}s of
+ \haddockid{Float} and \haddockid{Double}, and are instances of
+ \haddockid{Eq}, \haddockid{Ord}, \haddockid{Num}, \haddockid{Read},
+ \haddockid{Show}, \haddockid{Enum}, \haddocktt{Storable},
+ \haddockid{Real}, \haddockid{Fractional}, \haddockid{Floating},
+ \haddockid{RealFrac} and \haddockid{RealFloat}.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CFloat
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{float} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Enum\ CFloat\\instance\ Eq\ CFloat\\instance\ Floating\ CFloat\\instance\ Fractional\ CFloat\\instance\ Num\ CFloat\\instance\ Ord\ CFloat\\instance\ Read\ CFloat\\instance\ Real\ CFloat\\instance\ RealFloat\ CFloat\\instance\ RealFrac\ CFloat\\instance\ Show\ CFloat\\instance\ Storable\ CFloat
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CDouble
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{double} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Enum\ CDouble\\instance\ Eq\ CDouble\\instance\ Floating\ CDouble\\instance\ Fractional\ CDouble\\instance\ Num\ CDouble\\instance\ Ord\ CDouble\\instance\ Read\ CDouble\\instance\ Real\ CDouble\\instance\ RealFloat\ CDouble\\instance\ RealFrac\ CDouble\\instance\ Show\ CDouble\\instance\ Storable\ CDouble
+\end{tabular}]
+\end{haddockdesc}
+\subsection{Other types
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CFile
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{FILE} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CFpos
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{fpos{\char '137}t} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ CJmpBuf
+\end{tabular}]\haddockbegindoc
+Haskell type representing the C \haddocktt{jmp{\char '137}buf} type.
+\par
+
+\end{haddockdesc}

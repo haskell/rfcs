@@ -1,0 +1,97 @@
+\haddockmoduleheading{Data.Word}
+\label{module:Data.Word}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Data.Word (
+    Word,  Word8,  Word16,  Word32,  Word64
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{Unsigned integral types
+}
+This module provides unsigned integer types of unspecified width (\haddockid{Word})
+and fixed widths (\haddockid{Word8}, \haddockid{Word16}, \haddockid{Word32} and \haddockid{Word64}).  All
+arithmetic is performed modulo 2{\char '136}n, where \haddocktt{n} is the number of bits in
+the type.
+\par
+For coercing between any two integer types, use
+\haddockid{fromIntegral}.  Coercing word types to and from integer
+types preserves representation, not sign.
+\par
+The rules that hold for \haddockid{Enum} instances over a bounded type
+such as \haddockid{Int} (see the section of the Haskell language report dealing
+with arithmetic sequences) also hold for the \haddockid{Enum} instances
+over the various \haddockid{Word} types defined here.
+\par
+Right and left shifts by amounts greater than or equal to the width of
+the type result in a zero result.  This is contrary to the behaviour
+in C, which is undefined; a common interpretation is to truncate the
+shift count to the width of the type, for example \haddocktt{1\ <<\ 32\ ==\ 1} in
+some C implementations.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Word
+\end{tabular}]\haddockbegindoc
+A \haddockid{Word} is an unsigned integral type, with the same size as \haddockid{Int}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ Word\\instance\ Enum\ Word\\instance\ Eq\ Word\\instance\ Integral\ Word\\instance\ Num\ Word\\instance\ Ord\ Word\\instance\ Read\ Word\\instance\ Real\ Word\\instance\ Show\ Word\\instance\ Ix\ Word\\instance\ Storable\ Word\\instance\ Bits\ Word
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Word8
+\end{tabular}]\haddockbegindoc
+8-bit unsigned integer type
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ Word8\\instance\ Enum\ Word8\\instance\ Eq\ Word8\\instance\ Integral\ Word8\\instance\ Num\ Word8\\instance\ Ord\ Word8\\instance\ Read\ Word8\\instance\ Real\ Word8\\instance\ Show\ Word8\\instance\ Ix\ Word8\\instance\ Storable\ Word8\\instance\ Bits\ Word8
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Word16
+\end{tabular}]\haddockbegindoc
+16-bit unsigned integer type
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ Word16\\instance\ Enum\ Word16\\instance\ Eq\ Word16\\instance\ Integral\ Word16\\instance\ Num\ Word16\\instance\ Ord\ Word16\\instance\ Read\ Word16\\instance\ Real\ Word16\\instance\ Show\ Word16\\instance\ Ix\ Word16\\instance\ Storable\ Word16\\instance\ Bits\ Word16
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Word32
+\end{tabular}]\haddockbegindoc
+32-bit unsigned integer type
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ Word32\\instance\ Enum\ Word32\\instance\ Eq\ Word32\\instance\ Integral\ Word32\\instance\ Num\ Word32\\instance\ Ord\ Word32\\instance\ Read\ Word32\\instance\ Real\ Word32\\instance\ Show\ Word32\\instance\ Ix\ Word32\\instance\ Storable\ Word32\\instance\ Bits\ Word32
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Word64
+\end{tabular}]\haddockbegindoc
+64-bit unsigned integer type
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ Word64\\instance\ Enum\ Word64\\instance\ Eq\ Word64\\instance\ Integral\ Word64\\instance\ Num\ Word64\\instance\ Ord\ Word64\\instance\ Read\ Word64\\instance\ Real\ Word64\\instance\ Show\ Word64\\instance\ Ix\ Word64\\instance\ Storable\ Word64\\instance\ Bits\ Word64
+\end{tabular}]
+\end{haddockdesc}

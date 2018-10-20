@@ -1,0 +1,67 @@
+\haddockmoduleheading{System.Exit}
+\label{module:System.Exit}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module System.Exit (
+    ExitCode(ExitSuccess, ExitFailure),  exitWith,  exitFailure,  exitSuccess
+  ) where\end{verbatim}}
+\haddockendheader
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ ExitCode
+\end{tabular}]\haddockbegindoc
+\haddockbeginconstrs
+\haddockdecltt{=} & \haddockdecltt{ExitSuccess} & indicates successful termination;
+ \\
+\haddockdecltt{|} & \haddockdecltt{ExitFailure Int} & indicates program failure with an exit code.
+ The exact interpretation of the code is
+ operating-system dependent.  In particular, some values
+ may be prohibited (e.g. 0 on a POSIX-compliant system).
+ \\
+\end{tabulary}\par
+Defines the exit codes that a program can return.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ ExitCode\\instance\ Ord\ ExitCode\\instance\ Read\ ExitCode\\instance\ Show\ ExitCode\\
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+exitWith\ ::\ ExitCode\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Computation \haddocktt{exitWith\ code} terminates the program, returning \haddocktt{code}
+to the program's caller.  
+The caller may interpret the return code as it wishes, but the program
+should return \haddockid{ExitSuccess} to mean normal completion, and
+\haddocktt{ExitFailure\ n} to mean that the program encountered a problem from
+which it could not recover.  The value \haddockid{exitFailure} is equal to
+\haddocktt{exitWith\ (ExitFailure\ exitfail)}, where \haddocktt{exitfail} is
+implementation-dependent.  \haddockid{exitWith} bypasses the error handling in
+the I/O monad and cannot be intercepted by \haddockid{catch} from the \haddocktt{Prelude}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+exitFailure\ ::\ IO\ a
+\end{tabular}]\haddockbegindoc
+The computation \haddockid{exitFailure} is equivalent to
+ \haddockid{exitWith} \haddocktt{(}\haddockid{ExitFailure} \emph{exitfail}\haddocktt{)},
+ where \emph{exitfail} is implementation-dependent.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+exitSuccess\ ::\ IO\ a
+\end{tabular}]\haddockbegindoc
+The computation \haddockid{exitSuccess} is equivalent to
+ \haddockid{exitWith} \haddockid{ExitSuccess}, It terminates the program
+ successfully.
+\par
+
+\end{haddockdesc}

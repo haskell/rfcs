@@ -1,0 +1,141 @@
+%%% LaTeX2e package file to set EBNF in the style of the Haskell report
+%%%
+%%% Manuel M. T. Chakravarty <chak@cse.unsw.edu.au> [1997..2001]
+%%%
+%%% $Id: grammar.sty,v 1.1 2003/01/14 06:58:33 chak Exp $
+%%%
+%%% This file is free software; you can redistribute it and/or modify
+%%% it under the terms of the GNU General Public License as published by
+%%% the Free Software Foundation; either version 2 of the License, or
+%%% (at your option) any later version.
+%%%
+%%% This file is distributed in the hope that it will be useful,
+%%% but WITHOUT ANY WARRANTY; without even the implied warranty of
+%%% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%%% GNU General Public License for more details.
+%%%
+%%% DOCU ======================================================================
+%%%
+%%% As a cheap (and ineffective) substitute for proper documentation, here an
+%%% example using the macros:
+%%%
+%%%   \begin{grammar}
+%%%     \grule{ftype}{%
+%%%       \gnterm{frtype}}
+%%%     \gor{%
+%%%       \gnterm{fatype} -> \gnterm{ftype}}
+%%%     \grule{frtype}{%
+%%%       \gnterm{fatype}}
+%%%     \gor{%
+%%%       ()}
+%%%     \grule[$k\geq0$]{fatype}{%
+%%%       \gnterm{qtycon} \gnterm[1]{atype} \gellipse\ \gnterm[k]{atype}}
+%%%   \end{grammar}
+%%%
+%%% TODO ======================================================================
+%%%
+%%% * flexible way of determining the column width is needed (should be the
+%%%   same throughout a single grammar (or even the whole document)
+%%%
+
+\ProvidesPackage{grammar}[2001/04/17, v0.5a, <chak@cse.unsw.edu.au>]
+
+\RequirePackage{ifthen}
+
+% font configuration
+%
+% * these two commands can be redefined to change the default fonts for
+%   terminals and non-terminals, respectively
+%
+\newcommand{\gtermfont}{\ttfamily}
+\newcommand{\gntermfont}{\rmfamily\itshape}
+
+% remembers whether we are in the star form of the grammar environment
+% (internal) 
+%
+\newif\if@quoted
+
+% grammar environment
+%
+% * typeset in paragraph mode within a tabular
+% * there are four columns, containing the nonterminal, rule symbol (-> or |),
+%   the rules rhs, and a comment, respectively
+% * the star form of the command is not `quote'd
+%
+\newenvironment{grammar}{%
+  \@quotedtrue
+  \@grammar
+  }{%
+  \@endgrammar
+  }
+\newenvironment{grammar*}{%
+  \@quotedfalse
+  \@grammar
+  }{%
+  \@endgrammar
+  }
+
+% internal implementation of the grammar environment
+%
+\newcommand{\@grammar}{%
+  \gtermfont                                    % for terminals
+  \if@quoted\quote\fi
+  \tabular{@{}lcl@{\quad}l@{}}
+  }
+\newcommand{\@endgrammar}{%
+  \endtabular
+  \if@quoted\endquote\fi
+  \ignorespaces\global\@ignoretrue
+  }
+
+% a rule: optional comment, lhs, and rhs
+%
+\newcommand{\grule}[3][!*NEVER USED ARGUMENT*!]{%
+  \ifthenelse{\equal{#1}{!*NEVER USED ARGUMENT*!}}{%
+    \gnterm{#2} &$\rightarrow$& #3 \\
+    }{%
+    \gnterm{#2} &$\rightarrow$& #3 & \rmfamily(#1)\\
+    }%
+  }
+
+% a rule alternative: optional comment and rhs
+%
+\newcommand{\gor}[2][!*NEVER USED ARGUMENT*!]{%
+  \ifthenelse{\equal{#1}{!*NEVER USED ARGUMENT*!}}{%
+    &$|$& #2\\
+    }{%
+    &$|$& #2 & \rmfamily(#1)\\
+    }%
+  }
+
+% set a non-terminal with an optimal subscript
+%
+\newcommand{\gnterm}[2][!*NEVER USED ARGUMENT*!]{%
+  \bgroup
+  \gntermfont#2%
+  \ifthenelse{\equal{#1}{!*NEVER USED ARGUMENT*!}}\relax{%
+    \(_{#1}\)%
+    }%
+  \egroup
+  }
+
+\newcommand{\galt}{$|$}                         % inline alternatives
+\newcommand{\gellipse}{\textrm{\ldots}}         % ellipses
+\newcommand{\ggroup}[1]{\textrm(#1\textrm)}     % grouped expression
+\newcommand{\gopt}[1]{\textrm[#1\textrm]}       % optinal term
+\newcommand{\grepeat}[1]{\textrm\{#1\textrm\}}  % repeated term
+\newcommand{\gminus}[1]{%                       % set difference
+  \(_{\langle\mbox{\scriptsize #1}\rangle}\)}
+\newcommand{\gverbal}[1]{{\rmfamily\textbf{#1}}}% informal description
+
+% the following command is for terminals, but it is not necessary with the
+% `grammar' environment, as terminals are the default; it is however useful in 
+% the rest of the text
+%
+\newcommand{\gterm}[1]{{\normalfont\gtermfont#1}}
+
+% some characters that are difficult to denote 
+%
+\newcommand{\gbackslash}{\char"5C}
+\newcommand{\gtilde}{\char"7E}
+\newcommand{\ghat}{\char"5E}

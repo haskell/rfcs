@@ -1,0 +1,115 @@
+\haddockmoduleheading{Foreign.StablePtr}
+\label{module:Foreign.StablePtr}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.StablePtr (
+    StablePtr,  newStablePtr,  deRefStablePtr,  freeStablePtr, 
+    castStablePtrToPtr,  castPtrToStablePtr
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{Stable references to Haskell values
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ StablePtr\ a
+\end{tabular}]\haddockbegindoc
+A \emph{stable pointer} is a reference to a Haskell expression that is
+guaranteed not to be affected by garbage collection, i.e., it will neither be
+deallocated nor will the value of the stable pointer itself change during
+garbage collection (ordinary references may be relocated during garbage
+collection).  Consequently, stable pointers can be passed to foreign code,
+which can treat it as an opaque reference to a Haskell value.
+\par
+A value of type \haddocktt{StablePtr\ a} is a stable pointer to a Haskell
+expression of type \haddocktt{a}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ (StablePtr\ a)\\instance\ Storable\ (StablePtr\ a)
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newStablePtr\ ::\ a\ ->\ IO\ (StablePtr\ a)
+\end{tabular}]\haddockbegindoc
+Create a stable pointer referring to the given Haskell value.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+deRefStablePtr\ ::\ StablePtr\ a\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Obtain the Haskell value referenced by a stable pointer, i.e., the
+ same value that was passed to the corresponding call to
+ \haddocktt{makeStablePtr}.  If the argument to \haddockid{deRefStablePtr} has
+ already been freed using \haddockid{freeStablePtr}, the behaviour of
+ \haddockid{deRefStablePtr} is undefined.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+freeStablePtr\ ::\ StablePtr\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Dissolve the association between the stable pointer and the Haskell
+ value. Afterwards, if the stable pointer is passed to
+ \haddockid{deRefStablePtr} or \haddockid{freeStablePtr}, the behaviour is
+ undefined.  However, the stable pointer may still be passed to
+ \haddockid{castStablePtrToPtr}, but the \haddocktt{\haddocktt{Foreign.Ptr.Ptr}\ ()} value returned
+ by \haddockid{castStablePtrToPtr}, in this case, is undefined (in particular,
+ it may be \haddocktt{Foreign.Ptr.nullPtr}).  Nevertheless, the call
+ to \haddockid{castStablePtrToPtr} is guaranteed not to diverge.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castStablePtrToPtr\ ::\ StablePtr\ a\ ->\ Ptr\ ()
+\end{tabular}]\haddockbegindoc
+Coerce a stable pointer to an address. No guarantees are made about
+ the resulting value, except that the original stable pointer can be
+ recovered by \haddockid{castPtrToStablePtr}.  In particular, the address may not
+ refer to an accessible memory location and any attempt to pass it to
+ the member functions of the class \haddocktt{Foreign.Storable.Storable} leads to
+ undefined behaviour.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castPtrToStablePtr\ ::\ Ptr\ ()\ ->\ StablePtr\ a
+\end{tabular}]\haddockbegindoc
+The inverse of \haddockid{castStablePtrToPtr}, i.e., we have the identity
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ sp == castPtrToStablePtr (castStablePtrToPtr sp)
+\end{verbatim}}
+\end{quote}
+for any stable pointer \haddocktt{sp} on which \haddockid{freeStablePtr} has
+ not been executed yet.  Moreover, \haddockid{castPtrToStablePtr} may
+ only be applied to pointers that have been produced by
+ \haddockid{castStablePtrToPtr}.
+\par
+
+\end{haddockdesc}
+\subsection{The C-side interface
+}
+The following definition is available to C programs inter-operating with
+ Haskell code when including the header \haddocktt{HsFFI.h}.
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ typedef void *HsStablePtr;  
+\end{verbatim}}
+\end{quote}
+Note that no assumptions may be made about the values representing stable
+ pointers.  In fact, they need not even be valid memory addresses.  The only
+ guarantee provided is that if they are passed back to Haskell land, the
+ function \haddockid{deRefStablePtr} will be able to reconstruct the
+ Haskell value referred to by the stable pointer.
+\par

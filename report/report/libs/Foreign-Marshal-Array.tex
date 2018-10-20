@@ -1,0 +1,215 @@
+\haddockmoduleheading{Foreign.Marshal.Array}
+\label{module:Foreign.Marshal.Array}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.Marshal.Array (
+    mallocArray,  mallocArray0,  allocaArray,  allocaArray0,  reallocArray, 
+    reallocArray0,  peekArray,  peekArray0,  pokeArray,  pokeArray0,  newArray, 
+    newArray0,  withArray,  withArray0,  withArrayLen,  withArrayLen0, 
+    copyArray,  moveArray,  lengthArray0,  advancePtr
+  ) where\end{verbatim}}
+\haddockendheader
+
+The module \haddocktt{Foreign.Marshal.Array} provides operations for marshalling Haskell
+lists into monolithic arrays and vice versa.  Most functions come in two
+flavours: one for arrays terminated by a special termination element and one
+where an explicit length parameter is used to determine the extent of an
+array.  The typical example for the former case are C's NUL terminated
+strings.  However, please note that C strings should usually be marshalled
+using the functions provided by \haddocktt{Foreign.C.String} as
+the Unicode encoding has to be taken into account.  All functions specifically
+operating on arrays that are terminated by a special termination element have
+a name ending on \haddocktt{0}---e.g., \haddockid{mallocArray} allocates space for an
+array of the given size, whereas \haddockid{mallocArray0} allocates space for one
+more element to ensure that there is room for the terminator.
+\par
+
+\section{Marshalling arrays
+}
+\subsection{Allocation
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mallocArray\ ::\ Storable\ a\ =>\ Int\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Allocate storage for the given number of elements of a storable type
+ (like \haddocktt{Foreign.Marshal.Alloc.malloc}, but for multiple elements).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mallocArray0\ ::\ Storable\ a\ =>\ Int\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Like \haddockid{mallocArray}, but add an extra position to hold a special
+ termination element.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+allocaArray\ ::\ Storable\ a\ =>\ Int\ ->\ (Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+Temporarily allocate space for the given number of elements
+ (like \haddocktt{Foreign.Marshal.Alloc.alloca}, but for multiple elements).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+allocaArray0\ ::\ Storable\ a\ =>\ Int\ ->\ (Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+Like \haddockid{allocaArray}, but add an extra position to hold a special
+ termination element.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+reallocArray\ ::\ Storable\ a\ =>\ Ptr\ a\ ->\ Int\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Adjust the size of an array
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+reallocArray0\ ::\ Storable\ a\ =>\ Ptr\ a\ ->\ Int\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Adjust the size of an array including an extra position for the end marker.
+\par
+
+\end{haddockdesc}
+\subsection{Marshalling
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+peekArray\ ::\ Storable\ a\ =>\ Int\ ->\ Ptr\ a\ ->\ IO\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+Convert an array of given length into a Haskell list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+peekArray0\ ::\ (Storable\ a,\ Eq\ a)\ =>\ a\ ->\ Ptr\ a\ ->\ IO\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+Convert an array terminated by the given end marker into a Haskell list
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+pokeArray\ ::\ Storable\ a\ =>\ Ptr\ a\ ->\ {\char 91}a{\char 93}\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Write the list elements consecutive into memory
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+pokeArray0\ ::\ Storable\ a\ =>\ a\ ->\ Ptr\ a\ ->\ {\char 91}a{\char 93}\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Write the list elements consecutive into memory and terminate them with the
+ given marker element
+\par
+
+\end{haddockdesc}
+\subsection{Combined allocation and marshalling
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newArray\ ::\ Storable\ a\ =>\ {\char 91}a{\char 93}\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Write a list of storable elements into a newly allocated, consecutive
+ sequence of storable values
+ (like \haddocktt{Foreign.Marshal.Utils.new}, but for multiple elements).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newArray0\ ::\ Storable\ a\ =>\ a\ ->\ {\char 91}a{\char 93}\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Write a list of storable elements into a newly allocated, consecutive
+ sequence of storable values, where the end is fixed by the given end marker
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withArray\ ::\ Storable\ a\ =>\ {\char 91}a{\char 93}\ ->\ (Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+Temporarily store a list of storable values in memory
+ (like \haddocktt{Foreign.Marshal.Utils.with}, but for multiple elements).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withArray0\ ::\ Storable\ a\ =>\ a\ ->\ {\char 91}a{\char 93}\ ->\ (Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+Like \haddockid{withArray}, but a terminator indicates where the array ends
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withArrayLen\ ::\ Storable\ a\ =>\ {\char 91}a{\char 93}\ ->\ (Int\ ->\ Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+Like \haddockid{withArray}, but the action gets the number of values
+ as an additional parameter
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withArrayLen0\ ::\ Storable\ a\ =>\ a\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ {\char 91}a{\char 93}\ ->\ (Int\ ->\ Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+Like \haddockid{withArrayLen}, but a terminator indicates where the array ends
+\par
+
+\end{haddockdesc}
+\subsection{Copying
+}
+(argument order: destination, source)
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+copyArray\ ::\ Storable\ a\ =>\ Ptr\ a\ ->\ Ptr\ a\ ->\ Int\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Copy the given number of elements from the second array (source) into the
+ first array (destination); the copied areas may \emph{not} overlap
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+moveArray\ ::\ Storable\ a\ =>\ Ptr\ a\ ->\ Ptr\ a\ ->\ Int\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Copy the given number of elements from the second array (source) into the
+ first array (destination); the copied areas \emph{may} overlap
+\par
+
+\end{haddockdesc}
+\subsection{Finding the length
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+lengthArray0\ ::\ (Storable\ a,\ Eq\ a)\ =>\ a\ ->\ Ptr\ a\ ->\ IO\ Int
+\end{tabular}]\haddockbegindoc
+Return the number of elements in an array, excluding the terminator
+\par
+
+\end{haddockdesc}
+\subsection{Indexing
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+advancePtr\ ::\ Storable\ a\ =>\ Ptr\ a\ ->\ Int\ ->\ Ptr\ a
+\end{tabular}]\haddockbegindoc
+Advance a pointer into an array by the given number of elements
+\par
+
+\end{haddockdesc}

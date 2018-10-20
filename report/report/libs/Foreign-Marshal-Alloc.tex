@@ -1,0 +1,149 @@
+\haddockmoduleheading{Foreign.Marshal.Alloc}
+\label{module:Foreign.Marshal.Alloc}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.Marshal.Alloc (
+    alloca,  allocaBytes,  malloc,  mallocBytes,  realloc,  reallocBytes, 
+    free,  finalizerFree
+  ) where\end{verbatim}}
+\haddockendheader
+
+The module \haddocktt{Foreign.Marshal.Alloc} provides operations to allocate and
+deallocate blocks of raw memory (i.e., unstructured chunks of memory
+outside of the area maintained by the Haskell storage manager).  These
+memory blocks are commonly used to pass compound data structures to
+foreign functions or to provide space in which compound result values
+are obtained from foreign functions.
+\par
+If any of the allocation functions fails, a value of \haddocktt{nullPtr} is
+produced.  If \haddockid{free} or \haddockid{reallocBytes} is applied to a memory area
+that has been allocated with \haddockid{alloca} or \haddockid{allocaBytes}, the
+behaviour is undefined.  Any further access to memory areas allocated with
+\haddockid{alloca} or \haddockid{allocaBytes}, after the computation that was passed to
+the allocation function has terminated, leads to undefined behaviour.  Any
+further access to the memory area referenced by a pointer passed to
+\haddockid{realloc}, \haddockid{reallocBytes}, or \haddockid{free} entails undefined
+behaviour.
+\par
+All storage allocated by functions that allocate based on a \emph{size in bytes}
+must be sufficiently aligned for any of the basic foreign types
+that fits into the newly allocated storage. All storage allocated by
+functions that allocate based on a specific type must be sufficiently
+aligned for that type. Array allocation routines need to obey the same
+alignment constraints for each array element.
+\par
+
+\section{Memory allocation
+}
+\subsection{Local allocation
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+alloca\ ::\ Storable\ a\ =>\ (Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+\haddocktt{alloca\ f} executes the computation \haddocktt{f}, passing as argument
+ a pointer to a temporarily allocated block of memory sufficient to
+ hold values of type \haddocktt{a}.
+\par
+The memory is freed when \haddocktt{f} terminates (either normally or via an
+ exception), so the pointer passed to \haddocktt{f} must \emph{not} be used after this.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+allocaBytes\ ::\ Int\ ->\ (Ptr\ a\ ->\ IO\ b)\ ->\ IO\ b
+\end{tabular}]\haddockbegindoc
+\haddocktt{allocaBytes\ n\ f} executes the computation \haddocktt{f}, passing as argument
+ a pointer to a temporarily allocated block of memory of \haddocktt{n} bytes.
+ The block of memory is sufficiently aligned for any of the basic
+ foreign types that fits into a memory block of the allocated size.
+\par
+The memory is freed when \haddocktt{f} terminates (either normally or via an
+ exception), so the pointer passed to \haddocktt{f} must \emph{not} be used after this.
+\par
+
+\end{haddockdesc}
+\subsection{Dynamic allocation
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+malloc\ ::\ Storable\ a\ =>\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Allocate a block of memory that is sufficient to hold values of type
+ \haddocktt{a}.  The size of the area allocated is determined by the \haddockid{sizeOf}
+ method from the instance of \haddockid{Storable} for the appropriate type.
+\par
+The memory may be deallocated using \haddockid{free} or \haddockid{finalizerFree} when
+ no longer required.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mallocBytes\ ::\ Int\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Allocate a block of memory of the given number of bytes.
+ The block of memory is sufficiently aligned for any of the basic
+ foreign types that fits into a memory block of the allocated size.
+\par
+The memory may be deallocated using \haddockid{free} or \haddockid{finalizerFree} when
+ no longer required.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+realloc\ ::\ Storable\ b\ =>\ Ptr\ a\ ->\ IO\ (Ptr\ b)
+\end{tabular}]\haddockbegindoc
+Resize a memory area that was allocated with \haddockid{malloc} or \haddockid{mallocBytes}
+ to the size needed to store values of type \haddocktt{b}.  The returned pointer
+ may refer to an entirely different memory area, but will be suitably
+ aligned to hold values of type \haddocktt{b}.  The contents of the referenced
+ memory area will be the same as of the original pointer up to the
+ minimum of the original size and the size of values of type \haddocktt{b}.
+\par
+If the argument to \haddockid{realloc} is \haddockid{nullPtr}, \haddockid{realloc} behaves like
+ \haddockid{malloc}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+reallocBytes\ ::\ Ptr\ a\ ->\ Int\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Resize a memory area that was allocated with \haddockid{malloc} or \haddockid{mallocBytes}
+ to the given size.  The returned pointer may refer to an entirely
+ different memory area, but will be sufficiently aligned for any of the
+ basic foreign types that fits into a memory block of the given size.
+ The contents of the referenced memory area will be the same as of
+ the original pointer up to the minimum of the original size and the
+ given size.
+\par
+If the pointer argument to \haddockid{reallocBytes} is \haddockid{nullPtr}, \haddockid{reallocBytes}
+ behaves like \haddockid{malloc}.  If the requested size is 0, \haddockid{reallocBytes}
+ behaves like \haddockid{free}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+free\ ::\ Ptr\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Free a block of memory that was allocated with \haddockid{malloc},
+ \haddockid{mallocBytes}, \haddockid{realloc}, \haddockid{reallocBytes}, \haddocktt{Foreign.Marshal.Utils.new}
+ or any of the \haddocktt{new}\emph{X} functions in \haddocktt{Foreign.Marshal.Array} or
+ \haddocktt{Foreign.C.String}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+finalizerFree\ ::\ FinalizerPtr\ a
+\end{tabular}]\haddockbegindoc
+A pointer to a foreign function equivalent to \haddockid{free}, which may be
+ used as a finalizer (cf \haddocktt{Foreign.ForeignPtr.ForeignPtr}) for storage
+ allocated with \haddockid{malloc}, \haddockid{mallocBytes}, \haddockid{realloc} or \haddockid{reallocBytes}.
+\par
+
+\end{haddockdesc}

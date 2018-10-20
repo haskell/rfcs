@@ -1,0 +1,46 @@
+\haddockmoduleheading{Foreign.Marshal}
+\label{module:Foreign.Marshal}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.Marshal (
+    module Foreign.Marshal.Alloc,  module Foreign.Marshal.Array, 
+    module Foreign.Marshal.Error,  module Foreign.Marshal.Utils, 
+    unsafeLocalState
+  ) where\end{verbatim}}
+\haddockendheader
+
+The module \haddocktt{Foreign.Marshal} re-exports the other modules in the
+ \haddocktt{Foreign.Marshal} hierarchy:
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+module\ Foreign.Marshal.Alloc\\module\ Foreign.Marshal.Array\\module\ Foreign.Marshal.Error\\module\ Foreign.Marshal.Utils
+\end{tabular}]
+\end{haddockdesc}
+and provides one function:
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+unsafeLocalState\ ::\ IO\ a\ ->\ a
+\end{tabular}]\haddockbegindoc
+Sometimes an external entity is a pure function, except that it passes
+arguments and/or results via pointers.  The function
+\haddocktt{unsafeLocalState} permits the packaging of such entities as pure
+functions.  
+\par
+The only IO operations allowed in the IO action passed to
+\haddocktt{unsafeLocalState} are (a) local allocation (\haddocktt{alloca}, \haddocktt{allocaBytes}
+and derived operations such as \haddocktt{withArray} and \haddocktt{withCString}), and (b)
+pointer operations (\haddocktt{Foreign.Storable} and \haddocktt{Foreign.Ptr}) on the
+pointers to local storage, and (c) foreign functions whose only
+observable effect is to read and/or write the locally allocated
+memory.  Passing an IO operation that does not obey these rules
+results in undefined behaviour.
+\par
+It is expected that this operation will be
+replaced in a future revision of Haskell.
+\par
+
+\end{haddockdesc}
