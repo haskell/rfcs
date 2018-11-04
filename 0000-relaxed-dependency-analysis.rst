@@ -54,7 +54,7 @@ proposal is solely about the last problem, and the fix is to simply remove the l
 
 As it happens, one language extension from the list of Haskell 2010 `encouraged language extensions
 <https://www.haskell.org/onlinereport/haskell2010/haskellch12.html#x19-19100012.3>`_, namely `-XRelaxedPolyRec
-<https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#generalised-typing-of-mutually-recursive-bindings>`_
+<https://downloads.haskell.org/~ghc/8.0.1/docs/html/users_guide/glasgow_exts.html#generalised-typing-of-mutually-recursive-bindings>`_
 in GHC has two effects on the language semantics which exactly correspond to issues #2 and #3 above. If this proposal is
 accepted, therefore, the ``-XRelaxedPolyRec`` behaviour would become the default and the extension could then be removed
 from the list.
