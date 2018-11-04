@@ -1,0 +1,3 @@
+# Change section -> chapter etc, for formatting with book style
+
+sed -e 's/\\section{/\\chapter{/g' -e 's/subsection{/section{/g'  -e 's/Appendix/Chapter/g'

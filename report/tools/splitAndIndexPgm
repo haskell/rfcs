@@ -1,0 +1,245 @@
+eval "exec perl -S $0 $*"
+     if $running_under_some_random_shell;
+#
+# $Header: /home/cvs/root/haskell-report/tools/splitAndIndexPgm,v 1.3 2002/12/03 10:27:22 ross Exp $
+#
+# This script reads a Haskell program and inserts LaTeX/verbatim
+#   magic to indicate where a page break may occur.
+#   It must be after a blank line that is followed by code or a
+#   comment that begins in column 1.
+#   Also, if the number of lines spit out between allowed breaks
+#   exceeds $maxLines, then the LaTeX magic is inserted anyway.
+#
+#   Makes up \index (or \indextt) entries from type signatures.
+#
+#   Will Partain, partain@cs.glasgow.ac.uk
+#
+$pgm = $0;
+$prevState = 'toplevCode';
+$currState = '';
+$savedBlanks = 0;
+$maxLines = 42; # before there must be a break
+$lineCnt = 0;
+@indexentries = ();
+@specialentries = ();	# these don't get mangled by printIndex...
+$SaveForIndexing = '';
+
+while ($ARGV[0] =~ /^-/) {
+    $_ = $ARGV[0]; shift;
+    if (/^-m(\d+)/) {
+    	$maxLines = $1;
+    }
+}
+
+print "\\noindent\\bprogB\n\@\n";
+while (<>) {
+    $currState = &newState();
+
+    if ($prevState eq 'blankLine' &&
+    	($currState =~ /^toplev/)) { # a break OK here
+    	print "\@\n";
+    	&printIndexEntries();	# for previous block
+	$SaveForIndexing .= $_;
+	print "\\eprogB\\vspace{-2ex}\\noindent\\bprogB\n\@\n$_";
+	$lineCnt = 0;
+    	$savedBlanks = 0;
+
+    } elsif ($currState eq 'blankLine') { # save these up
+    	$savedBlanks++;
+
+    } else {
+    	if ($lineCnt > $maxLines) {
+    	    print stderr "$pgm: Forced split after $maxLines lines\n";
+	    print "\@\n";
+	    &printIndexEntries();	# for the blk we're forced to emit
+	    $SaveForIndexing .= $_;
+	    print "\\eprogB\\noindent\\bprogB\n\@\n";
+	    $lineCnt = 0;
+	} else {
+	    $SaveForIndexing .= $_;
+	}
+    	print "\n" if ($savedBlanks > 0);
+    	$lineCnt++ if ($savedBlanks > 0);
+    	print $_;
+	$lineCnt++;
+    	$savedBlanks = 0;
+    }
+    $prevState = $currState;
+}
+print "\@\n";
+&printIndexEntries();
+print "\\eprogB\n";
+
+sub newState {
+    if (/^--/) { # comment in column 1
+	'toplevComment';
+    } elsif (/^\s*$/ && $prevState eq 'toplevComment') { # the gimmick
+	'toplevComment';
+    } elsif (/^\s*$/) {
+	'blankLine';
+    } elsif (/^[^ \t]/) { # something in column 1
+	'toplevCode';
+    } else {
+    	'localCode';
+    }
+}
+
+sub printIndexEntries { # also re-sets $indexentries, specialentries
+
+    local($i,$raw,$processed);
+    
+    &grokForIndexEntries();	# in $SaveForIndexing; results in @indexentries, @specialentries
+
+    foreach $i (@indexentries) {
+    	if ($i =~ /^[A-Za-z][A-Za-z0-9'_]*$/) {
+    	    $i =~ s/\_/\{\\char'137\}/g;
+    	    print "\\indextt\{$i\}%\n" if ($i !~ /^prim[A-Z]/); # no primitives, we're British
+	} elsif ($i =~ /^\((.*)\)$/) {
+    	    $raw = $1;
+	    $processed = "\001" .$raw . "\003";
+
+	    # this is really really ugly...
+    	    $processed =~ s/\\/\{\\char'134\}/g;
+
+    	    $processed =~ s/\!/\{\\char'041\}/g;
+    	    $processed =~ s/\$/\{\\char'044\}/g;
+    	    $processed =~ s/\%/\{\\char'045\}/g;
+    	    $processed =~ s/\&/\\\&/g;	# 046
+    	    $processed =~ s/\^/\{\\char'136\}/g;
+    	    $processed =~ s/\_/\{\\char'137\}/g;
+    	    $processed =~ s/\|/\{\\char'174\}/g;
+	    #
+	    $processed =~ s/\001/\{\\tt  /;
+	    $processed =~ s/\003/\}/;
+	    #
+	    # there are a few "raw" chars that need fiddling, too...
+	    #
+	    $raw =~ s/!/""!/g;
+	    $raw =~ s/\@/""\@\@/g;
+	    $raw =~ s/\\/\\\\/g;
+	    $raw =~ s/\|/\\vert/g;
+
+    	    print "\\index\{$raw\@\@$processed\}%\n";
+	} else {
+    	    print stderr "index proto-entry in unexpected form: $i\n";
+    	}
+    }
+    foreach $i (@specialentries) {	# print as is
+	print "\\index\{$i\}%\n";
+    }
+    @indexentries = (); # re-set
+    @specialentries = ();
+}
+
+sub grokForIndexEntries { # in $_
+    local($save_line);
+    local($goodies,@goodie);
+
+    $* = 1;
+    $save_line = $_;	# restore at the end
+    $_ = $SaveForIndexing;
+
+    # rm comments and blank lines
+    s/--.*//g;
+    s/^\s*\n//g;
+
+#print STDERR "to index: $SaveForIndexing\n";
+
+    # lines ending in commas are suspected of being continuation lines
+    s/,\s*\n/,/g;
+
+    # now, we are deeply interested in type signatures
+    while (/^\s*([a-z\(].*)::/) {
+    	$goodies = $1;
+	$goodies =~ s/[ \t]//g;
+	# ADR Hack:
+	#   Part of the prelude contains the expression (maxBound::Char)
+	#   and we don't want to index that.
+	#   Ditto for type sig on local definition.
+	if (!($goodies =~ /\(maxBound/
+              || $goodies eq "wherelastChar")) {
+	    push(@indexentries, split(/\s*,\s*/,$goodies));
+#print STDERR "goodies: $goodies ;; @indexentries\n";
+	}
+	s/^\s*[a-z\(].*:://;
+    }
+
+    # we are modestly interested in other things
+    # record exact index entries in specialentries; otherwise indexentries
+
+    while (/^\s*(module|interface|import)\s+([A-Z][A-Za-z0-9_']*)(\s*)/) {
+    	local($before) = $1; local($thing) = $2; local($after) = $3;
+
+	push(@specialentries, "$thing\@\@{\\tt  $thing} (module)");
+	s/^\s*$before\s+$thing$after//;
+    }
+
+    while (/^\s*infix.?\s+[0-9]\s+(.*)/) {
+    	$goodies = $1;
+	$goodies =~ s/[ \t]//g;
+	# convert to magic form required for printing
+	local($g);
+	foreach $g (split(/\s*,\s*/,$goodies)) {
+	    $g = "($g)";		# add parens
+	    $g =~ s/\(\`(.*)\`\)/\1/;	# fix parend,backquoted ...
+	    push(@indexentries, $g);
+	}
+#print STDERR "goodies: $goodies ;; @indexentries\n";
+	s/^\s*infix.*//;
+    }
+
+    while (/^\s*class\s+(.*)\s+([A-Z][A-Za-z0-9_']*)\s+[a-z]\s+where\s*$/) {
+    	local($context) = $1; local($class) = $2;
+
+        push(@specialentries, "$class\@\@{\\tt  $class} (class)");
+
+    	if ($context =~ /\((.*)\)\s+=>/) {
+	    ($goodies = $1) =~ s/ [a-z]//g;	# nuke the variable
+	    $goodies =~ s/[ \t]//g;
+	    local($g);
+	    foreach $g (split(/\s*,\s*/,$goodies)) {
+		push(@specialentries, "$g\@\@{\\tt  $g} (class)!superclass of {\\tt $class}");
+	    }
+	}
+	s/^\s*class//;
+    }
+
+    while (/^\s*instance\s+(.*)\s+where\s*$/) {
+	local($stuff) = $1;
+	local($class); local($ty);
+	
+	# toss context
+	$stuff =~ s/\(.*\)\s*=>//;
+	
+	if ($stuff =~ /([A-Z][A-Za-z0-9_']*)\s*\(([A-Z][A-Za-z0-9_',]*)\s+[ a-z]+\)/) {
+	    # instance Foo(Bar x y z) where
+	    $class = $1; $ty = $2;
+	    push(@specialentries, "$class\@\@{\\tt  $class} (class)!instance for {\\tt $ty}");
+	} elsif ($stuff =~ /([A-Z][A-Za-z0-9_']*)\s+([A-Z\[][A-Za-z0-9_'\]]*)/) {
+	    # instance Foo Bar where
+	    $class = $1; $ty = $2;
+	    push(@specialentries, "$class\@\@{\\tt  $class} (class)!instance for {\\tt $ty}");
+	} else {
+	    print STDERR "!!! didn't grok instance: $stuff\n";
+	}
+	s/^\s*instance\s+//;
+    }
+
+    while (/^\s*data\s+([A-Z][A-Za-z0-9_']*)(\s*)/) {
+	local($tycon) = $1;
+
+	push(@specialentries, "$tycon\@\@{\\tt  $tycon} (datatype)");
+	s/^\s*data\s+//;
+    }
+
+    while (/^\s*type\s+([A-Z][A-Za-z0-9_']*)(\s*)/) {
+	local($tysyn) = $1;
+
+	push(@specialentries, "$tysyn\@\@{\\tt  $tysyn} (type synonym)");
+	s/^\s*type\s+//;
+    }
+
+
+    $SaveForIndexing = '';	# reset
+    $_ = $save_line;
+}

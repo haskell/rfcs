@@ -1,0 +1,80 @@
+%
+% $Header: /home/cvs/root/haskell-report/report/standard-prelude.verb,v 1.4 2002/12/10 11:51:11 simonpj Exp $
+%
+%**<title>The Haskell 98 Report: Standard Prelude</title>
+%**~header
+%*anchor on
+\section{Standard Prelude}
+\label{stdprelude}
+
+In this chapter the entire \Haskell{} Prelude is given.  It constitutes
+a {\em specification} for the Prelude.  Many of the definitions are
+written with clarity rather than efficiency in mind, 
+and it is not required that the specification be implemented as shown here.
+
+The default method definitions, given with @class@ declarations, constitute
+a specification {\em only} of the default method.  They do not constitute a
+specification of the meaning of the method in all instances.  To take
+one particular example, the default method for @enumFrom@ in class @Enum@
+will not work properly for types whose range exceeds that of @Int@ (because
+@fromEnum@ cannot map all values in the type to distinct @Int@ values).
+
+The Prelude shown here is organized into a root module, @Prelude@,
+and three sub-modules, @PreludeList@, @PreludeText@, and @PreludeIO@.
+This structure is purely presentational.
+An implementation is not required to use 
+this organisation for the Prelude,
+nor are these three modules available for import separately.
+Only the exports of module @Prelude@ are significant.
+
+Some of these modules import Library modules, such as @Data.Char@, @Control.Monad@, @System.IO@,
+and @Numeric@.  These modules are described fully in Part~\ref{libraries}.
+These imports are not, of course, part of the specification
+of the @Prelude@.  That is, an implementation is free to import more, or less,
+of the Library modules, as it pleases.
+
+Primitives that
+are not definable in \Haskell{}, indicated by names starting with ``@prim@'', are
+defined in a system dependent manner in module @PreludeBuiltin@ and
+are not shown here.  Instance declarations that simply bind primitives to
+class methods are omitted.  Some of the more verbose instances with
+obvious functionality have been left out for the sake of brevity.
+
+Declarations for special types such as @Integer@, or @()@ are
+included in the Prelude for completeness even though the declaration
+may be incomplete or syntactically invalid.  An ellipsis ``@...@'' is often
+used in places where the remainder of a definition cannot be given in Haskell.
+
+To reduce the occurrence of unexpected ambiguity errors, and to
+improve efficiency, a number of commonly-used functions over lists use
+the @Int@ type rather than using a more general numeric type, such as
+@Integral a@ or @Num a@.  These functions are: @take@, @drop@,
+@!!@, @length@, @splitAt@, and @replicate@.  The more general
+versions are given in the @Data.List@ library, with the prefix
+``@generic@''; for example @genericLength@.
+
+\clearpage
+% The index entries for :, [], (), and tuples are here
+% it just so HAPPENS that they'll end up referring to the right page
+% HHAACCKK!!   <---- Partain, you scoundrel! -- KH
+% Well, they aren't there anymore so I nuked them.  So there!  jcp
+\inputHS{Prelude}\clearpage
+
+%\subsection{Prelude {\tt PreludeBuiltin}}
+%\label{preludebuiltin}
+%\input{PreludeBuiltin}\clearpage
+
+
+\subsection{Prelude \texorpdfstring{{\tt PreludeList}}{PreludeList}}
+\label{preludelist}
+\inputHS{PreludeList}\clearpage
+\subsection{Prelude \texorpdfstring{{\tt PreludeText}}{PreludeText}}
+\label{preludetext}
+\inputHS{PreludeText}\cleardoublepage
+
+\subsection{Prelude \texorpdfstring{{\tt PreludeIO}}{PreludeIO}}
+\label{preludeio}
+\inputHS{PreludeIO}
+%**~footer
+
+

@@ -1,0 +1,279 @@
+\haddockmoduleheading{Foreign.Ptr}
+\label{module:Foreign.Ptr}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.Ptr (
+    Ptr,  nullPtr,  castPtr,  plusPtr,  alignPtr,  minusPtr,  FunPtr, 
+    nullFunPtr,  castFunPtr,  castFunPtrToPtr,  castPtrToFunPtr, 
+    freeHaskellFunPtr,  IntPtr,  ptrToIntPtr,  intPtrToPtr,  WordPtr, 
+    ptrToWordPtr,  wordPtrToPtr
+  ) where\end{verbatim}}
+\haddockendheader
+
+The module \haddocktt{Foreign.Ptr} provides typed pointers to foreign
+ entities.  We distinguish two kinds of pointers: pointers to data
+ and pointers to functions.  It is understood that these two kinds
+ of pointers may be represented differently as they may be
+ references to data and text segments, respectively.
+\par
+
+\section{Data pointers
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Ptr\ a
+\end{tabular}]\haddockbegindoc
+A value of type \haddocktt{Ptr\ a} represents a pointer to an object, or an
+ array of objects, which may be marshalled to or from Haskell values
+ of type \haddocktt{a}.
+\par
+The type \haddocktt{a} will often be an instance of class
+ \haddocktt{Foreign.Storable.Storable} which provides the marshalling operations.
+ However this is not essential, and you can provide your own operations
+ to access the pointer.  For example you might write small foreign
+ functions to get or set the fields of a C \haddocktt{struct}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ (Ptr\ a)\\instance\ Ord\ (Ptr\ a)\\instance\ Show\ (Ptr\ a)\\instance\ Storable\ (Ptr\ a)
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+nullPtr\ ::\ Ptr\ a
+\end{tabular}]\haddockbegindoc
+The constant \haddockid{nullPtr} contains a distinguished value of \haddockid{Ptr}
+ that is not associated with a valid memory location.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castPtr\ ::\ Ptr\ a\ ->\ Ptr\ b
+\end{tabular}]\haddockbegindoc
+The \haddockid{castPtr} function casts a pointer from one type to another.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+plusPtr\ ::\ Ptr\ a\ ->\ Int\ ->\ Ptr\ b
+\end{tabular}]\haddockbegindoc
+Advances the given address by the given offset in bytes.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+alignPtr\ ::\ Ptr\ a\ ->\ Int\ ->\ Ptr\ a
+\end{tabular}]\haddockbegindoc
+Given an arbitrary address and an alignment constraint,
+ \haddockid{alignPtr} yields the next higher address that fulfills the
+ alignment constraint.  An alignment constraint \haddocktt{x} is fulfilled by
+ any address divisible by \haddocktt{x}.  This operation is idempotent.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+minusPtr\ ::\ Ptr\ a\ ->\ Ptr\ b\ ->\ Int
+\end{tabular}]\haddockbegindoc
+Computes the offset required to get from the second to the first
+ argument.  We have 
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ p2 == p1 `plusPtr` (p2 `minusPtr` p1)
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\section{Function pointers
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ FunPtr\ a
+\end{tabular}]\haddockbegindoc
+A value of type \haddocktt{FunPtr\ a} is a pointer to a function callable
+ from foreign code.  The type \haddocktt{a} will normally be a \emph{foreign type},
+ a function type with zero or more arguments where
+\par
+\begin{itemize}
+\item
+ the argument types are \emph{marshallable foreign types},
+   i.e. \haddockid{Char}, \haddockid{Int}, \haddockid{Double}, \haddockid{Float},
+   \haddockid{Bool}, \haddocktt{Data.Int.Int8}, \haddocktt{Data.Int.Int16}, \haddocktt{Data.Int.Int32},
+   \haddocktt{Data.Int.Int64}, \haddocktt{Data.Word.Word8}, \haddocktt{Data.Word.Word16},
+   \haddocktt{Data.Word.Word32}, \haddocktt{Data.Word.Word64}, \haddocktt{Ptr\ a}, \haddocktt{FunPtr\ a},
+   \haddocktt{\haddocktt{Foreign.StablePtr.StablePtr}\ a} or a renaming of any of these
+   using \haddocktt{newtype}.
+\par
+
+\item
+ the return type is either a marshallable foreign type or has the form
+   \haddocktt{IO\ t} where \haddocktt{t} is a marshallable foreign type or \haddocktt{()}.
+\par
+
+\end{itemize}
+A value of type \haddocktt{FunPtr\ a} may be a pointer to a foreign function,
+ either returned by another foreign function or imported with a
+ a static address import like
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ foreign import ccall "stdlib.h &free"
+   p_free :: FunPtr (Ptr a -> IO ())
+\end{verbatim}}
+\end{quote}
+or a pointer to a Haskell function created using a \emph{wrapper} stub
+ declared to produce a \haddockid{FunPtr} of the correct type.  For example:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ type Compare = Int -> Int -> Bool
+ foreign import ccall "wrapper"
+   mkCompare :: Compare -> IO (FunPtr Compare)
+\end{verbatim}}
+\end{quote}
+Calls to wrapper stubs like \haddocktt{mkCompare} allocate storage, which
+ should be released with \haddocktt{Foreign.Ptr.freeHaskellFunPtr} when no
+ longer required.
+\par
+To convert \haddockid{FunPtr} values to corresponding Haskell functions, one
+ can define a \emph{dynamic} stub for the specific foreign type, e.g.
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ type IntFunction = CInt -> IO ()
+ foreign import ccall "dynamic" 
+   mkFun :: FunPtr IntFunction -> IntFunction
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ (FunPtr\ a)\\instance\ Ord\ (FunPtr\ a)\\instance\ Show\ (FunPtr\ a)\\instance\ Storable\ (FunPtr\ a)
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+nullFunPtr\ ::\ FunPtr\ a
+\end{tabular}]\haddockbegindoc
+The constant \haddockid{nullFunPtr} contains a
+ distinguished value of \haddockid{FunPtr} that is not
+ associated with a valid memory location.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castFunPtr\ ::\ FunPtr\ a\ ->\ FunPtr\ b
+\end{tabular}]\haddockbegindoc
+Casts a \haddockid{FunPtr} to a \haddockid{FunPtr} of a different type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castFunPtrToPtr\ ::\ FunPtr\ a\ ->\ Ptr\ b
+\end{tabular}]\haddockbegindoc
+Casts a \haddockid{FunPtr} to a \haddockid{Ptr}.
+\par
+\emph{Note:} this is valid only on architectures where data and function
+ pointers range over the same set of addresses, and should only be used
+ for bindings to external libraries whose interface already relies on
+ this assumption.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castPtrToFunPtr\ ::\ Ptr\ a\ ->\ FunPtr\ b
+\end{tabular}]\haddockbegindoc
+Casts a \haddockid{Ptr} to a \haddockid{FunPtr}.
+\par
+\emph{Note:} this is valid only on architectures where data and function
+ pointers range over the same set of addresses, and should only be used
+ for bindings to external libraries whose interface already relies on
+ this assumption.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+freeHaskellFunPtr\ ::\ FunPtr\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Release the storage associated with the given \haddockid{FunPtr}, which
+ must have been obtained from a wrapper stub.  This should be called
+ whenever the return value from a foreign import wrapper function is
+ no longer required; otherwise, the storage it uses will leak.
+\par
+
+\end{haddockdesc}
+\section{Integral types with lossless conversion to and from pointers
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ IntPtr
+\end{tabular}]\haddockbegindoc
+A signed integral type that can be losslessly converted to and from
+ \haddocktt{Ptr}.  This type is also compatible with the C99 type \haddocktt{intptr{\char '137}t}, and
+ can be marshalled to and from that type safely.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ IntPtr\\instance\ Enum\ IntPtr\\instance\ Eq\ IntPtr\\instance\ Integral\ IntPtr\\instance\ Num\ IntPtr\\instance\ Ord\ IntPtr\\instance\ Read\ IntPtr\\instance\ Real\ IntPtr\\instance\ Show\ IntPtr\\instance\ Storable\ IntPtr\\instance\ Bits\ IntPtr
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+ptrToIntPtr\ ::\ Ptr\ a\ ->\ IntPtr
+\end{tabular}]\haddockbegindoc
+casts a \haddocktt{Ptr} to an \haddocktt{IntPtr}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+intPtrToPtr\ ::\ IntPtr\ ->\ Ptr\ a
+\end{tabular}]\haddockbegindoc
+casts an \haddocktt{IntPtr} to a \haddocktt{Ptr}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ WordPtr
+\end{tabular}]\haddockbegindoc
+An unsigned integral type that can be losslessly converted to and from
+ \haddocktt{Ptr}. This type is also compatible with the C99 type \haddocktt{uintptr{\char '137}t}, and
+ can be marshalled to and from that type safely.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bounded\ WordPtr\\instance\ Enum\ WordPtr\\instance\ Eq\ WordPtr\\instance\ Integral\ WordPtr\\instance\ Num\ WordPtr\\instance\ Ord\ WordPtr\\instance\ Read\ WordPtr\\instance\ Real\ WordPtr\\instance\ Show\ WordPtr\\instance\ Storable\ WordPtr\\instance\ Bits\ WordPtr
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+ptrToWordPtr\ ::\ Ptr\ a\ ->\ WordPtr
+\end{tabular}]\haddockbegindoc
+casts a \haddocktt{Ptr} to a \haddocktt{WordPtr}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+wordPtrToPtr\ ::\ WordPtr\ ->\ Ptr\ a
+\end{tabular}]\haddockbegindoc
+casts a \haddocktt{WordPtr} to a \haddocktt{Ptr}
+\par
+
+\end{haddockdesc}

@@ -1,0 +1,994 @@
+\haddockmoduleheading{System.IO}
+\label{module:System.IO}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module System.IO (
+    IO,  fixIO,  FilePath,  Handle,  stdin,  stdout,  stderr,  withFile, 
+    openFile,  IOMode(ReadMode, WriteMode, AppendMode, ReadWriteMode),  hClose, 
+    readFile,  writeFile,  appendFile,  hFileSize,  hSetFileSize,  hIsEOF, 
+    isEOF,  BufferMode(NoBuffering, LineBuffering, BlockBuffering), 
+    hSetBuffering,  hGetBuffering,  hFlush,  hGetPosn,  hSetPosn,  HandlePosn, 
+    hSeek,  SeekMode(AbsoluteSeek, RelativeSeek, SeekFromEnd),  hTell, 
+    hIsOpen,  hIsClosed,  hIsReadable,  hIsWritable,  hIsSeekable, 
+    hIsTerminalDevice,  hSetEcho,  hGetEcho,  hShow,  hWaitForInput,  hReady, 
+    hGetChar,  hGetLine,  hLookAhead,  hGetContents,  hPutChar,  hPutStr, 
+    hPutStrLn,  hPrint,  interact,  putChar,  putStr,  putStrLn,  print, 
+    getChar,  getLine,  getContents,  readIO,  readLn
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{The IO monad
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ IO\ a
+\end{tabular}]\haddockbegindoc
+A value of type \haddocktt{IO\ a} is a computation which, when performed,
+does some I/O before returning a value of type \haddocktt{a}.
+\par
+There is really only one way to "perform" an I/O action: bind it to
+\haddocktt{Main.main} in your program.  When your program is run, the I/O will
+be performed.  It isn't possible to perform I/O from an arbitrary
+function, unless that function is itself in the \haddockid{IO} monad and called
+at some point, directly or indirectly, from \haddocktt{Main.main}.
+\par
+\haddockid{IO} is a monad, so \haddockid{IO} actions can be combined using either the do-notation
+or the \haddocktt{>>} and \haddocktt{>>=} operations from the \haddocktt{Monad} class.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Monad\ IO\\instance\ Functor\ IO
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[
+fixIO\ ::\ (a\ ->\ IO\ a)\ ->\ IO\ a
+]
+\end{haddockdesc}
+\section{Files and handles
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+type\ FilePath\ =\ String
+\end{tabular}]\haddockbegindoc
+File and directory names are values of type \haddockid{String}, whose precise
+ meaning is operating system dependent. Files can be opened, yielding a
+ handle which can then be used to operate on the contents of that file.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Handle
+\end{tabular}]\haddockbegindoc
+Haskell defines operations to read and write characters from and to files,
+ represented by values of type \haddocktt{Handle}.  Each value of this type is a
+ \emph{handle}: a record used by the Haskell run-time system to \emph{manage} I/O
+ with file system objects.  A handle has at least the following properties:
+\par
+\begin{itemize}
+\item
+ whether it manages input or output or both;
+\par
+
+\item
+ whether it is \emph{open}, \emph{closed} or \emph{semi-closed};
+\par
+
+\item
+ whether the object is seekable;
+\par
+
+\item
+ whether buffering is disabled, or enabled on a line or block basis;
+\par
+
+\item
+ a buffer (whose length may be zero).
+\par
+
+\end{itemize}
+Most handles will also have a current I/O position indicating where the next
+ input or output operation will occur.  A handle is \emph{readable} if it
+ manages only input or both input and output; likewise, it is \emph{writable} if
+ it manages only output or both input and output.  A handle is \emph{open} when
+ first allocated.
+ Once it is closed it can no longer be used for either input or output,
+ though an implementation cannot re-use its storage while references
+ remain to it.  Handles are in the \haddockid{Show} and \haddockid{Eq} classes.  The string
+ produced by showing a handle is system dependent; it should include
+ enough information to identify the handle for debugging.  A handle is
+ equal according to \haddockid{==} only to itself; no attempt
+ is made to compare the internal state of different handles for equality.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ Handle\\instance\ Show\ Handle\\
+\end{tabular}]
+\end{haddockdesc}
+\subsection{Standard handles
+}
+Three handles are allocated during program initialisation,
+ and are initially open.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+stdin\ ::\ Handle
+\end{tabular}]\haddockbegindoc
+A handle managing input from the Haskell program's standard input channel.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+stdout\ ::\ Handle
+\end{tabular}]\haddockbegindoc
+A handle managing output to the Haskell program's standard output channel.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+stderr\ ::\ Handle
+\end{tabular}]\haddockbegindoc
+A handle managing output to the Haskell program's standard error channel.
+\par
+
+\end{haddockdesc}
+\section{Opening and closing files
+}
+\subsection{Opening files
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withFile\ ::\ FilePath\ ->\ IOMode\ ->\ (Handle\ ->\ IO\ r)\ ->\ IO\ r
+\end{tabular}]\haddockbegindoc
+\haddocktt{withFile\ name\ mode\ act} opens a file using \haddockid{openFile} and passes
+ the resulting handle to the computation \haddocktt{act}.  The handle will be
+ closed on exit from \haddockid{withFile}, whether by normal termination or by
+ raising an exception.  If closing the handle raises an exception, then
+ this exception will be raised by \haddockid{withFile} rather than any exception
+ raised by \haddocktt{act}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+openFile\ ::\ FilePath\ ->\ IOMode\ ->\ IO\ Handle
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{openFile} \haddocktt{file\ mode} allocates and returns a new, open
+ handle to manage the file \haddocktt{file}.  It manages input if \haddocktt{mode}
+ is \haddockid{ReadMode}, output if \haddocktt{mode} is \haddockid{WriteMode} or \haddockid{AppendMode},
+ and both input and output if mode is \haddockid{ReadWriteMode}.
+\par
+If the file does not exist and it is opened for output, it should be
+ created as a new file.  If \haddocktt{mode} is \haddockid{WriteMode} and the file
+ already exists, then it should be truncated to zero length.
+ Some operating systems delete empty files, so there is no guarantee
+ that the file will exist following an \haddockid{openFile} with \haddocktt{mode}
+ \haddockid{WriteMode} unless it is subsequently written to successfully.
+ The handle is positioned at the end of the file if \haddocktt{mode} is
+ \haddockid{AppendMode}, and otherwise at the beginning (in which case its
+ internal position is 0).
+ The initial buffer mode is implementation-dependent.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{isAlreadyInUseError} if the file is already open and cannot be reopened;
+\par
+
+\item
+ \haddocktt{isDoesNotExistError} if the file does not exist; or
+\par
+
+\item
+ \haddocktt{isPermissionError} if the user does not have permission to open the file.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ IOMode
+\end{tabular}]\haddockbegindoc
+\haddockbeginconstrs
+\haddockdecltt{=} & \haddockdecltt{ReadMode} & \\
+\haddockdecltt{|} & \haddockdecltt{WriteMode} & \\
+\haddockdecltt{|} & \haddockdecltt{AppendMode} & \\
+\haddockdecltt{|} & \haddockdecltt{ReadWriteMode} & \\
+\end{tabulary}\par
+See \haddocktt{System.IO.openFile}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Enum\ IOMode\\instance\ Eq\ IOMode\\instance\ Ord\ IOMode\\instance\ Read\ IOMode\\instance\ Show\ IOMode\\instance\ Ix\ IOMode
+\end{tabular}]
+\end{haddockdesc}
+\subsection{Closing files
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hClose\ ::\ Handle\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hClose} \haddocktt{hdl} makes handle \haddocktt{hdl} closed.  Before the
+ computation finishes, if \haddocktt{hdl} is writable its buffer is flushed as
+ for \haddockid{hFlush}.
+ Performing \haddockid{hClose} on a handle that has already been closed has no effect; 
+ doing so is not an error.  All other operations on a closed handle will fail.
+ If \haddockid{hClose} fails for any reason, any further operations (apart from
+ \haddockid{hClose}) on the handle will still fail as if \haddocktt{hdl} had been successfully
+ closed.
+\par
+
+\end{haddockdesc}
+\subsection{Special cases
+}
+These functions are also exported by the \haddocktt{Prelude}.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readFile\ ::\ FilePath\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+The \haddockid{readFile} function reads a file and
+ returns the contents of the file as a string.
+ The file is read lazily, on demand, as with \haddockid{getContents}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+writeFile\ ::\ FilePath\ ->\ String\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+The computation \haddockid{writeFile} \haddocktt{file\ str} function writes the string \haddocktt{str},
+ to the file \haddocktt{file}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+appendFile\ ::\ FilePath\ ->\ String\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+The computation \haddockid{appendFile} \haddocktt{file\ str} function appends the string \haddocktt{str},
+ to the file \haddocktt{file}.
+\par
+Note that \haddockid{writeFile} and \haddockid{appendFile} write a literal string
+ to a file.  To write a value of any printable type, as with \haddockid{print},
+ use the \haddockid{show} function to convert the value to a string first.
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ main = appendFile "squares" (show [(x,x*x) | x <- [0,0.1..2]])
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\subsection{File locking
+}
+Implementations should enforce as far as possible, at least locally to the
+ Haskell process, multiple-reader single-writer locking on files.
+ That is, \emph{there may either be many handles on the same file which manage input, or just one handle on the file which manages output}.  If any
+ open or semi-closed handle is managing a file for output, no new
+ handle can be allocated for that file.  If any open or semi-closed
+ handle is managing a file for input, new handles can only be allocated
+ if they do not manage output.  Whether two files are the same is
+ implementation-dependent, but they should normally be the same if they
+ have the same absolute path name and neither has been renamed, for
+ example.
+\par
+\emph{Warning}: the \haddockid{readFile} operation holds a semi-closed handle on
+ the file until the entire contents of the file have been consumed.
+ It follows that an attempt to write to a file (using \haddockid{writeFile}, for
+ example) that was earlier opened by \haddockid{readFile} will usually result in
+ failure with \haddocktt{System.IO.Error.isAlreadyInUseError}.
+\par
+
+\section{Operations on handles
+}
+\subsection{Determining and changing the size of a file
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hFileSize\ ::\ Handle\ ->\ IO\ Integer
+\end{tabular}]\haddockbegindoc
+For a handle \haddocktt{hdl} which attached to a physical file,
+ \haddockid{hFileSize} \haddocktt{hdl} returns the size of that file in 8-bit bytes.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hSetFileSize\ ::\ Handle\ ->\ Integer\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+\haddockid{hSetFileSize} \haddocktt{hdl} \haddocktt{size} truncates the physical file with handle \haddocktt{hdl} to \haddocktt{size} bytes.
+\par
+
+\end{haddockdesc}
+\subsection{Detecting the end of input
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hIsEOF\ ::\ Handle\ ->\ IO\ Bool
+\end{tabular}]\haddockbegindoc
+For a readable handle \haddocktt{hdl}, \haddockid{hIsEOF} \haddocktt{hdl} returns
+ \haddockid{True} if no further input can be taken from \haddocktt{hdl} or for a
+ physical file, if the current I/O position is equal to the length of
+ the file.  Otherwise, it returns \haddockid{False}.
+\par
+NOTE: \haddockid{hIsEOF} may block, because it has to attempt to read from
+ the stream to determine whether there is any more data to be read.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isEOF\ ::\ IO\ Bool
+\end{tabular}]\haddockbegindoc
+The computation \haddockid{isEOF} is identical to \haddockid{hIsEOF},
+ except that it works only on \haddockid{stdin}.
+\par
+
+\end{haddockdesc}
+\subsection{Buffering operations
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ BufferMode
+\end{tabular}]\haddockbegindoc
+\haddockbeginconstrs
+\haddockdecltt{=} & \haddockdecltt{NoBuffering} & buffering is disabled if possible.
+ \\
+\haddockdecltt{|} & \haddockdecltt{LineBuffering} & line-buffering should be enabled if possible.
+ \\
+\haddockdecltt{|} & \haddockdecltt{BlockBuffering (Maybe Int)} & block-buffering should be enabled if possible.
+ The size of the buffer is \haddocktt{n} items if the argument
+ is \haddockid{Just} \haddocktt{n} and is otherwise implementation-dependent.
+ \\
+\end{tabulary}\par
+Three kinds of buffering are supported: line-buffering, 
+ block-buffering or no-buffering.  These modes have the following
+ effects. For output, items are written out, or \emph{flushed},
+ from the internal buffer according to the buffer mode:
+\par
+\begin{itemize}
+\item
+ \emph{line-buffering}: the entire output buffer is flushed
+    whenever a newline is output, the buffer overflows, 
+    a \haddocktt{System.IO.hFlush} is issued, or the handle is closed.
+\par
+
+\item
+ \emph{block-buffering}: the entire buffer is written out whenever it
+    overflows, a \haddocktt{System.IO.hFlush} is issued, or the handle is closed.
+\par
+
+\item
+ \emph{no-buffering}: output is written immediately, and never stored
+    in the buffer.
+\par
+
+\end{itemize}
+An implementation is free to flush the buffer more frequently,
+ but not less frequently, than specified above.
+ The output buffer is emptied as soon as it has been written out.
+\par
+Similarly, input occurs according to the buffer mode for the handle:
+\par
+\begin{itemize}
+\item
+ \emph{line-buffering}: when the buffer for the handle is not empty,
+    the next item is obtained from the buffer; otherwise, when the
+    buffer is empty, characters up to and including the next newline
+    character are read into the buffer.  No characters are available
+    until the newline character is available or the buffer is full.
+\par
+
+\item
+ \emph{block-buffering}: when the buffer for the handle becomes empty,
+    the next block of data is read into the buffer.
+\par
+
+\item
+ \emph{no-buffering}: the next input item is read and returned.
+    The \haddocktt{System.IO.hLookAhead} operation implies that even a no-buffered
+    handle may require a one-character buffer.
+\par
+
+\end{itemize}
+The default buffering mode when a handle is opened is
+ implementation-dependent and may depend on the file system object
+ which is attached to that handle.
+ For most implementations, physical files will normally be block-buffered 
+ and terminals will normally be line-buffered.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ BufferMode\\instance\ Ord\ BufferMode\\instance\ Read\ BufferMode\\instance\ Show\ BufferMode
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hSetBuffering\ ::\ Handle\ ->\ BufferMode\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hSetBuffering} \haddocktt{hdl\ mode} sets the mode of buffering for
+ handle \haddocktt{hdl} on subsequent reads and writes.
+\par
+If the buffer mode is changed from \haddockid{BlockBuffering} or
+ \haddockid{LineBuffering} to \haddockid{NoBuffering}, then
+\par
+\begin{itemize}
+\item
+ if \haddocktt{hdl} is writable, the buffer is flushed as for \haddockid{hFlush};
+\par
+
+\item
+ if \haddocktt{hdl} is not writable, the contents of the buffer is discarded.
+\par
+
+\end{itemize}
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{isPermissionError} if the handle has already been used for reading
+    or writing and the implementation does not allow the buffering mode
+    to be changed.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hGetBuffering\ ::\ Handle\ ->\ IO\ BufferMode
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hGetBuffering} \haddocktt{hdl} returns the current buffering mode
+ for \haddocktt{hdl}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hFlush\ ::\ Handle\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+The action \haddockid{hFlush} \haddocktt{hdl} causes any items buffered for output
+ in handle \haddocktt{hdl} to be sent immediately to the operating system.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{isFullError} if the device is full;
+\par
+
+\item
+ \haddocktt{isPermissionError} if a system resource limit would be exceeded.
+    It is unspecified whether the characters in the buffer are discarded
+    or retained under these circumstances.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\subsection{Repositioning handles
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hGetPosn\ ::\ Handle\ ->\ IO\ HandlePosn
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hGetPosn} \haddocktt{hdl} returns the current I/O position of
+ \haddocktt{hdl} as a value of the abstract type \haddockid{HandlePosn}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hSetPosn\ ::\ HandlePosn\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+If a call to \haddockid{hGetPosn} \haddocktt{hdl} returns a position \haddocktt{p},
+ then computation \haddockid{hSetPosn} \haddocktt{p} sets the position of \haddocktt{hdl}
+ to the position it held at the time of the call to \haddockid{hGetPosn}.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{isPermissionError} if a system resource limit would be exceeded.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ HandlePosn
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ HandlePosn\\instance\ Show\ HandlePosn
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hSeek\ ::\ Handle\ ->\ SeekMode\ ->\ Integer\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hSeek} \haddocktt{hdl\ mode\ i} sets the position of handle
+ \haddocktt{hdl} depending on \haddocktt{mode}.
+ The offset \haddocktt{i} is given in terms of 8-bit bytes.
+\par
+If \haddocktt{hdl} is block- or line-buffered, then seeking to a position which is not
+ in the current buffer will first cause any items in the output buffer to be
+ written to the device, and then cause the input buffer to be discarded.
+ Some handles may not be seekable (see \haddockid{hIsSeekable}), or only support a
+ subset of the possible positioning operations (for instance, it may only
+ be possible to seek to the end of a tape, or to a positive offset from
+ the beginning or current position).
+ It is not possible to set a negative I/O position, or for
+ a physical file, an I/O position beyond the current end-of-file.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{isIllegalOperationError} if the Handle is not seekable, or does
+     not support the requested seek mode.
+\par
+
+\item
+ \haddocktt{isPermissionError} if a system resource limit would be exceeded.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ SeekMode
+\end{tabular}]\haddockbegindoc
+\haddockbeginconstrs
+\haddockdecltt{=} & \haddockdecltt{AbsoluteSeek} & the position of \haddocktt{hdl} is set to \haddocktt{i}.
+ \\
+\haddockdecltt{|} & \haddockdecltt{RelativeSeek} & the position of \haddocktt{hdl} is set to offset \haddocktt{i}
+ from the current position.
+ \\
+\haddockdecltt{|} & \haddockdecltt{SeekFromEnd} & the position of \haddocktt{hdl} is set to offset \haddocktt{i}
+ from the end of the file.
+ \\
+\end{tabulary}\par
+A mode that determines the effect of \haddocktt{hSeek} \haddocktt{hdl\ mode\ i}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Enum\ SeekMode\\instance\ Eq\ SeekMode\\instance\ Ord\ SeekMode\\instance\ Read\ SeekMode\\instance\ Show\ SeekMode\\instance\ Ix\ SeekMode
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hTell\ ::\ Handle\ ->\ IO\ Integer
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hTell} \haddocktt{hdl} returns the current position of the
+ handle \haddocktt{hdl}, as the number of bytes from the beginning of
+ the file.  The value returned may be subsequently passed to
+ \haddockid{hSeek} to reposition the handle to the current position.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{isIllegalOperationError} if the Handle is not seekable.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\subsection{Handle properties
+}
+Each of these operations returns \haddockid{True} if the handle has the
+ the specified property, or \haddockid{False} otherwise.
+\par
+
+\begin{haddockdesc}
+\item[
+hIsOpen\ ::\ Handle\ ->\ IO\ Bool
+]
+\item[
+hIsClosed\ ::\ Handle\ ->\ IO\ Bool
+]
+\item[
+hIsReadable\ ::\ Handle\ ->\ IO\ Bool
+]
+\item[
+hIsWritable\ ::\ Handle\ ->\ IO\ Bool
+]
+\item[
+hIsSeekable\ ::\ Handle\ ->\ IO\ Bool
+]
+\end{haddockdesc}
+\subsection{Terminal operations
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hIsTerminalDevice\ ::\ Handle\ ->\ IO\ Bool
+\end{tabular}]\haddockbegindoc
+Is the handle connected to a terminal?
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hSetEcho\ ::\ Handle\ ->\ Bool\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Set the echoing status of a handle connected to a terminal.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hGetEcho\ ::\ Handle\ ->\ IO\ Bool
+\end{tabular}]\haddockbegindoc
+Get the echoing status of a handle connected to a terminal.
+\par
+
+\end{haddockdesc}
+\subsection{Showing handle state
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hShow\ ::\ Handle\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+\haddockid{hShow} is in the \haddockid{IO} monad, and gives more comprehensive output
+ than the (pure) instance of \haddockid{Show} for \haddockid{Handle}.
+\par
+
+\end{haddockdesc}
+\section{Text input and output
+}
+\subsection{Text input
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hWaitForInput\ ::\ Handle\ ->\ Int\ ->\ IO\ Bool
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hWaitForInput} \haddocktt{hdl\ t}
+ waits until input is available on handle \haddocktt{hdl}.
+ It returns \haddockid{True} as soon as input is available on \haddocktt{hdl},
+ or \haddockid{False} if no input is available within \haddocktt{t} milliseconds.  Note that
+ \haddockid{hWaitForInput} waits until one or more full \emph{characters} are available,
+ which means that it needs to do decoding, and hence may fail
+ with a decoding error.
+\par
+If \haddocktt{t} is less than zero, then \haddocktt{hWaitForInput} waits indefinitely.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{isEOFError} if the end of file has been reached.
+\par
+
+\item
+ a decoding error, if the input begins with an invalid byte sequence
+    in this Handle's encoding.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hReady\ ::\ Handle\ ->\ IO\ Bool
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hReady} \haddocktt{hdl} indicates whether at least one item is
+ available for input from handle \haddocktt{hdl}.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{System.IO.Error.isEOFError} if the end of file has been reached.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hGetChar\ ::\ Handle\ ->\ IO\ Char
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hGetChar} \haddocktt{hdl} reads a character from the file or
+ channel managed by \haddocktt{hdl}, blocking until a character is available.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddockid{isEOFError} if the end of file has been reached.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hGetLine\ ::\ Handle\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hGetLine} \haddocktt{hdl} reads a line from the file or
+ channel managed by \haddocktt{hdl}.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddockid{isEOFError} if the end of file is encountered when reading
+    the \emph{first} character of the line.
+\par
+
+\end{itemize}
+If \haddockid{hGetLine} encounters end-of-file at any other point while reading
+ in a line, it is treated as a line terminator and the (partial)
+ line is returned.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hLookAhead\ ::\ Handle\ ->\ IO\ Char
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hLookAhead} returns the next character from the handle
+ without removing it from the input buffer, blocking until a character
+ is available.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{isEOFError} if the end of file has been reached.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hGetContents\ ::\ Handle\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hGetContents} \haddocktt{hdl} returns the list of characters
+ corresponding to the unread portion of the channel or file managed
+ by \haddocktt{hdl}, which is put into an intermediate state, \emph{semi-closed}.
+ In this state, \haddocktt{hdl} is effectively closed,
+ but items are read from \haddocktt{hdl} on demand and accumulated in a special
+ list returned by \haddockid{hGetContents} \haddocktt{hdl}.
+\par
+Any operation that fails because a handle is closed,
+ also fails if a handle is semi-closed.  The only exception is \haddocktt{hClose}.
+ A semi-closed handle becomes closed:
+\par
+\begin{itemize}
+\item
+ if \haddocktt{hClose} is applied to it;
+\par
+
+\item
+ if an I/O error occurs when reading an item from the handle;
+\par
+
+\item
+ or once the entire contents of the handle has been read.
+\par
+
+\end{itemize}
+Once a semi-closed handle becomes closed, the contents of the
+ associated list becomes fixed.  The contents of this final list is
+ only partially specified: it will contain at least all the items of
+ the stream that were evaluated prior to the handle becoming closed.
+\par
+Any I/O errors encountered while a handle is semi-closed are simply
+ discarded.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddockid{isEOFError} if the end of file has been reached.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\subsection{Text output
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hPutChar\ ::\ Handle\ ->\ Char\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hPutChar} \haddocktt{hdl\ ch} writes the character \haddocktt{ch} to the
+ file or channel managed by \haddocktt{hdl}.  Characters may be buffered if
+ buffering is enabled for \haddocktt{hdl}.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddockid{isFullError} if the device is full; or
+\par
+
+\item
+ \haddockid{isPermissionError} if another system resource limit would be exceeded.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hPutStr\ ::\ Handle\ ->\ String\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hPutStr} \haddocktt{hdl\ s} writes the string
+ \haddocktt{s} to the file or channel managed by \haddocktt{hdl}.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddockid{isFullError} if the device is full; or
+\par
+
+\item
+ \haddockid{isPermissionError} if another system resource limit would be exceeded.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hPutStrLn\ ::\ Handle\ ->\ String\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+The same as \haddockid{hPutStr}, but adds a newline character.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+hPrint\ ::\ Show\ a\ =>\ Handle\ ->\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Computation \haddockid{hPrint} \haddocktt{hdl\ t} writes the string representation of \haddocktt{t}
+ given by the \haddockid{shows} function to the file or channel managed by \haddocktt{hdl}
+ and appends a newline.
+\par
+This operation may fail with:
+\par
+\begin{itemize}
+\item
+ \haddocktt{System.IO.Error.isFullError} if the device is full; or
+\par
+
+\item
+ \haddocktt{System.IO.Error.isPermissionError} if another system resource limit would be exceeded.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\subsection{Special cases for standard input and output
+}
+These functions are also exported by the \haddocktt{Prelude}.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+interact\ ::\ (String\ ->\ String)\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+The \haddockid{interact} function takes a function of type \haddocktt{String->String}
+ as its argument.  The entire input from the standard input device is
+ passed to this function as its argument, and the resulting string is
+ output on the standard output device.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+putChar\ ::\ Char\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Write a character to the standard output device
+ (same as \haddockid{hPutChar} \haddockid{stdout}).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+putStr\ ::\ String\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Write a string to the standard output device
+ (same as \haddockid{hPutStr} \haddockid{stdout}).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+putStrLn\ ::\ String\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+The same as \haddockid{putStr}, but adds a newline character.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+print\ ::\ Show\ a\ =>\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+The \haddockid{print} function outputs a value of any printable type to the
+ standard output device.
+ Printable types are those that are instances of class \haddockid{Show}; \haddockid{print}
+ converts values to strings for output using the \haddockid{show} operation and
+ adds a newline.
+\par
+For example, a program to print the first 20 integers and their
+ powers of 2 could be written as:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ main = print ([(n, 2^n) | n <- [0..19]])
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+getChar\ ::\ IO\ Char
+\end{tabular}]\haddockbegindoc
+Read a character from the standard input device
+ (same as \haddockid{hGetChar} \haddockid{stdin}).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+getLine\ ::\ IO\ String
+\end{tabular}]\haddockbegindoc
+Read a line from the standard input device
+ (same as \haddockid{hGetLine} \haddockid{stdin}).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+getContents\ ::\ IO\ String
+\end{tabular}]\haddockbegindoc
+The \haddockid{getContents} operation returns all user input as a single string,
+ which is read lazily as it is needed
+ (same as \haddockid{hGetContents} \haddockid{stdin}).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readIO\ ::\ Read\ a\ =>\ String\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{readIO} function is similar to \haddockid{read} except that it signals
+ parse failure to the \haddockid{IO} monad instead of terminating the program.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readLn\ ::\ Read\ a\ =>\ IO\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{readLn} function combines \haddockid{getLine} and \haddockid{readIO}.
+\par
+
+\end{haddockdesc}

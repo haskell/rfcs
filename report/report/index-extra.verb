@@ -1,0 +1,115 @@
+% "see XXX" and "see also YYY" index entries
+%
+% collected here and inserted at the END of the report
+% so that those index entries will always appear LAST
+% -------------------------------------------------------------------
+% but first some ...
+%
+% NOTES ON INDEXING: by Will Partain (partain@@dcs.glasgow.ac.uk)
+
+% Paul Hudak did the initial selection of index entries for the report
+% (version 1.0); I haven't changed that, really.  I did the automatic
+% indexing of the code in the prelude (Appendix A), and the
+% plug-and-chug indexing of the syntax non-terminals.
+
+% The important thing is consistency!  Here's what I've done -- my
+% model has been the index for the LaTeX manual.  This doesn't mean
+% that there aren't plenty of shortcomings.
+%
+% 1) I always index the singular form, i.e., "file", not "files";
+%    "expression", not "expressions".
+%
+% 2) The tricky part is how to index things that could come under
+%    several possible titles.  Here's an example and how I handled it.
+%    Let's say we have several index entries for "list expression",
+%    "conditional expression", and "case expression".
+%
+%    * we want each index entry to appear under exactly one name
+%
+%    * we want other likely/interesting entries to at least be
+%      cross-referenced.
+%
+%    So:
+%
+%    * put each entry under the straightforward un-reordered thing;
+%      in the example, "list expression", "case expression", etc.
+%
+%    * under "expression" (a likely place for someone to look), have:
+%
+%    	expression
+%	    case, {\em see} case expression
+%	    conditional, {\em see} conditional expression
+%	    list, {\em see} list expression
+% -------------------------------------------------------------------
+%
+\index{application!function|see{function application}}
+\index{application!operator|see{operator application}}
+\index{binding!function|see{function binding}}
+\index{binding!pattern|see{pattern binding}}
+\index{binding!simple pattern|see{simple pattern binding}}
+\index{character set!ASCII|see{ASCII character set}}
+\index{character set!transparent|see{transparent character set}}
+\index{datatype!abstract|see{abstract datatype}}
+\index{datatype!algebraic|see{algebraic datatype}}
+\index{datatype!declaration|see{{\tt data} declaration}}
+\index{datatype!recursive|see{recursive datatype}}
+\index{datatype!renaming|see{{\tt newtype} declaration}}
+\index{declaration!datatype|see{{\tt data} declaration}}
+\index{declaration!class|see{class declaration}}
+\index{declaration!instance|see{instance declaration}}
+\index{declaration!default|see{{\tt default} declaration}}
+\index{declaration!import|see{import declaration}}
+\index{declaration!fixity|see{fixity declaration}}
+\index{environment!class|see{class environment}}
+\index{environment!type|see{type environment}}
+\index{expression!type|see{type expression}}
+\index{expression!conditional|see{conditional expression}}
+\index{expression!unit|see{unit expression}}
+\index{expression!let|see{let expression}}
+\index{expression!case|see{case expression}}
+\index{expression!simple case|see{simple case expression}}
+\index{""@@-pattern@@{\tt {\char'100}}|see{as-pattern}}
+\index{_@@{\tt {\char'137}}|see{wildcard pattern}}
+\index{pattern!""@@-pattern@@{\tt {\char'100}}|see{as-pattern}}
+\index{pattern!_@@{\tt {\char'137}}|see{wildcard pattern}}
+\index{pattern!constructed|see{constructed pattern}}
+\index{pattern!integer|see{integer literal pattern}}
+\index{pattern!floating|see{floating literal pattern}}
+\index{pattern!linear|see{linear pattern}}
+\index{pattern!irrefutable|see{irrefutable pattern}}
+\index{pattern!refutable|see{refutable pattern}}
+\index{semantics!formal|see{formal semantics}}
+\index{string!transparent|see{transparent string}}
+\index{type!ambiguous|see{ambiguous type}}
+\index{type!monomorphic|see{monomorphic type}}
+\index{type!principal|see{principal type}}
+\index{type!trivial|see{trivial type}}
+\index{type!numeric|see{numeric type}}
+\index{type!function|see{function type}}
+\index{type!constructed|see{constructed type}}
+\index{type!tuple|see{tuple type}}
+\index{type!list|see{list type}}
+\index{type renaming|see{{\tt newtype} declaration}}
+\index{type signature!for an expression|see{expression type-signature}}
+%
+\index{(aaa)@@{\tt ()}|see{trivial type and unit expression}}%
+\index{-@@{\tt  -}|hseealso{negation}}
+\index{\\@@{\tt {\char'134}}|see{lambda abstraction}}
+\index{~@@{\tt {\char'176}}|see{irrefutable pattern}}
+\index{derived instance|hseealso{instance declaration}}
+\index{if-then-else expression|see{conditional expression}}
+\index{instance declaration|hseealso{derived instance}}
+\index{layout|hseealso{off-side rule}}
+\index{off-side rule|hseealso{layout}}
+\index{method|see{class method}}
+\index{overloaded pattern|see{pattern-matching}}
+\index{precedence|hseealso{fixity}}
+\index{section|hseealso{operator application}}
+\index{signature|see{type signature}}
+\index{standard prelude|hseealso{{\tt Prelude}}}
+\index{synonym|see{type synonym}}
+\index{type class|see{class}}
+\index{type synonym|hseealso{datatype}}
+\index{unit datatype|see{trivial type}}
+\index{name!qualified|see{qualified name}}
+\index{name!special|see{special name}}
