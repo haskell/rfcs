@@ -1,0 +1,436 @@
+\haddockmoduleheading{Foreign.C.String}
+\label{module:Foreign.C.String}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.C.String (
+    CString,  CStringLen,  peekCString,  peekCStringLen,  newCString, 
+    newCStringLen,  withCString,  withCStringLen,  charIsRepresentable, 
+    castCharToCChar,  castCCharToChar,  castCharToCUChar,  castCUCharToChar, 
+    castCharToCSChar,  castCSCharToChar,  peekCAString,  peekCAStringLen, 
+    newCAString,  newCAStringLen,  withCAString,  withCAStringLen,  CWString, 
+    CWStringLen,  peekCWString,  peekCWStringLen,  newCWString, 
+    newCWStringLen,  withCWString,  withCWStringLen
+  ) where\end{verbatim}}
+\haddockendheader
+
+Utilities for primitive marshalling of C strings.
+\par
+The marshalling converts each Haskell character, representing a Unicode
+ code point, to one or more bytes in a manner that, by default, is
+ determined by the current locale.  As a consequence, no guarantees
+ can be made about the relative length of a Haskell string and its
+ corresponding C string, and therefore all the marshalling routines
+ include memory allocation.  The translation between Unicode and the
+ encoding of the current locale may be lossy.
+\par
+
+\section{C strings
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+type\ CString\ =\ Ptr\ CChar
+\end{tabular}]\haddockbegindoc
+A C string is a reference to an array of C characters terminated by NUL.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+type\ CStringLen\ =\ (Ptr\ CChar,\ Int)
+\end{tabular}]\haddockbegindoc
+A string with explicit length information in bytes instead of a
+ terminating NUL (allowing NUL characters in the middle of the string).
+\par
+
+\end{haddockdesc}
+\subsection{Using a locale-dependent encoding
+}
+Currently these functions are identical to their \haddocktt{CAString} counterparts;
+ eventually they will use an encoding determined by the current locale.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+peekCString\ ::\ CString\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+Marshal a NUL terminated C string into a Haskell string.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+peekCStringLen\ ::\ CStringLen\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+Marshal a C string with explicit length into a Haskell string.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newCString\ ::\ String\ ->\ IO\ CString
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a NUL terminated C string.
+\par
+\begin{itemize}
+\item
+ the Haskell string may \emph{not} contain any NUL characters
+\par
+
+\item
+ new storage is allocated for the C string and must be
+   explicitly freed using \haddocktt{Foreign.Marshal.Alloc.free} or
+   \haddocktt{Foreign.Marshal.Alloc.finalizerFree}.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newCStringLen\ ::\ String\ ->\ IO\ CStringLen
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a C string (ie, character array) with
+ explicit length information.
+\par
+\begin{itemize}
+\item
+ new storage is allocated for the C string and must be
+   explicitly freed using \haddocktt{Foreign.Marshal.Alloc.free} or
+   \haddocktt{Foreign.Marshal.Alloc.finalizerFree}.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withCString\ ::\ String\ ->\ (CString\ ->\ IO\ a)\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a NUL terminated C string using temporary
+ storage.
+\par
+\begin{itemize}
+\item
+ the Haskell string may \emph{not} contain any NUL characters
+\par
+
+\item
+ the memory is freed when the subcomputation terminates (either
+   normally or via an exception), so the pointer to the temporary
+   storage must \emph{not} be used after this.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withCStringLen\ ::\ String\ ->\ (CStringLen\ ->\ IO\ a)\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a C string (ie, character array)
+ in temporary storage, with explicit length information.
+\par
+\begin{itemize}
+\item
+ the memory is freed when the subcomputation terminates (either
+   normally or via an exception), so the pointer to the temporary
+   storage must \emph{not} be used after this.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+charIsRepresentable\ ::\ Char\ ->\ IO\ Bool
+\end{tabular}]\haddockbegindoc
+Determines whether a character can be accurately encoded in a \haddockid{CString}.
+ Unrepresentable characters are converted to \haddocktt{'?'}.
+\par
+Currently only Latin-1 characters are representable.
+\par
+
+\end{haddockdesc}
+\subsection{Using 8-bit characters
+}
+These variants of the above functions are for use with C libraries
+ that are ignorant of Unicode.  These functions should be used with
+ care, as a loss of information can occur.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castCharToCChar\ ::\ Char\ ->\ CChar
+\end{tabular}]\haddockbegindoc
+Convert a Haskell character to a C character.
+ This function is only safe on the first 256 characters.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castCCharToChar\ ::\ CChar\ ->\ Char
+\end{tabular}]\haddockbegindoc
+Convert a C byte, representing a Latin-1 character, to the corresponding
+ Haskell character.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castCharToCUChar\ ::\ Char\ ->\ CUChar
+\end{tabular}]\haddockbegindoc
+Convert a Haskell character to a C \haddocktt{unsigned\ char}.
+ This function is only safe on the first 256 characters.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castCUCharToChar\ ::\ CUChar\ ->\ Char
+\end{tabular}]\haddockbegindoc
+Convert a C \haddocktt{unsigned\ char}, representing a Latin-1 character, to
+ the corresponding Haskell character.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castCharToCSChar\ ::\ Char\ ->\ CSChar
+\end{tabular}]\haddockbegindoc
+Convert a Haskell character to a C \haddocktt{signed\ char}.
+ This function is only safe on the first 256 characters.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+castCSCharToChar\ ::\ CSChar\ ->\ Char
+\end{tabular}]\haddockbegindoc
+Convert a C \haddocktt{signed\ char}, representing a Latin-1 character, to the
+ corresponding Haskell character.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+peekCAString\ ::\ CString\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+Marshal a NUL terminated C string into a Haskell string.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+peekCAStringLen\ ::\ CStringLen\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+Marshal a C string with explicit length into a Haskell string.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newCAString\ ::\ String\ ->\ IO\ CString
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a NUL terminated C string.
+\par
+\begin{itemize}
+\item
+ the Haskell string may \emph{not} contain any NUL characters
+\par
+
+\item
+ new storage is allocated for the C string and must be
+   explicitly freed using \haddocktt{Foreign.Marshal.Alloc.free} or
+   \haddocktt{Foreign.Marshal.Alloc.finalizerFree}.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newCAStringLen\ ::\ String\ ->\ IO\ CStringLen
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a C string (ie, character array) with
+ explicit length information.
+\par
+\begin{itemize}
+\item
+ new storage is allocated for the C string and must be
+   explicitly freed using \haddocktt{Foreign.Marshal.Alloc.free} or
+   \haddocktt{Foreign.Marshal.Alloc.finalizerFree}.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withCAString\ ::\ String\ ->\ (CString\ ->\ IO\ a)\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a NUL terminated C string using temporary
+ storage.
+\par
+\begin{itemize}
+\item
+ the Haskell string may \emph{not} contain any NUL characters
+\par
+
+\item
+ the memory is freed when the subcomputation terminates (either
+   normally or via an exception), so the pointer to the temporary
+   storage must \emph{not} be used after this.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withCAStringLen\ ::\ String\ ->\ (CStringLen\ ->\ IO\ a)\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a C string (ie, character array)
+ in temporary storage, with explicit length information.
+\par
+\begin{itemize}
+\item
+ the memory is freed when the subcomputation terminates (either
+   normally or via an exception), so the pointer to the temporary
+   storage must \emph{not} be used after this.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\section{C wide strings
+}
+These variants of the above functions are for use with C libraries
+ that encode Unicode using the C \haddocktt{wchar{\char '137}t} type in a system-dependent
+ way.  The only encodings supported are
+\par
+\begin{itemize}
+\item
+ UTF-32 (the C compiler defines \haddocktt{{\char '137}{\char '137}STDC{\char '137}ISO{\char '137}10646{\char '137}{\char '137}}), or
+\par
+
+\item
+ UTF-16 (as used on Windows systems).
+\par
+
+\end{itemize}
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+type\ CWString\ =\ Ptr\ CWchar
+\end{tabular}]\haddockbegindoc
+A C wide string is a reference to an array of C wide characters
+ terminated by NUL.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+type\ CWStringLen\ =\ (Ptr\ CWchar,\ Int)
+\end{tabular}]\haddockbegindoc
+A wide character string with explicit length information in \haddockid{CWchar}s
+ instead of a terminating NUL (allowing NUL characters in the middle
+ of the string).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+peekCWString\ ::\ CWString\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+Marshal a NUL terminated C wide string into a Haskell string.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+peekCWStringLen\ ::\ CWStringLen\ ->\ IO\ String
+\end{tabular}]\haddockbegindoc
+Marshal a C wide string with explicit length into a Haskell string.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newCWString\ ::\ String\ ->\ IO\ CWString
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a NUL terminated C wide string.
+\par
+\begin{itemize}
+\item
+ the Haskell string may \emph{not} contain any NUL characters
+\par
+
+\item
+ new storage is allocated for the C wide string and must
+   be explicitly freed using \haddocktt{Foreign.Marshal.Alloc.free} or
+   \haddocktt{Foreign.Marshal.Alloc.finalizerFree}.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+newCWStringLen\ ::\ String\ ->\ IO\ CWStringLen
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a C wide string (ie, wide character array)
+ with explicit length information.
+\par
+\begin{itemize}
+\item
+ new storage is allocated for the C wide string and must
+   be explicitly freed using \haddocktt{Foreign.Marshal.Alloc.free} or
+   \haddocktt{Foreign.Marshal.Alloc.finalizerFree}.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withCWString\ ::\ String\ ->\ (CWString\ ->\ IO\ a)\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a NUL terminated C wide string using
+ temporary storage.
+\par
+\begin{itemize}
+\item
+ the Haskell string may \emph{not} contain any NUL characters
+\par
+
+\item
+ the memory is freed when the subcomputation terminates (either
+   normally or via an exception), so the pointer to the temporary
+   storage must \emph{not} be used after this.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+withCWStringLen\ ::\ String\ ->\ (CWStringLen\ ->\ IO\ a)\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Marshal a Haskell string into a NUL terminated C wide string using
+ temporary storage.
+\par
+\begin{itemize}
+\item
+ the Haskell string may \emph{not} contain any NUL characters
+\par
+
+\item
+ the memory is freed when the subcomputation terminates (either
+   normally or via an exception), so the pointer to the temporary
+   storage must \emph{not} be used after this.
+\par
+
+\end{itemize}
+
+\end{haddockdesc}

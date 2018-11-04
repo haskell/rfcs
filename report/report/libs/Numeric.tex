@@ -1,0 +1,238 @@
+\haddockmoduleheading{Numeric}
+\label{module:Numeric}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Numeric (
+    showSigned,  showIntAtBase,  showInt,  showHex,  showOct,  showEFloat, 
+    showFFloat,  showGFloat,  showFloat,  floatToDigits,  readSigned,  readInt, 
+    readDec,  readOct,  readHex,  readFloat,  lexDigits,  fromRat
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{Showing
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showSigned
+\end{tabular}]\haddockbegindoc
+\haddockbeginargs
+\haddockdecltt{::} & \haddockdecltt{Real a} \\
+                     \haddockdecltt{=>} & \haddockdecltt{(a
+                                                          -> ShowS)} & a function that can show unsigned values
+ \\
+                                                                       \haddockdecltt{->} & \haddockdecltt{Int} & the precedence of the enclosing context
+ \\
+                                                                                                                  \haddockdecltt{->} & \haddockdecltt{a} & the value to show
+ \\
+                                                                                                                                                           \haddockdecltt{->} & \haddockdecltt{ShowS} & \\
+\end{tabulary}\par
+Converts a possibly-negative \haddockid{Real} value to a string.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showIntAtBase\ ::\ Integral\ a\ =>\ a\ ->\ (Int\ ->\ Char)\ ->\ a\ ->\ ShowS
+\end{tabular}]\haddockbegindoc
+Shows a \emph{non-negative} \haddockid{Integral} number using the base specified by the
+ first argument, and the character representation specified by the second.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showInt\ ::\ Integral\ a\ =>\ a\ ->\ ShowS
+\end{tabular}]\haddockbegindoc
+Show \emph{non-negative} \haddockid{Integral} numbers in base 10.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showHex\ ::\ Integral\ a\ =>\ a\ ->\ ShowS
+\end{tabular}]\haddockbegindoc
+Show \emph{non-negative} \haddockid{Integral} numbers in base 16.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showOct\ ::\ Integral\ a\ =>\ a\ ->\ ShowS
+\end{tabular}]\haddockbegindoc
+Show \emph{non-negative} \haddockid{Integral} numbers in base 8.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showEFloat\ ::\ RealFloat\ a\ =>\ Maybe\ Int\ ->\ a\ ->\ ShowS
+\end{tabular}]\haddockbegindoc
+Show a signed \haddockid{RealFloat} value
+ using scientific (exponential) notation (e.g. \haddocktt{2.45e2}, \haddocktt{1.5e-3}).
+\par
+In the call \haddocktt{showEFloat\ digs\ val}, if \haddocktt{digs} is \haddockid{Nothing},
+ the value is shown to full precision; if \haddocktt{digs} is \haddocktt{Just\ d},
+ then at most \haddocktt{d} digits after the decimal point are shown.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showFFloat\ ::\ RealFloat\ a\ =>\ Maybe\ Int\ ->\ a\ ->\ ShowS
+\end{tabular}]\haddockbegindoc
+Show a signed \haddockid{RealFloat} value
+ using standard decimal notation (e.g. \haddocktt{245000}, \haddocktt{0.0015}).
+\par
+In the call \haddocktt{showFFloat\ digs\ val}, if \haddocktt{digs} is \haddockid{Nothing},
+ the value is shown to full precision; if \haddocktt{digs} is \haddocktt{Just\ d},
+ then at most \haddocktt{d} digits after the decimal point are shown.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showGFloat\ ::\ RealFloat\ a\ =>\ Maybe\ Int\ ->\ a\ ->\ ShowS
+\end{tabular}]\haddockbegindoc
+Show a signed \haddockid{RealFloat} value
+ using standard decimal notation for arguments whose absolute value lies 
+ between \haddocktt{0.1} and \haddocktt{9,999,999}, and scientific notation otherwise.
+\par
+In the call \haddocktt{showGFloat\ digs\ val}, if \haddocktt{digs} is \haddockid{Nothing},
+ the value is shown to full precision; if \haddocktt{digs} is \haddocktt{Just\ d},
+ then at most \haddocktt{d} digits after the decimal point are shown.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+showFloat\ ::\ RealFloat\ a\ =>\ a\ ->\ ShowS
+\end{tabular}]\haddockbegindoc
+Show a signed \haddockid{RealFloat} value to full precision
+ using standard decimal notation for arguments whose absolute value lies 
+ between \haddocktt{0.1} and \haddocktt{9,999,999}, and scientific notation otherwise.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+floatToDigits\ ::\ RealFloat\ a\ =>\ Integer\ ->\ a\ ->\ ({\char 91}Int{\char 93},\ Int)
+\end{tabular}]\haddockbegindoc
+\haddockid{floatToDigits} takes a base and a non-negative \haddockid{RealFloat} number,
+ and returns a list of digits and an exponent. 
+ In particular, if \haddocktt{x>=0}, and
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ floatToDigits base x = ([d1,d2,...,dn], e)
+\end{verbatim}}
+\end{quote}
+then
+\par
+\begin{enumerate}
+\item 
+\begin{quote}
+{\haddockverb\begin{verbatim}
+n >= 1\end{verbatim}}
+\end{quote}
+
+\item 
+\begin{quote}
+{\haddockverb\begin{verbatim}
+x = 0.d1d2...dn * (base**e)\end{verbatim}}
+\end{quote}
+
+\item 
+\begin{quote}
+{\haddockverb\begin{verbatim}
+0 <= di <= base-1\end{verbatim}}
+\end{quote}
+
+\end{enumerate}
+
+\end{haddockdesc}
+\section{Reading
+}
+\emph{NB:} \haddockid{readInt} is the 'dual' of \haddockid{showIntAtBase},
+ and \haddockid{readDec} is the `dual' of \haddockid{showInt}.
+ The inconsistent naming is a historical accident.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readSigned\ ::\ Real\ a\ =>\ ReadS\ a\ ->\ ReadS\ a
+\end{tabular}]\haddockbegindoc
+Reads a \emph{signed} \haddockid{Real} value, given a reader for an unsigned value.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readInt
+\end{tabular}]\haddockbegindoc
+\haddockbeginargs
+\haddockdecltt{::} & \haddockdecltt{Num a} \\
+                     \haddockdecltt{=>} & \haddockdecltt{a} & the base
+ \\
+                                                              \haddockdecltt{->} & \haddockdecltt{(Char
+                                                                                                   -> Bool)} & a predicate distinguishing valid digits in this base
+ \\
+                                                                                                               \haddockdecltt{->} & \haddockdecltt{(Char
+                                                                                                                                                    -> Int)} & a function converting a valid digit character to an \haddockid{Int} \\
+                                                                                                                                                               \haddockdecltt{->} & \haddockdecltt{ReadS a} & \\
+\end{tabulary}\par
+Reads an \emph{unsigned} \haddockid{Integral} value in an arbitrary base.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readDec\ ::\ Num\ a\ =>\ ReadS\ a
+\end{tabular}]\haddockbegindoc
+Read an unsigned number in decimal notation.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readOct\ ::\ Num\ a\ =>\ ReadS\ a
+\end{tabular}]\haddockbegindoc
+Read an unsigned number in octal notation.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readHex\ ::\ Num\ a\ =>\ ReadS\ a
+\end{tabular}]\haddockbegindoc
+Read an unsigned number in hexadecimal notation.
+ Both upper or lower case letters are allowed.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+readFloat\ ::\ RealFrac\ a\ =>\ ReadS\ a
+\end{tabular}]\haddockbegindoc
+Reads an \emph{unsigned} \haddockid{RealFrac} value,
+ expressed in decimal scientific notation.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+lexDigits\ ::\ ReadS\ String
+\end{tabular}]\haddockbegindoc
+Reads a non-empty string of decimal digits.
+\par
+
+\end{haddockdesc}
+\section{Miscellaneous
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+fromRat\ ::\ RealFloat\ a\ =>\ Rational\ ->\ a
+\end{tabular}]\haddockbegindoc
+Converts a \haddockid{Rational} value into any type in class \haddockid{RealFloat}.
+\par
+
+\end{haddockdesc}

@@ -1,0 +1,91 @@
+%
+% $Header: /home/cvs/root/haskell-report/report/syntax-lexical.verb,v 1.10 2003/01/13 13:08:56 simonpj Exp $
+% 
+
+@@@
+
+program		-> \{ lexeme | whitespace \}
+lexeme          -> qvarid | qconid | qvarsym | qconsym 
+                | literal | special | reservedop | reservedid
+literal		-> integer | float | char | string
+special		-> @(@ | @)@ | @,@ | @;@ | @[@ | @]@ | \bkq | @{@ | @}@
+
+whitespace	-> whitestuff \{whitestuff\}
+whitestuff	-> whitechar | comment | ncomment
+whitechar 	-> newline | vertab | space | tab | uniWhite
+newline   	-> return linefeed | return | linefeed | formfeed
+return		-> \tr{a carriage return}
+linefeed	-> \tr{a line feed}
+vertab		-> \tr{a vertical tab}
+formfeed	-> \tr{a form feed}
+space		-> \tr{a space}
+tab		-> \tr{a horizontal tab}
+uniWhite        -> \tr{any Unicode character defined as whitespace}
+
+comment         -> dashes [ any_{\langle{}symbol\rangle} \{any\} ] newline
+dashes		-> @--@ \{@-@\}
+opencom		-> @{-@
+closecom	-> @-}@
+ncomment	-> opencom ANYseq \{ncomment ANYseq\} closecom
+ANYseq		-> \{ANY\}_{\langle{}\{ANY\} ( opencom | closecom ) \{ANY\}\rangle{}}
+ANY		-> graphic | whitechar
+any		-> graphic | space | tab
+graphic		-> small | large | symbol | digit | special | @"@ | @'@
+
+small		-> ascSmall | uniSmall | @_@
+ascSmall      -> @a@ | @b@ | ... | @z@
+uniSmall        -> \tr{any Unicode lowercase letter}
+
+large		-> ascLarge | uniLarge
+ascLarge      -> @A@ | @B@ | ... | @Z@
+uniLarge        -> \tr{any uppercase or titlecase Unicode letter}
+symbol		-> ascSymbol | uniSymbol_{\langle{}special | @_@ | @"@ | @'@\rangle{}}
+
+ascSymbol     -> @!@ | @#@ | @$@ | @%@ | @&@ | @*@ | @+@ | @.@ | @/@ | @<@ | @=@ | @>@ | @?@ | @@
+                |  @\@ | @^@ | @|@ | @-@ | @~@ \hprime{| @:@}
+uniSymbol       -> \tr{any Unicode symbol or punctuation}
+digit          -> ascDigit | uniDigit
+ascDigit	-> @0@ | @1@ | ... | @9@
+uniDigit        -> \tr{any Unicode decimal digit}
+octit   -> @0@ | @1@ | ... | @7@
+hexit   -> digit | @A@ | ... | @F@ | @a@ | ... | @f@
+
+@@@
+
+\indexsyn{program}%
+\indexsyn{lexeme}%
+\indexsyn{literal}%
+\indexsyn{special}%
+\indexsyn{whitespace}%
+\indexsyn{whitestuff}%
+\indexsyn{whitechar}%
+\indexsyn{uniWhite}%
+\indexsyn{newline}%
+\indexsyn{space}%
+\indexsyn{tab}%
+\indexsyn{vertab}%
+\indexsyn{formfeed}%
+\indexsyn{comment}%
+\indexsyn{dashes}%
+\indexsyn{ncomment}%
+\indexsyn{opencom}%
+\indexsyn{closecom}%
+\indexsyn{ANYseq}%
+\indexsyn{ANY}%
+\indexsyn{any}%
+\indexsyn{graphic}%
+\indexsyn{small}%
+\indexsyn{ascSmall}%
+\indexsyn{uniSmall}%
+\indexsyn{uniDigit}%
+\indexsyn{large}%
+\indexsyn{ascLarge}%
+\indexsyn{uniLarge}%
+\indexsyn{symbol}%
+\indexsyn{ascSymbol}%
+\indexsyn{uniSymbol}%
+\indexsyn{digit}%
+\indexsyn{ascDigit}%
+\indexsyn{uniDigit}%
+\indexsyn{octit}%
+\indexsyn{hexit}%

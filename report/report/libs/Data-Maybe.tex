@@ -1,0 +1,169 @@
+\haddockmoduleheading{Data.Maybe}
+\label{module:Data.Maybe}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Data.Maybe (
+    Maybe(Nothing, Just),  maybe,  isJust,  isNothing,  fromJust,  fromMaybe, 
+    listToMaybe,  maybeToList,  catMaybes,  mapMaybe
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{The \haddocktt{Maybe} type and operations
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ Maybe\ a
+\end{tabular}]\haddockbegindoc
+\haddockbeginconstrs
+\haddockdecltt{=} & \haddockdecltt{Nothing} & \\
+\haddockdecltt{|} & \haddockdecltt{Just a} & \\
+\end{tabulary}\par
+The \haddockid{Maybe} type encapsulates an optional value.  A value of type
+ \haddocktt{Maybe\ a} either contains a value of type \haddocktt{a} (represented as \haddocktt{Just\ a}), 
+ or it is empty (represented as \haddockid{Nothing}).  Using \haddockid{Maybe} is a good way to 
+ deal with errors or exceptional cases without resorting to drastic
+ measures such as \haddockid{error}.
+\par
+The \haddockid{Maybe} type is also a monad.  It is a simple kind of error
+ monad, where all errors are represented by \haddockid{Nothing}.  A richer
+ error monad can be built using the \haddocktt{Data.Either.Either} type.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Monad\ Maybe\\instance\ Functor\ Maybe\\instance\ MonadPlus\ Maybe\\instance\ Eq\ a\ =>\ Eq\ (Maybe\ a)\\instance\ Ord\ a\ =>\ Ord\ (Maybe\ a)\\instance\ Read\ a\ =>\ Read\ (Maybe\ a)\\instance\ Show\ a\ =>\ Show\ (Maybe\ a)
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+maybe\ ::\ b\ ->\ (a\ ->\ b)\ ->\ Maybe\ a\ ->\ b
+\end{tabular}]\haddockbegindoc
+The \haddockid{maybe} function takes a default value, a function, and a \haddockid{Maybe}
+ value.  If the \haddockid{Maybe} value is \haddockid{Nothing}, the function returns the
+ default value.  Otherwise, it applies the function to the value inside
+ the \haddockid{Just} and returns the result.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isJust\ ::\ Maybe\ a\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+The \haddockid{isJust} function returns \haddockid{True} iff its argument is of the
+ form \haddocktt{Just\ {\char '137}}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isNothing\ ::\ Maybe\ a\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+The \haddockid{isNothing} function returns \haddockid{True} iff its argument is \haddockid{Nothing}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+fromJust\ ::\ Maybe\ a\ ->\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{fromJust} function extracts the element out of a \haddockid{Just} and
+ throws an error if its argument is \haddockid{Nothing}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+fromMaybe\ ::\ a\ ->\ Maybe\ a\ ->\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{fromMaybe} function takes a default value and and \haddockid{Maybe}
+ value.  If the \haddockid{Maybe} is \haddockid{Nothing}, it returns the default values;
+ otherwise, it returns the value contained in the \haddockid{Maybe}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+listToMaybe\ ::\ {\char 91}a{\char 93}\ ->\ Maybe\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{listToMaybe} function returns \haddockid{Nothing} on an empty list
+ or \haddocktt{Just\ a} where \haddocktt{a} is the first element of the list.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+maybeToList\ ::\ Maybe\ a\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{maybeToList} function returns an empty list when given
+ \haddockid{Nothing} or a singleton list when not given \haddockid{Nothing}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+catMaybes\ ::\ {\char 91}Maybe\ a{\char 93}\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{catMaybes} function takes a list of \haddockid{Maybe}s and returns
+ a list of all the \haddockid{Just} values. 
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mapMaybe\ ::\ (a\ ->\ Maybe\ b)\ ->\ {\char 91}a{\char 93}\ ->\ {\char 91}b{\char 93}
+\end{tabular}]\haddockbegindoc
+The \haddockid{mapMaybe} function is a version of \haddockid{map} which can throw
+ out elements.  In particular, the functional argument returns
+ something of type \haddocktt{Maybe\ b}.  If this is \haddockid{Nothing}, no element
+ is added on to the result list.  If it just \haddocktt{Just\ b}, then \haddocktt{b} is
+ included in the result list.
+\par
+
+\end{haddockdesc}
+\section{Specification
+}
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ module Data.Maybe(
+     Maybe(Nothing, Just),
+     isJust, isNothing,
+     fromJust, fromMaybe, listToMaybe, maybeToList,
+     catMaybes, mapMaybe,
+     maybe
+   ) where
+ 
+ maybe                  :: b -> (a -> b) -> Maybe a -> b
+ maybe n _ Nothing      =  n
+ maybe _ f (Just x)     =  f x
+ 
+ isJust                 :: Maybe a -> Bool
+ isJust (Just a)        =  True
+ isJust Nothing         =  False
+ 
+ isNothing              :: Maybe a -> Bool
+ isNothing              =  not . isJust
+ 
+ fromJust               :: Maybe a -> a
+ fromJust (Just a)      =  a
+ fromJust Nothing       =  error "Maybe.fromJust: Nothing"
+ 
+ fromMaybe              :: a -> Maybe a -> a
+ fromMaybe d Nothing    =  d
+ fromMaybe d (Just a)   =  a
+ 
+ maybeToList            :: Maybe a -> [a]
+ maybeToList Nothing    =  []
+ maybeToList (Just a)   =  [a]
+ 
+ listToMaybe            :: [a] -> Maybe a
+ listToMaybe []         =  Nothing
+ listToMaybe (a:_)      =  Just a
+  
+ catMaybes              :: [Maybe a] -> [a]
+ catMaybes ms           =  [ m | Just m <- ms ]
+ 
+ mapMaybe               :: (a -> Maybe b) -> [a] -> [b]
+ mapMaybe f             =  catMaybes . map f
+\end{verbatim}}
+\end{quote}

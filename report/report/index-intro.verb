@@ -1,0 +1,4 @@
+Index entries that refer to nonterminals in the \Haskell{} syntax are
+shown in an "italic" font.  Code entities 
+are shown in @typewriter@ font.  Ordinary index entries are
+shown in a roman font.

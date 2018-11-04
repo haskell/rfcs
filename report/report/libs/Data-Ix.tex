@@ -1,0 +1,148 @@
+\haddockmoduleheading{Data.Ix}
+\label{module:Data.Ix}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Data.Ix (
+    Ix(range, index, inRange, rangeSize)
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{The \haddockid{Ix} class
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+class\ Ord\ a\ =>\ Ix\ a\ where
+\end{tabular}]\haddockbegindoc
+The \haddockid{Ix} class is used to map a contiguous subrange of values in
+ a type onto integers.  It is used primarily for array indexing
+ (see the array package).
+\par
+The first argument \haddocktt{(l,u)} of each of these operations is a pair
+ specifying the lower and upper bounds of a contiguous subrange of values.
+\par
+An implementation is entitled to assume the following laws about these
+ operations:
+\par
+\begin{itemize}
+\item
+ \haddocktt{inRange\ (l,u)\ i\ ==\ elem\ i\ (range\ (l,u))} \haddocktt{\ }
+\par
+
+\item
+ \haddocktt{range\ (l,u)\ !!\ index\ (l,u)\ i\ ==\ i}, when \haddocktt{inRange\ (l,u)\ i}
+\par
+
+\item
+ \haddocktt{map\ (index\ (l,u))\ (range\ (l,u)))\ ==\ {\char 91}0..rangeSize\ (l,u)-1{\char 93}} \haddocktt{\ }
+\par
+
+\item
+ \haddocktt{rangeSize\ (l,u)\ ==\ length\ (range\ (l,u))} \haddocktt{\ }
+\par
+
+\end{itemize}
+Minimal complete instance: \haddockid{range}, \haddockid{index} and \haddockid{inRange}.
+\par
+
+\haddockpremethods{}\textbf{Methods}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+range\ ::\ (a,\ a)\ ->\ {\char 91}a{\char 93}
+\end{tabular}]\haddockbegindoc
+The list of values in the subrange defined by a bounding pair.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+index\ ::\ (a,\ a)\ ->\ a\ ->\ Int
+\end{tabular}]\haddockbegindoc
+The position of a subscript in the subrange.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+inRange\ ::\ (a,\ a)\ ->\ a\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+Returns \haddockid{True} the given subscript lies in the range defined
+ the bounding pair.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+rangeSize\ ::\ (a,\ a)\ ->\ Int
+\end{tabular}]\haddockbegindoc
+The size of the subrange defined by a bounding pair.
+\par
+
+\end{haddockdesc}
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Ix\ Bool\\instance\ Ix\ Char\\instance\ Ix\ Int\\instance\ Ix\ Int8\\instance\ Ix\ Int16\\instance\ Ix\ Int32\\instance\ Ix\ Int64\\instance\ Ix\ Integer\\instance\ Ix\ Ordering\\instance\ Ix\ Word\\instance\ Ix\ Word8\\instance\ Ix\ Word16\\instance\ Ix\ Word32\\instance\ Ix\ Word64\\instance\ Ix\ ()\\instance\ Ix\ GeneralCategory\\instance\ Ix\ SeekMode\\instance\ Ix\ IOMode\\instance\ (Ix\ a,\ Ix\ b)\ =>\ Ix\ (a,\ b)\\instance\ (Ix\ a1,\ Ix\ a2,\ Ix\ a3)\ =>\ Ix\ (a1,\ a2,\ a3)\\instance\ (Ix\ a1,\ Ix\ a2,\ Ix\ a3,\ Ix\ a4)\ =>\ Ix\ (a1,\ a2,\ a3,\ a4)\\instance\ (Ix\ a1,\ Ix\ a2,\ Ix\ a3,\ Ix\ a4,\ Ix\ a5)\ =>\ Ix\ (a1,\ a2,\ a3,\ a4,\ a5)
+\end{tabular}]
+\end{haddockdesc}
+\section{Deriving Instances of \haddocktt{Ix}
+}
+It is possible to derive an instance of \haddocktt{Ix} automatically, using
+a \haddocktt{deriving} clause on a \haddocktt{data} declaration.
+Such derived instance declarations for the class \haddocktt{Ix} are only possible
+for enumerations (i.e. datatypes having
+only nullary constructors) and single-constructor datatypes,
+whose constituent types are instances of \haddocktt{Ix}.   A Haskell implementation
+must provide \haddocktt{Ix} instances for tuples up to at least size 15.
+\par
+For an \emph{enumeration}, the nullary constructors are assumed to be
+numbered left-to-right with the indices being 0 to n-1 inclusive.
+This is the same numbering defined by the \haddocktt{Enum} class.  For example,
+given the datatype:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ data Colour = Red | Orange | Yellow | Green | Blue | Indigo | Violet
+\end{verbatim}}
+\end{quote}
+we would have:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ range   (Yellow,Blue)        ==  [Yellow,Green,Blue]
+ index   (Yellow,Blue) Green  ==  1
+ inRange (Yellow,Blue) Red    ==  False
+\end{verbatim}}
+\end{quote}
+For \emph{single-constructor datatypes}, the derived instance declarations
+are as shown for tuples:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ instance  (Ix a, Ix b)  => Ix (a,b) where
+         range ((l,l'),(u,u'))
+                 = [(i,i') | i <- range (l,u), i' <- range (l',u')]
+         index ((l,l'),(u,u')) (i,i')
+                 =  index (l,u) i * rangeSize (l',u') + index (l',u') i'
+         inRange ((l,l'),(u,u')) (i,i')
+                 = inRange (l,u) i && inRange (l',u') i'
+ 
+ -- Instances for other tuples are obtained from this scheme:
+ --
+ --  instance  (Ix a1, Ix a2, ... , Ix ak) => Ix (a1,a2,...,ak)  where
+ --      range ((l1,l2,...,lk),(u1,u2,...,uk)) =
+ --          [(i1,i2,...,ik) | i1 <- range (l1,u1),
+ --                            i2 <- range (l2,u2),
+ --                            ...
+ --                            ik <- range (lk,uk)]
+ --
+ --      index ((l1,l2,...,lk),(u1,u2,...,uk)) (i1,i2,...,ik) =
+ --        index (lk,uk) ik + rangeSize (lk,uk) * (
+ --         index (lk-1,uk-1) ik-1 + rangeSize (lk-1,uk-1) * (
+ --          ...
+ --           index (l1,u1)))
+ --
+ --      inRange ((l1,l2,...lk),(u1,u2,...,uk)) (i1,i2,...,ik) =
+ --          inRange (l1,u1) i1 && inRange (l2,u2) i2 &&
+ --              ... && inRange (lk,uk) ik
+\end{verbatim}}
+\end{quote}

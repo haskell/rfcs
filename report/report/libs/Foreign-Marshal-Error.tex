@@ -1,0 +1,71 @@
+\haddockmoduleheading{Foreign.Marshal.Error}
+\label{module:Foreign.Marshal.Error}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Foreign.Marshal.Error (
+    throwIf,  throwIf_,  throwIfNeg,  throwIfNeg_,  throwIfNull,  void
+  ) where\end{verbatim}}
+\haddockendheader
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+throwIf
+\end{tabular}]\haddockbegindoc
+\haddockbeginargs
+\haddockdecltt{::} & \haddockdecltt{(a
+                                     -> Bool)} & error condition on the result of the \haddockid{IO} action
+ \\
+                                                 \haddockdecltt{->} & \haddockdecltt{(a
+                                                                                      -> String)} & computes an error message from erroneous results
+ of the \haddockid{IO} action
+ \\
+                                                                                                    \haddockdecltt{->} & \haddockdecltt{IO a} & the \haddockid{IO} action to be executed
+ \\
+                                                                                                                                                \haddockdecltt{->} & \haddockdecltt{IO a} & \\
+\end{tabulary}\par
+Execute an \haddockid{IO} action, throwing a \haddockid{userError} if the predicate yields
+ \haddockid{True} when applied to the result returned by the \haddockid{IO} action.
+ If no exception is raised, return the result of the computation.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+throwIf{\char '137}\ ::\ (a\ ->\ Bool)\ ->\ (a\ ->\ String)\ ->\ IO\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Like \haddockid{throwIf}, but discarding the result
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+throwIfNeg\ ::\ (Ord\ a,\ Num\ a)\ =>\ (a\ ->\ String)\ ->\ IO\ a\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Guards against negative result values
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+throwIfNeg{\char '137}\ ::\ (Ord\ a,\ Num\ a)\ =>\ (a\ ->\ String)\ ->\ IO\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Like \haddockid{throwIfNeg}, but discarding the result
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+throwIfNull\ ::\ String\ ->\ IO\ (Ptr\ a)\ ->\ IO\ (Ptr\ a)
+\end{tabular}]\haddockbegindoc
+Guards against null pointers
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+void\ ::\ IO\ a\ ->\ IO\ ()
+\end{tabular}]\haddockbegindoc
+Discard the return value of an \haddockid{IO} action
+\par
+
+\end{haddockdesc}

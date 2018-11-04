@@ -1,0 +1,286 @@
+\haddockmoduleheading{System.IO.Error}
+\label{module:System.IO.Error}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module System.IO.Error (
+    IOError,  userError,  mkIOError,  annotateIOError,  isAlreadyExistsError, 
+    isDoesNotExistError,  isAlreadyInUseError,  isFullError,  isEOFError, 
+    isIllegalOperation,  isPermissionError,  isUserError,  ioeGetErrorString, 
+    ioeGetHandle,  ioeGetFileName,  IOErrorType,  alreadyExistsErrorType, 
+    doesNotExistErrorType,  alreadyInUseErrorType,  fullErrorType, 
+    eofErrorType,  illegalOperationErrorType,  permissionErrorType, 
+    userErrorType,  ioError,  catch,  try
+  ) where\end{verbatim}}
+\haddockendheader
+
+\section{I/O errors
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+type\ IOError\ =\ IOError
+\end{tabular}]\haddockbegindoc
+Errors of type \haddockid{IOError} are used by the \haddockid{IO} monad.  This is an
+ abstract type; the module \haddocktt{System.IO.Error} provides functions to
+ interrogate and construct values of type \haddockid{IOError}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+userError\ ::\ String\ ->\ IOError
+\end{tabular}]\haddockbegindoc
+Construct an \haddockid{IOError} value with a string describing the error.
+ The \haddockid{fail} method of the \haddockid{IO} instance of the \haddockid{Monad} class raises a
+ \haddockid{userError}, thus:
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ instance Monad IO where 
+   ...
+   fail s = ioError (userError s)
+\end{verbatim}}
+\end{quote}
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+mkIOError\ ::\ IOErrorType\\\ \ \ \ \ \ \ \ \ \ \ \ \ ->\ String\ ->\ Maybe\ Handle\ ->\ Maybe\ FilePath\ ->\ IOError
+\end{tabular}]\haddockbegindoc
+Construct an \haddockid{IOError} of the given type where the second argument
+ describes the error location and the third and fourth argument
+ contain the file handle and file path of the file involved in the
+ error if applicable.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+annotateIOError\ ::\ IOError\\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ->\ String\ ->\ Maybe\ Handle\ ->\ Maybe\ FilePath\ ->\ IOError
+\end{tabular}]\haddockbegindoc
+Adds a location description and maybe a file path and file handle
+ to an \haddockid{IOError}.  If any of the file handle or file path is not given
+ the corresponding value in the \haddockid{IOError} remains unaltered.
+\par
+
+\end{haddockdesc}
+\subsection{Classifying I/O errors
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isAlreadyExistsError\ ::\ IOError\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+An error indicating that an \haddockid{IO} operation failed because
+ one of its arguments already exists.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isDoesNotExistError\ ::\ IOError\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+An error indicating that an \haddockid{IO} operation failed because
+ one of its arguments does not exist.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isAlreadyInUseError\ ::\ IOError\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+An error indicating that an \haddockid{IO} operation failed because
+ one of its arguments is a single-use resource, which is already
+ being used (for example, opening the same file twice for writing
+ might give this error).
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isFullError\ ::\ IOError\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+An error indicating that an \haddockid{IO} operation failed because
+ the device is full.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isEOFError\ ::\ IOError\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+An error indicating that an \haddockid{IO} operation failed because
+ the end of file has been reached.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isIllegalOperation\ ::\ IOError\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+An error indicating that an \haddockid{IO} operation failed because
+ the operation was not possible.
+ Any computation which returns an \haddockid{IO} result may fail with
+ \haddockid{isIllegalOperation}.  In some cases, an implementation will not be
+ able to distinguish between the possible error causes.  In this case
+ it should fail with \haddockid{isIllegalOperation}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isPermissionError\ ::\ IOError\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+An error indicating that an \haddockid{IO} operation failed because
+ the user does not have sufficient operating system privilege
+ to perform that operation.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isUserError\ ::\ IOError\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+A programmer-defined error value constructed using \haddockid{userError}.
+\par
+
+\end{haddockdesc}
+\subsection{Attributes of I/O errors
+}
+\begin{haddockdesc}
+\item[
+ioeGetErrorString\ ::\ IOError\ ->\ String
+]
+\item[
+ioeGetHandle\ ::\ IOError\ ->\ Maybe\ Handle
+]
+\item[
+ioeGetFileName\ ::\ IOError\ ->\ Maybe\ FilePath
+]
+\end{haddockdesc}
+\section{Types of I/O error
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+data\ IOErrorType
+\end{tabular}]\haddockbegindoc
+An abstract type that contains a value for each variant of \haddockid{IOError}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Eq\ IOErrorType\\instance\ Show\ IOErrorType
+\end{tabular}]
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+alreadyExistsErrorType\ ::\ IOErrorType
+\end{tabular}]\haddockbegindoc
+I/O error where the operation failed because one of its arguments
+ already exists.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+doesNotExistErrorType\ ::\ IOErrorType
+\end{tabular}]\haddockbegindoc
+I/O error where the operation failed because one of its arguments
+ does not exist.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+alreadyInUseErrorType\ ::\ IOErrorType
+\end{tabular}]\haddockbegindoc
+I/O error where the operation failed because one of its arguments
+ is a single-use resource, which is already being used.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+fullErrorType\ ::\ IOErrorType
+\end{tabular}]\haddockbegindoc
+I/O error where the operation failed because the device is full.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+eofErrorType\ ::\ IOErrorType
+\end{tabular}]\haddockbegindoc
+I/O error where the operation failed because the end of file has
+ been reached.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+illegalOperationErrorType\ ::\ IOErrorType
+\end{tabular}]\haddockbegindoc
+I/O error where the operation is not possible.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+permissionErrorType\ ::\ IOErrorType
+\end{tabular}]\haddockbegindoc
+I/O error where the operation failed because the user does not
+ have sufficient operating system privilege to perform that operation.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+userErrorType\ ::\ IOErrorType
+\end{tabular}]\haddockbegindoc
+I/O error that is programmer-defined.
+\par
+
+\end{haddockdesc}
+\section{Throwing and catching I/O errors
+}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+ioError\ ::\ IOError\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+Raise an \haddockid{IOError} in the \haddockid{IO} monad.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+catch\ ::\ IO\ a\ ->\ (IOError\ ->\ IO\ a)\ ->\ IO\ a
+\end{tabular}]\haddockbegindoc
+The \haddockid{catch} function establishes a handler that receives any \haddockid{IOError}
+ raised in the action protected by \haddockid{catch}.  An \haddockid{IOError} is caught by
+ the most recent handler established by \haddockid{catch}.  These handlers are
+ not selective: all \haddockid{IOError}s are caught.  Exception propagation
+ must be explicitly provided in a handler by re-raising any unwanted
+ exceptions.  For example, in
+\par
+\begin{quote}
+{\haddockverb\begin{verbatim}
+ f = catch g (\e -> if IO.isEOFError e then return [] else ioError e)
+\end{verbatim}}
+\end{quote}
+the function \haddocktt{f} returns \haddocktt{{\char 91}{\char 93}} when an end-of-file exception
+ (cf. \haddockid{isEOFError}) occurs in \haddocktt{g}; otherwise, the
+ exception is propagated to the next outer handler.
+\par
+When an exception propagates outside the main program, the Haskell
+ system prints the associated \haddockid{IOError} value and exits the program.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+try\ ::\ IO\ a\ ->\ IO\ (Either\ IOError\ a)
+\end{tabular}]\haddockbegindoc
+The construct \haddockid{try} \haddocktt{comp} exposes IO errors which occur within a
+ computation, and which are not fully handled.
+\par
+
+\end{haddockdesc}

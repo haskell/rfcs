@@ -1,0 +1,231 @@
+\haddockmoduleheading{Data.Bits}
+\label{module:Data.Bits}
+\haddockbeginheader
+{\haddockverb\begin{verbatim}
+module Data.Bits (
+    Bits((.&.),
+         (.|.),
+         xor,
+         complement,
+         shift,
+         rotate,
+         bit,
+         setBit,
+         clearBit,
+         complementBit,
+         testBit,
+         bitSize,
+         isSigned,
+         shiftL,
+         shiftR,
+         rotateL,
+         rotateR)
+  ) where\end{verbatim}}
+\haddockendheader
+
+This module defines bitwise operations for signed and unsigned
+ integers.
+\par
+
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+class\ Num\ a\ =>\ Bits\ a\ where
+\end{tabular}]\haddockbegindoc
+The \haddockid{Bits} class defines bitwise operations over integral types.
+\par
+\begin{itemize}
+\item
+ Bits are numbered from 0 with bit 0 being the least
+  significant bit.
+\par
+
+\end{itemize}
+Minimal complete definition: \haddockid{.{\char '46}.}, \haddockid{.|.}, \haddockid{xor}, \haddockid{complement},
+(\haddockid{shift} or (\haddockid{shiftL} and \haddockid{shiftR})), (\haddockid{rotate} or (\haddockid{rotateL} and \haddockid{rotateR})),
+\haddockid{bitSize} and \haddockid{isSigned}.
+\par
+
+\haddockpremethods{}\textbf{Methods}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(.{\char '46}.)\ ::\ a\ ->\ a\ ->\ a
+\end{tabular}]\haddockbegindoc
+Bitwise "and"
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+(.|.)\ ::\ a\ ->\ a\ ->\ a
+\end{tabular}]\haddockbegindoc
+Bitwise "or"
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+xor\ ::\ a\ ->\ a\ ->\ a
+\end{tabular}]\haddockbegindoc
+Bitwise "xor"
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+complement\ ::\ a\ ->\ a
+\end{tabular}]\haddockbegindoc
+Reverse all the bits in the argument 
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+shift\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddocktt{shift\ x\ i} shifts \haddocktt{x} left by \haddocktt{i} bits if \haddocktt{i} is positive,
+        or right by \haddocktt{-i} bits otherwise.
+        Right shifts perform sign extension on signed number types;
+        i.e. they fill the top bits with 1 if the \haddocktt{x} is negative
+        and with 0 otherwise.
+\par
+An instance can define either this unified \haddockid{shift} or \haddockid{shiftL} and
+        \haddockid{shiftR}, depending on which is more convenient for the type in
+        question. 
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+rotate\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddocktt{rotate\ x\ i} rotates \haddocktt{x} left by \haddocktt{i} bits if \haddocktt{i} is positive,
+        or right by \haddocktt{-i} bits otherwise.
+\par
+For unbounded types like \haddockid{Integer}, \haddockid{rotate} is equivalent to \haddockid{shift}.
+\par
+An instance can define either this unified \haddockid{rotate} or \haddockid{rotateL} and
+        \haddockid{rotateR}, depending on which is more convenient for the type in
+        question. 
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+bit\ ::\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddocktt{bit\ i} is a value with the \haddocktt{i}th bit set and all other bits clear
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+setBit\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddocktt{x\ `setBit`\ i} is the same as \haddocktt{x\ .|.\ bit\ i}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+clearBit\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddocktt{x\ `clearBit`\ i} is the same as \haddocktt{x\ .{\char '46}.\ complement\ (bit\ i)}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+complementBit\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+\haddocktt{x\ `complementBit`\ i} is the same as \haddocktt{x\ `xor`\ bit\ i}
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+testBit\ ::\ a\ ->\ Int\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+Return \haddockid{True} if the \haddocktt{n}th bit of the argument is 1
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+bitSize\ ::\ a\ ->\ Int
+\end{tabular}]\haddockbegindoc
+Return the number of bits in the type of the argument.  The actual
+        value of the argument is ignored.  The function \haddockid{bitSize} is
+        undefined for types that do not have a fixed bitsize, like \haddockid{Integer}.
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+isSigned\ ::\ a\ ->\ Bool
+\end{tabular}]\haddockbegindoc
+Return \haddockid{True} if the argument is a signed type.  The actual
+        value of the argument is ignored 
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+shiftL\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+Shift the argument left by the specified number of bits
+        (which must be non-negative).
+\par
+An instance can define either this and \haddockid{shiftR} or the unified
+        \haddockid{shift}, depending on which is more convenient for the type in
+        question. 
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+shiftR\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+Shift the first argument right by the specified number of bits
+        (which must be non-negative).
+        Right shifts perform sign extension on signed number types;
+        i.e. they fill the top bits with 1 if the \haddocktt{x} is negative
+        and with 0 otherwise.
+\par
+An instance can define either this and \haddockid{shiftL} or the unified
+        \haddockid{shift}, depending on which is more convenient for the type in
+        question. 
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+rotateL\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+Rotate the argument left by the specified number of bits
+        (which must be non-negative).
+\par
+An instance can define either this and \haddockid{rotateR} or the unified
+        \haddockid{rotate}, depending on which is more convenient for the type in
+        question. 
+\par
+
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+rotateR\ ::\ a\ ->\ Int\ ->\ a
+\end{tabular}]\haddockbegindoc
+Rotate the argument right by the specified number of bits
+        (which must be non-negative).
+\par
+An instance can define either this and \haddockid{rotateL} or the unified
+        \haddockid{rotate}, depending on which is more convenient for the type in
+        question. 
+\par
+
+\end{haddockdesc}
+\end{haddockdesc}
+\begin{haddockdesc}
+\item[\begin{tabular}{@{}l}
+instance\ Bits\ Int\\instance\ Bits\ Int8\\instance\ Bits\ Int16\\instance\ Bits\ Int32\\instance\ Bits\ Int64\\instance\ Bits\ Integer\\instance\ Bits\ Word\\instance\ Bits\ Word8\\instance\ Bits\ Word16\\instance\ Bits\ Word32\\instance\ Bits\ Word64\\instance\ Bits\ WordPtr\\instance\ Bits\ IntPtr\\instance\ Bits\ CChar\\instance\ Bits\ CSChar\\instance\ Bits\ CUChar\\instance\ Bits\ CShort\\instance\ Bits\ CUShort\\instance\ Bits\ CInt\\instance\ Bits\ CUInt\\instance\ Bits\ CLong\\instance\ Bits\ CULong\\instance\ Bits\ CLLong\\instance\ Bits\ CULLong\\instance\ Bits\ CPtrdiff\\instance\ Bits\ CSize\\instance\ Bits\ CWchar\\instance\ Bits\ CSigAtomic\\instance\ Bits\ CIntPtr\\instance\ Bits\ CUIntPtr\\instance\ Bits\ CIntMax\\instance\ Bits\ CUIntMax
+\end{tabular}]
+\end{haddockdesc}
