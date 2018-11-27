@@ -99,7 +99,7 @@ Those implementations are also encouraged to support the following
 named language features:
 \bprog
 @
-PatternGuards, NoNPlusKPatterns, RelaxedPolyRec,
+PatternGuards, NoNPlusKPatterns,
 EmptyDataDecls, ForeignFunctionInterface
 @
 \eprog
